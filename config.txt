@@ -1,0 +1,2 @@
+ficheiro_jogos=./jogos.txt
+ficheiro_solucoes=./solucoes.txt

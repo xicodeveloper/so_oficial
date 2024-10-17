@@ -1,8 +1,93 @@
-Tabuleiro de Sudoku (Thu Oct 10 15:50:11 2024):
-Tabuleiro de Sudoku (Thu Oct 10 15:50:22 2024):
-Tabuleiro de Sudoku (Thu Oct 10 16:53:38 2024):
-Tabuleiro de Sudoku (Thu Oct 10 17:24:29 2024):
+Tabuleiro de Sudoku (Thu Oct 17 21:15:47 2024):
+1  _  _  |  _ 5 6  | 7 8 9 
+ _  _  _  | 7  _  _  | 1 2 3 
+ _  _  _  |  _ 2  _  | 4 5 6 
+-------------------------
+2 1 4  | 3  _  _  |  _  _ 7 
+ _ 6 5  | 8 9  _  | 2 1 4 
+8 9  _  | 2 1 4  |  _ 6 5 
+-------------------------
+5 3 1  |  _ 4  _  | 9 7 8 
+ _ 4  _  |  _ 7 8  | 5 3  _ 
+ _ 7  _  | 5  _ 1  | 6 4 2 
+
+Jogo terminado. Até à próxima!
+Tabuleiro de Sudoku (Thu Oct 17 21:17:25 2024):
 Movimento inválido!
-Tabuleiro de Sudoku (Thu Oct 10 17:24:33 2024):
-Tabuleiro de Sudoku (Thu Oct 10 17:25:02 2024):
+Tabuleiro de Sudoku (Thu Oct 17 21:17:30 2024):
+Jogo terminado. Até à próxima!
+Tabuleiro de Sudoku (Thu Oct 17 21:29:36 2024):
+Movimento inválido!
+Tabuleiro de Sudoku (Thu Oct 17 21:29:40 2024):
+Jogo terminado. Até à próxima!
+Tabuleiro de Sudoku (Thu Oct 17 21:50:01 2024):
+Movimento inválido!
+Tabuleiro de Sudoku (Thu Oct 17 21:50:06 2024):
+Jogo terminado. Até à próxima!
+Tabuleiro de Sudoku (Thu Oct 17 22:14:06 2024):
+Jogo terminado. Até à próxima!
+Tabuleiro de Sudoku (Thu Oct 17 22:15:52 2024):
+Jogo terminado. Até à próxima!
+Tabuleiro de Sudoku (Thu Oct 17 22:18:30 2024):
+Jogo terminado. Até à próxima!
+Tabuleiro de Sudoku (Thu Oct 17 22:20:49 2024):
+Jogo terminado. Até à próxima!
+Tabuleiro de Sudoku (Thu Oct 17 22:22:25 2024):
+Jogo terminado. Até à próxima!
+Tabuleiro de Sudoku (Thu Oct 17 22:22:54 2024):
+Jogo terminado. Até à próxima!
+Tabuleiro de Sudoku (Thu Oct 17 22:25:11 2024):
+Jogo terminado. Até à próxima!
+Tabuleiro de Sudoku (Thu Oct 17 22:34:43 2024):
+Movimento inválido!
+Tabuleiro de Sudoku (Thu Oct 17 22:36:55 2024):
+Movimento inválido!
+Tabuleiro de Sudoku (Thu Oct 17 22:36:58 2024):
+Jogo terminado. Até à próxima!
+Tabuleiro de Sudoku (Thu Oct 17 22:37:07 2024):
+Jogo terminado. Até à próxima!
+Tabuleiro de Sudoku (Thu Oct 17 22:38:56 2024):
+Jogo terminado. Até à próxima!
+Tabuleiro de Sudoku (Thu Oct 17 22:39:32 2024):
+Tabuleiro de Sudoku (Thu Oct 17 22:39:32 2024):
+Jogo terminado. Até à próxima!
+Tabuleiro de Sudoku (Thu Oct 17 22:43:34 2024):
+Tabuleiro de Sudoku (Thu Oct 17 22:43:34 2024):
+Movimento inválido!
+Tabuleiro de Sudoku (Thu Oct 17 22:43:41 2024):
+Movimento inválido!
+Tabuleiro de Sudoku (Thu Oct 17 22:43:47 2024):
+Tabuleiro de Sudoku (Thu Oct 17 22:44:00 2024):
+Movimento inválido!
+Perdeu o jogo. Excedeu as 3 tentativas.
+Tabuleiro de Sudoku (Thu Oct 17 22:44:28 2024):
+Tabuleiro de Sudoku (Thu Oct 17 22:44:28 2024):
+Jogo terminado. Até à próxima!
+Tabuleiro de Sudoku (Thu Oct 17 22:45:25 2024):
+Tabuleiro de Sudoku (Thu Oct 17 22:45:29 2024):
+Tabuleiro de Sudoku (Thu Oct 17 22:45:36 2024):
+Tabuleiro de Sudoku (Thu Oct 17 22:45:41 2024):
+Movimento inválido!
+Tabuleiro de Sudoku (Thu Oct 17 22:45:59 2024):
+Movimento inválido!
+Tabuleiro de Sudoku (Thu Oct 17 22:46:17 2024):
+Movimento inválido!
+Perdeu o jogo. Excedeu as 3 tentativas.
+Tabuleiro de Sudoku (Thu Oct 17 22:47:47 2024):
+Jogo terminado. Até à próxima!
+Tabuleiro de Sudoku (Thu Oct 17 22:47:59 2024):
+Tabuleiro de Sudoku (Thu Oct 17 22:48:12 2024):
+Movimento inválido!
+Tabuleiro de Sudoku (Thu Oct 17 22:48:21 2024):
+Movimento inválido!
+Tabuleiro de Sudoku (Thu Oct 17 22:48:35 2024):
+Movimento inválido!
+Perdeu o jogo. Excedeu as 3 tentativas.
+Tabuleiro de Sudoku (Thu Oct 17 22:48:49 2024):
+Tabuleiro de Sudoku (Thu Oct 17 22:48:58 2024):
+Movimento inválido!
+Tabuleiro de Sudoku (Thu Oct 17 22:49:10 2024):
+Movimento inválido!
+Tabuleiro de Sudoku (Thu Oct 17 22:49:15 2024):
+Tabuleiro de Sudoku (Thu Oct 17 22:49:19 2024):
 Jogo terminado. Até à próxima!

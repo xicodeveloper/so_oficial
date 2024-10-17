@@ -1,27 +1,24 @@
-# Definir os executáveis
-all: projeto servidor cliente
+# Compilador e flags
+CC = gcc
+CFLAGS = -Wall
+
+# Definir o executável principal (servidor)
+TARGET = servidor
 
 # Regras para compilar o projeto principal
-projeto: projeto.o
-	gcc -o projeto projeto.o -lpthread
+all: $(TARGET)
 
-projeto.o: projeto.c
-	gcc -c projeto.c -o projeto.o
+$(TARGET): Servidor.o Cliente.o
+	$(CC) -o $(TARGET) Servidor.o Cliente.o $(CFLAGS) -lpthread
 
-# Regras para compilar o servidor
-servidor: Servidor.o
-	gcc -o servidor Servidor.o -lpthread
+# Compilar Servidor.o
+Servidor.o: Servidor.c header.h
+	$(CC) -c Servidor.c -o Servidor.o $(CFLAGS)
 
-Servidor.o: Servidor.c
-	gcc -c Servidor.c -o Servidor.o
-
-# Regras para compilar o cliente
-cliente: Cliente.o
-	gcc -o cliente Cliente.o -lpthread
-
-Cliente.o: Cliente.c
-	gcc -c Cliente.c -o Cliente.o
+# Compilar Cliente.o
+Cliente.o: Cliente.c header.h
+	$(CC) -c Cliente.c -o Cliente.o $(CFLAGS)
 
 # Limpar ficheiros objeto e executáveis
 clean:
-	rm -f *.o *~ projeto servidor cliente
+	rm -f *.o *~ $(TARGET)
