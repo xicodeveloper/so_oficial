@@ -229,6 +229,23 @@ int verificar_vitoria(int tabuleiro[TAMANHO][TAMANHO]) {
     }
     return 1;
 }
+// Função para gravar a solução num ficheiro
+void gravar_solucao(int tabuleiro[TAMANHO][TAMANHO]) {
+    FILE *ficheiro = fopen("./solucoes.txt", "a");
+    if (ficheiro == NULL) {
+        printf("Erro ao abrir o ficheiro!\n");
+        return;
+    }
+
+    // Escrever a solução no ficheiro numa linha única
+    for (int i = 0; i < TAMANHO; i++) {
+        for (int j = 0; j < TAMANHO; j++) {
+            fprintf(ficheiro, "%d", tabuleiro[i][j]);
+        }
+    }
+    fprintf(ficheiro, "\n");
+    fclose(ficheiro);
+}
 
 int main(int argc, char *argv[]) {
     
@@ -266,10 +283,11 @@ int main(int argc, char *argv[]) {
     
     // Lê a configuração
     
-    salvar_tabuleiro(ficheiro_jogos,tabuleiro);
-    //resolver_sudoku(tabuleiro, 0,0);
-    //salvar_solucao(ficheiro_solucoes,tabuleiro);
+   // Salvar o tabuleiro no ficheiro de jogos
+    salvar_tabuleiro(ficheiro_jogos, tabuleiro);
     jogar_sudoku(tabuleiro);
-
+    // Resolver o Sudoku e gravar a solução no ficheiro de soluções
+    resolver_sudoku(tabuleiro, 0, 0);
+    gravar_solucao(tabuleiro); // Corrigido: Passa o tabuleiro em vez do nome do ficheiro
     return 0;
 }

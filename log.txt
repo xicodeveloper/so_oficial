@@ -1,9 +1,4 @@
-Tabuleiro de Sudoku em andamento (Fri Oct 18 18:52:00 2024).
-Movimento inválido!(Fri Oct 18 18:52:00 2024)
-Tabuleiro de Sudoku em andamento (Fri Oct 18 18:52:07 2024).
-Movimento inválido!(Fri Oct 18 18:52:07 2024)
-Tabuleiro de Sudoku em andamento (Fri Oct 18 18:52:17 2024).
-Cliente inseriu no Soduku!(Fri Oct 18 18:52:17 2024)
-Tabuleiro de Sudoku em andamento (Fri Oct 18 18:52:35 2024).
-Movimento inválido!(Fri Oct 18 18:52:35 2024)
-Perdeu o jogo. Excedeu as 3 tentativas(Fri Oct 18 18:52:35 2024).
+Tabuleiro de Sudoku em andamento (Fri Oct 18 18:56:05 2024).
+Cliente inseriu no Soduku!(Fri Oct 18 18:56:05 2024)
+Tabuleiro de Sudoku em andamento (Fri Oct 18 18:56:15 2024).
+Jogo terminado. Até à próxima!(Fri Oct 18 18:56:15 2024).
