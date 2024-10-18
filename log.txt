@@ -91,3 +91,4 @@ Movimento inválido!
 Tabuleiro de Sudoku (Thu Oct 17 22:49:15 2024):
 Tabuleiro de Sudoku (Thu Oct 17 22:49:19 2024):
 Jogo terminado. Até à próxima!
+Tabuleiro de Sudoku (Fri Oct 18 12:54:09 2024):

@@ -198,6 +198,16 @@ int verificar_vitoria(int tabuleiro[TAMANHO][TAMANHO]) {
     return 1;
 }
 int main(int argc, char *argv[]) {
+    
+    char ficheiro_jogos[256];
+    char ficheiro_solucoes[256];
+   
+
+    ler_configuracao(argv[1], ficheiro_jogos, ficheiro_solucoes);
+
+    printf("Ficheiro de jogos: %s\n", ficheiro_jogos);
+    printf("Ficheiro de soluções: %s\n", ficheiro_solucoes);
+
     int tabuleiro[TAMANHO][TAMANHO];
     int dificuldade;
 
@@ -219,14 +229,9 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    char ficheiro_jogos[256];
-    char ficheiro_solucoes[256];
-   
+    
     // Lê a configuração
-    ler_configuracao(argv[1], ficheiro_jogos, ficheiro_solucoes);
-
-    printf("Ficheiro de jogos: %s\n", ficheiro_jogos);
-    printf("Ficheiro de soluções: %s\n", ficheiro_solucoes);
+    
     salvar_tabuleiro(ficheiro_jogos,tabuleiro);
     //resolver_sudoku(tabuleiro, 0,0);
     //salvar_solucao(ficheiro_solucoes,tabuleiro);
