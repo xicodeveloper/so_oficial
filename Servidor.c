@@ -220,6 +220,7 @@ int main(int argc, char *argv[]) {
     printf("Numero de Tarefas -> \n");
     printf("Escolha o nível de dificuldade (1 = Fácil, 2 = Médio, 3 = Difícil): ");
     scanf("%d", &dificuldade);
+    while (getchar() != '\n'); // Limpar o buffer de entrada
 
     gerar_sudoku(tabuleiro, dificuldade);
     
