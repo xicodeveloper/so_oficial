@@ -128,7 +128,7 @@ void mudarColunas(int tabuleiro[TAMANHO][TAMANHO], int col1, int col2) {
         tabuleiro[i][col2] = temp;
     }
 }
-void misturarSodo(int tabuleiro[TAMANHO][TAMANHO]) {
+void misturarSudoku(int tabuleiro[TAMANHO][TAMANHO]) {
     for (int i = 0; i < 3; i++) {
         // Intercambiar filas dentro de cada subcuadrícula de 3x3
         int fila1 = i * 3 + rand() % 3;
@@ -247,47 +247,86 @@ void gravar_solucao(int tabuleiro[TAMANHO][TAMANHO]) {
     fclose(ficheiro);
 }
 
+void Menu(int tabuleiro[TAMANHO][TAMANHO], const char *nome_ficheiro) {
+int dificuldade;
+    printf("Escolha o nível de dificuldade (1 = Fácil, 2 = Médio, 3 = Difícil): ");
+    scanf("%d", &dificuldade);
+    while (getchar() != '\n'); // Limpar o buffer de entrada
+
+    gerar_sudoku(tabuleiro, dificuldade);
+    misturarSudoku(tabuleiro); // Corrigido o nome da função
+    salvar_tabuleiro(nome_ficheiro, tabuleiro); // Corrigido para usar o nome do ficheiro corretamente
+
+    printf("Tabuleiro de Sudoku gerado.\n");
+
+    while (1) {
+        int opcao;
+         time_t mytime = time(NULL);
+        char *timestamp = ctime(&mytime);
+        timestamp[strlen(timestamp) - 1] = 0; // Remove a nova linha do timestamp
+        imprimir_tabuleiro(tabuleiro);
+        // Exibir informações do jogo
+        printf("ID jogo a decorrer -> \n");
+        printf("Hora de inicio  -> \n");
+        printf("Tempo decorrido -> \n");
+        printf("Numero de Tarefas -> \n");
+
+        printf("----------Menu----------\n");
+        printf("1. Inserir.\n");
+        printf("2. Revelar Solução.\n");
+        printf("3. Desistir.\n");
+        printf("------------------------\n");
+        printf("Selecione o que deseja: ");
+        scanf("%d", &opcao);
+        while (getchar() != '\n'); // Limpar o buffer de entrada
+
+        switch (opcao) {
+            case 1:
+                jogar_sudoku(tabuleiro);
+                break;
+            case 2:
+                resolver_sudoku(tabuleiro, 0, 0);
+                gravar_solucao(tabuleiro); // Corrigido: gravar solução com o tabuleiro
+                imprimir_tabuleiro(tabuleiro);
+                return;
+                break;
+            case 3:
+            
+                printf("Desistiu do jogo. A sair...\n");
+                FILE *fe = fopen("log.txt", "a");
+            if (fe != NULL) {
+                fprintf(fe, "Jogador desistiu. Até à próxima!(%s).\n", timestamp);
+                fclose(fe);
+            }
+                return; 
+            default:
+                printf("Opção inválida! Tente novamente.\n");
+                break;
+        }
+    }
+}
+
 int main(int argc, char *argv[]) {
-    
+    if (argc < 2) {
+        printf("Uso: %s <ficheiro de configuração>\n", argv[0]);
+        return 1;
+    }
+
     char ficheiro_jogos[256];
     char ficheiro_solucoes[256];
-   
 
+    // Ler configuração
     ler_configuracao(argv[1], ficheiro_jogos, ficheiro_solucoes);
 
     printf("Ficheiro de jogos: %s\n", ficheiro_jogos);
     printf("Ficheiro de soluções: %s\n", ficheiro_solucoes);
 
     int tabuleiro[TAMANHO][TAMANHO];
-    int dificuldade;
 
-    srand(time(NULL));
 
-    // Pedir o nível de dificuldade ao jogador
-    printf("ID jogo a decorrer -> \n");
-    printf("Hora de inicio  -> \n");
-    printf("Tempo decorrido -> \n");
-    printf("Numero de Tarefas -> \n");
-    printf("Escolha o nível de dificuldade (1 = Fácil, 2 = Médio, 3 = Difícil): ");
-    scanf("%d", &dificuldade);
-    while (getchar() != '\n'); // Limpar o buffer de entrada
+    srand(time(NULL)); // Inicializa a semente para números aleatórios
 
-    gerar_sudoku(tabuleiro, dificuldade);
-    misturarSodo(tabuleiro);
-    printf("Tabuleiro de Sudoku gerado:\n");
-    if (argc < 2) {
-        printf("Uso: %s <ficheiro de configuração>\n", argv[0]);
-        return 1;
-    }
+    Menu(tabuleiro, ficheiro_jogos);
 
-    
-    // Lê a configuração
-    
-   // Salvar o tabuleiro no ficheiro de jogos
-    salvar_tabuleiro(ficheiro_jogos, tabuleiro);
-    jogar_sudoku(tabuleiro);
-    // Resolver o Sudoku e gravar a solução no ficheiro de soluções
-    resolver_sudoku(tabuleiro, 0, 0);
-    gravar_solucao(tabuleiro); // Corrigido: Passa o tabuleiro em vez do nome do ficheiro
     return 0;
 }
