@@ -22,3 +22,7 @@ Cliente.o: Cliente.c header.h
 # Limpar ficheiros objeto e executáveis
 clean:
 	rm -f *.o *~ $(TARGET)
+
+# Adicionar a regra clear
+clear: clean
+	@echo "Ficheiros limpos!"

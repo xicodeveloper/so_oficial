@@ -9,14 +9,17 @@ void jogar_sudoku(int tabuleiro[TAMANHO][TAMANHO]) {
     int erros = 0;
 
     while (1) {
+        FILE *fe = fopen("log.txt", "a");
+        time_t mytime = time(NULL);
+        char *timestamp = ctime(&mytime);
+        timestamp[strlen(timestamp) - 1] = 0; // Remove a nova linha do timestamp
         imprimir_tabuleiro(tabuleiro);
 
         // Verificar vitória
         if (verificar_vitoria(tabuleiro)) {
             printf("Parabéns! Completou o Sudoku corretamente!\n");
-            FILE *fe = fopen("log.txt", "a");
             if (fe != NULL) {
-                fprintf(fe, "Parabéns! Completou o Sudoku corretamente!\n");
+                fprintf(fe, "Parabéns! Completou o Sudoku corretamente!(%s).\n", timestamp);
                 fclose(fe);
             }
             break;
@@ -30,13 +33,22 @@ void jogar_sudoku(int tabuleiro[TAMANHO][TAMANHO]) {
             int result = sscanf(buffer, "%d %d %d", &linha, &col, &num);
             // Verificar si se leyeron los tres números
             if (result != 3) {
-                printf("Erro esperava-se 3 números inteiros.\n");
+                printf("Erro se esperava 3 inteiros.\n");
+              
+            if (fe != NULL) {
+                fprintf(fe, "Cliente inseriu mal as colunas/linhas/número(%s).\n", timestamp);
+                fclose(fe);
+            }
                 continue; // Pedir entrada nuevamente
             }
 
-            // Si los números son válidos, salir del bucle
+        
         } else {
-            printf("Erro ao ler a entrada.\n");
+               if (fe != NULL) {
+                 printf("Erro ao ler a entrada.\n");
+                fprintf(fe, "Erro a ler a entrada(%s).\n", timestamp);
+                fclose(fe);
+            }
             continue; // Pedir entrada nuevamente
         }
             
@@ -45,7 +57,7 @@ void jogar_sudoku(int tabuleiro[TAMANHO][TAMANHO]) {
             printf("Jogo terminado. Até à próxima!\n");
             FILE *fe = fopen("log.txt", "a");
             if (fe != NULL) {
-                fprintf(fe, "Jogo terminado. Até à próxima!\n");
+                fprintf(fe, "Jogo terminado. Até à próxima!(%s).\n", timestamp);
                 fclose(fe);
             }
             break;
@@ -56,16 +68,14 @@ void jogar_sudoku(int tabuleiro[TAMANHO][TAMANHO]) {
 
         // Verifica se a posição está vazia e o número é válido
         if (tabuleiro[linha][col] == 0 && pode_colocar(tabuleiro, linha, col, num)) {
+              FILE *fe = fopen("log.txt", "a");
+            fprintf(fe,"Cliente inseriu no Soduku!(%s)\n", timestamp);
+            printf("Cliente inseriu no Soduku!\n");
+            fclose(fe);
             tabuleiro[linha][col] = num;
-
-             FILE *fe = fopen("log.txt", "a");
-                if (fe != NULL) {
-                    fprintf(fe,"Cliente inseriu um número no soduku!\n");
-                }
-                fclose(fe);
         } else {
              FILE *fe = fopen("log.txt", "a");
-            fprintf(fe,"Movimento inválido!\n");
+            fprintf(fe,"Movimento inválido!(%s)\n", timestamp);
             fclose(fe);
             printf("Movimento inválido!\n");
             erros++;
@@ -73,7 +83,7 @@ void jogar_sudoku(int tabuleiro[TAMANHO][TAMANHO]) {
                 printf("Perdeu o jogo. Excedeu as 3 tentativas.\n");
                 FILE *fe = fopen("log.txt", "a");
                 if (fe != NULL) {
-                    fprintf(fe, "Perdeu o jogo. Excedeu as 3 tentativas.\n");
+                    fprintf(fe, "Perdeu o jogo. Excedeu as 3 tentativas(%s).\n", timestamp);
                     fclose(fe);
                 }
                 break;
@@ -81,84 +91,3 @@ void jogar_sudoku(int tabuleiro[TAMANHO][TAMANHO]) {
         }
     }
 }
-
-/*
-void connect_to_server() {
-    struct sockaddr_un addr;
-    int i;
-    int ret;
-    int data_socket;
-    char buffer[BUFFER_SIZE];
-
-    // Cria o socket de dados
-    data_socket = socket(AF_UNIX, SOCK_STREAM, 0);
-    if (data_socket == -1) {
-        perror("Erro ao criar socket");
-        exit(EXIT_FAILURE);
-    }
-
-    // Limpa a estrutura de endereço
-    memset(&addr, 0, sizeof(struct sockaddr_un));
-
-    // Configura o endereço do socket
-    addr.sun_family = AF_UNIX;
-    strncpy(addr.sun_path, SOCKET_NAME, sizeof(addr.sun_path) - 1);
-
-    // Conecta ao servidor
-    ret = connect(data_socket, (const struct sockaddr *) &addr, sizeof(struct sockaddr_un));
-    if (ret == -1) {
-        fprintf(stderr, "O servidor está indisponível.\n");
-        close(data_socket);
-        exit(EXIT_FAILURE);
-    }
-
-    printf("Conectado ao servidor.\n");
-
-    // Enviar números ao servidor
-    do {
-        printf("Digite um número para enviar ao servidor (0 para sair):\n");
-        scanf("%d", &i);
-
-        // Enviar o número
-        ret = write(data_socket, &i, sizeof(int));
-        if (ret == -1) {
-            perror("Erro ao enviar dados");
-            break;
-        }
-        printf("Número enviado: %d\n", i);
-    } while (i != 0);
-
-    // Solicitar resultado
-    memset(buffer, 0, BUFFER_SIZE);
-    strncpy(buffer, "RES", sizeof(buffer) - 1);
-    ret = write(data_socket, buffer, strlen(buffer));
-    if (ret == -1) {
-        perror("Erro ao solicitar resultado");
-        close(data_socket);
-        exit(EXIT_FAILURE);
-    }
-
-    // Receber o resultado
-    memset(buffer, 0, BUFFER_SIZE);
-    ret = read(data_socket, buffer, BUFFER_SIZE);
-    if (ret == -1) {
-        perror("Erro ao receber resultado");
-        close(data_socket);
-        exit(EXIT_FAILURE);
-    }
-
-    // Mostrar o resultado
-    printf("Resultado recebido do servidor: %s\n", buffer);
-
-    // Fechar o socket
-    close(data_socket);
-    printf("Conexão encerrada.\n");
-
-    exit(EXIT_SUCCESS);
-}
-    void main() {
-    printf("Iniciando cliente...\n");
-    connect_to_server();  // Inicia a conexão com o servidor
-    return 0;
-}*/
-
