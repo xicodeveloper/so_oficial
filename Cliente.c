@@ -10,7 +10,7 @@ void jogar_sudoku(int tabuleiro[TAMANHO][TAMANHO]) {
 
 
     while (1) {
-        FILE *fe = fopen("log.txt", "a");
+    
         time_t mytime = time(NULL);
         char *timestamp = ctime(&mytime);
         timestamp[strlen(timestamp) - 1] = 0; // Remove a nova linha do timestamp
@@ -19,10 +19,7 @@ void jogar_sudoku(int tabuleiro[TAMANHO][TAMANHO]) {
         // Verificar vitória
         if (verificar_vitoria(tabuleiro)) {
             printf("Parabéns! Completou o Sudoku corretamente!\n");
-            if (fe != NULL) {
-                fprintf(fe, "Parabéns! Completou o Sudoku corretamente!(%s).\n", timestamp);
-                fclose(fe);
-            }
+            escrever_log("Jogador concluiu o jogo");
             break;
         }
 
@@ -30,63 +27,44 @@ void jogar_sudoku(int tabuleiro[TAMANHO][TAMANHO]) {
         
 
         if (fgets(buffer, sizeof(buffer), stdin) != NULL) {
-            // Intentar extraer los tres números
+            // tentar extrair os tres números
             int result = sscanf(buffer, "%d %d %d", &linha, &col, &num);
-            // Verificar si se leyeron los tres números
+            // Verificar os tres números foram lidos
             if (result != 3) {
                 printf("Erro se esperava 3 inteiros.\n");
-              
-            if (fe != NULL) {
-                fprintf(fe, "Cliente inseriu mal as colunas/linhas/número(%s).\n", timestamp);
-                fclose(fe);
-            }
-                continue; // Pedir entrada nuevamente
+                escrever_log("Cliente inseriu mal as colunas/linhas/número");
+                continue; // Pedir input novamente
             }
 
         
         } else {
-               if (fe != NULL) {
-                 printf("Erro ao ler a entrada.\n");
-                fprintf(fe, "Erro a ler a entrada(%s).\n", timestamp);
-                fclose(fe);
-            }
-            continue; // Pedir entrada nuevamente
+              escrever_log("Erro a ler a entrada");
+            continue; // Pedir input novamente
         }
             
 
         if (linha == 0 && col == 0 && num == 0) {
             printf("Jogo terminado. Até à próxima!\n");
-            FILE *fe = fopen("log.txt", "a");
-            if (fe != NULL) {
-                fprintf(fe, "Jogo terminado. Até à próxima!(%s).\n", timestamp);
-                fclose(fe);
-            }
+          escrever_log("O jogador terminou");
             break;
         }
 
-        linha--; // Ajustar  índice 0
-        col--;   // Ajustar  índice 0
+        linha--; // por a 0
+        col--;   // por a 0
 
         // Verifica se a posição está vazia e o número é válido
         if (tabuleiro[linha][col] == 0 && pode_colocar(tabuleiro, linha, col, num)) {
-              FILE *fe = fopen("log.txt", "a");
-            fprintf(fe,"Cliente inseriu no Soduku!(%s)\n", timestamp);
+             escrever_log("Cliente inseriu no Soduku!");
             printf("Cliente inseriu no Soduku!\n");
-            fclose(fe);
+            
             tabuleiro[linha][col] = num;
         } else {
-             FILE *fe = fopen("log.txt", "a");
-            fprintf(fe,"Movimento inválido!(%s)\n", timestamp);
-            fclose(fe);
+           escrever_log("Movimento invalido");
             printf("Movimento inválido!\n");
             erros++;
             if (erros >= 3) {
                 printf("Perdeu o jogo. Excedeu as 3 tentativas.\n");
-                FILE *fe = fopen("log.txt", "a");
-                if (fe != NULL) {
-                    fprintf(fe, "Perdeu o jogo. Excedeu as 3 tentativas(%s).\n", timestamp);
-                    fclose(fe);
-                }
+               escrever_log("O Cliente perdeu o jogo");
                 break;
             }
         }

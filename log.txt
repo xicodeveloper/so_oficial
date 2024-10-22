@@ -1,10 +1,36 @@
-Mostrou o Tabuleiro Sudoku  (Mon Oct 21 16:16:33 2024).
-Jogador pediu a solucao. Até à próxima!(Mon Oct 21 16:16:44 2024).
-Mostrou o Tabuleiro Sudoku  (Mon Oct 21 16:16:44 2024).
-Mostrou o Tabuleiro Sudoku  (Mon Oct 21 16:17:14 2024).
-Mostrou o Tabuleiro Sudoku  (Mon Oct 21 16:17:20 2024).
-Jogador desistiu. Até à próxima!(Mon Oct 21 16:17:20 2024).
-Mostrou o Tabuleiro Sudoku  (Tue Oct 22 11:56:11 2024).
-Mostrou o Tabuleiro Sudoku  (Tue Oct 22 12:27:25 2024).
-Jogador pediu a solucao. Até à próxima!(Tue Oct 22 12:27:31 2024).
-Mostrou o Tabuleiro Sudoku  (Tue Oct 22 12:27:31 2024).
+Tue Oct 22 13:31:47 2024 | Inicio do servidor: Configuração lida com sucesso.
+Tue Oct 22 13:31:57 2024 | O Servidor gera o Soduku.
+Tue Oct 22 13:31:57 2024 | O Servidor guardou o tabuleiro.
+Tue Oct 22 13:31:57 2024 | O Servidor mostrou o tabuleiro ao cliente.
+Tue Oct 22 13:32:40 2024 | O Servidor guardou a solucao.
+Tue Oct 22 13:32:40 2024 | O Servidor mostrou o tabuleiro ao cliente.
+Tue Oct 22 13:32:48 2024 | Inicio do servidor: Configuração lida com sucesso.
+Tue Oct 22 13:36:21 2024 | O Servidor gera o Soduku.
+Tue Oct 22 13:36:21 2024 | O Servidor guardou o tabuleiro.
+Tue Oct 22 13:36:21 2024 | O Servidor mostrou o tabuleiro ao cliente.
+Tue Oct 22 13:36:25 2024 | Jogador desistiu do Sodoku.
+Tue Oct 22 13:36:32 2024 | Inicio do servidor: Configuração lida com sucesso.
+Tue Oct 22 13:36:33 2024 | O Servidor gera o Soduku.
+Tue Oct 22 13:36:33 2024 | O Servidor guardou o tabuleiro.
+Tue Oct 22 13:36:33 2024 | O Servidor mostrou o tabuleiro ao cliente.
+Tue Oct 22 13:36:34 2024 | O Jogador selecionou uma opcao invalida no Menu.
+Tue Oct 22 13:36:34 2024 | O Servidor mostrou o tabuleiro ao cliente.
+Tue Oct 22 13:36:39 2024 | O Servidor mostrou o tabuleiro ao cliente.
+Tue Oct 22 13:41:54 2024 | Cliente inseriu mal as colunas/linhas/número.
+Tue Oct 22 13:41:54 2024 | O Servidor mostrou o tabuleiro ao cliente.
+Tue Oct 22 13:42:18 2024 | Movimento invalido.
+Tue Oct 22 13:42:18 2024 | O Servidor mostrou o tabuleiro ao cliente.
+Tue Oct 22 13:42:32 2024 | Movimento invalido.
+Tue Oct 22 13:42:32 2024 | O Servidor mostrou o tabuleiro ao cliente.
+Tue Oct 22 13:42:37 2024 | O jogador terminou.
+Tue Oct 22 13:42:37 2024 | O Servidor mostrou o tabuleiro ao cliente.
+Tue Oct 22 13:42:46 2024 | O Servidor guardou a solucao.
+Tue Oct 22 13:42:46 2024 | O Servidor mostrou o tabuleiro ao cliente.
+Tue Oct 22 13:50:57 2024 | Inicio do servidor: Configuração lida com sucesso.
+Tue Oct 22 13:50:58 2024 | O Servidor gera o Soduku.
+Tue Oct 22 13:50:58 2024 | O Servidor guardou o tabuleiro.
+Tue Oct 22 13:50:58 2024 | O Servidor mostrou o tabuleiro ao cliente.
+Tue Oct 22 13:51:06 2024 | Cliente clicou na opcao 2 do menu.
+Tue Oct 22 13:51:06 2024 | O Servidor guardou a solucao.
+Tue Oct 22 13:51:06 2024 | O Servidor mostrou o tabuleiro ao cliente.
+Tue Oct 22 13:51:06 2024 | Cliente saiu do Sodoku.

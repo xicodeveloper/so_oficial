@@ -1,6 +1,22 @@
 #include "header.h"
 #define TAMANHO 9
 
+
+void escrever_log(const char *mensagem) {
+    FILE *f = fopen("log.txt", "a");
+    if (f == NULL) {
+        printf("Erro ao abrir o ficheiro log.txt\n");
+        return;
+    }
+
+    time_t mytime = time(NULL);
+    char *timestamp = ctime(&mytime);
+    timestamp[strlen(timestamp) - 1] = 0; // Remove a nova linha do timestamp
+
+    fprintf(f, "%s | %s.\n", timestamp, mensagem);
+    fclose(f);
+}
+
 // Função para, atraves da config.txt definir os caminhos dos ficheiros de jogos e de soluções
 void ler_configuracao(char *config_path, char *ficheiro_jogos, char *ficheiro_solucoes) {//recebe o caminho do ficheiro de configuração
     FILE *config = fopen(config_path, "r");
@@ -28,13 +44,16 @@ void ler_configuracao(char *config_path, char *ficheiro_jogos, char *ficheiro_so
             // Copia o valor do token para a variável ficheiro_solucoes
             strcpy(ficheiro_solucoes, token);  
         } 
+        
     } 
 
     // Fecha o ficheiro de configuração após a leitura
-    fclose(config);  
+    fclose(config); 
+  
+    escrever_log("Inicio do servidor: Configuração lida com sucesso");
 
 }
-
+//permite guardar o tabuleiro no ficheiro jogos.txt
 void salvar_tabuleiro(const char *nome_ficheiro, int tabuleiro[TAMANHO][TAMANHO]) {
     FILE *f = fopen(nome_ficheiro, "a"); // Abre o ficheiro para acrescentar
     if (f == NULL) {
@@ -43,23 +62,27 @@ void salvar_tabuleiro(const char *nome_ficheiro, int tabuleiro[TAMANHO][TAMANHO]
     }
 
     // Grava o tabuleiro no ficheiro
-    for (int i = 0; i < TAMANHO; i++) {
+    for (int i = 0; i < TAMANHO; i++) {//percorre toda a matriz
         for (int j = 0; j < TAMANHO; j++) {
             if (tabuleiro[i][j] == 0) {
                 fprintf(f, "_"); // Representa espaços vazios com "_"
             } else {
-                fprintf(f, "%d", tabuleiro[i][j]);
+                fprintf(f, "%d", tabuleiro[i][j]); //coloca numeros no ficheiro_jogos
             }
         }
 
     }
+    escrever_log("O Servidor guardou o tabuleiro");
     fprintf(f,"\n");
     fclose(f); // Fecha o ficheiro
+
+
+
 }
 
-// Função para gravar a solução num ficheiro
-void gravar_solucao(int tabuleiro[TAMANHO][TAMANHO]) {
-    FILE *ficheiro = fopen("./solucoes.txt", "a");
+// Função para gravar a solução no ficheiro solucoes.txt
+void gravar_solucao(int tabuleiro[TAMANHO][TAMANHO], const char *nome_ficheiro_solucoes) {
+    FILE *ficheiro = fopen(nome_ficheiro_solucoes, "a");
       time_t mytime = time(NULL);
     char *timestamp = ctime(&mytime);
     timestamp[strlen(timestamp) - 1] = 0; // Remove a nova linha do timestamp
@@ -67,11 +90,7 @@ void gravar_solucao(int tabuleiro[TAMANHO][TAMANHO]) {
         printf("Erro ao abrir o ficheiro!\n");
         return;
     }
-                    FILE *fe = fopen("log.txt", "a");
-            if (fe != NULL) {
-                fprintf(fe, "Jogador pediu a solucao. Até à próxima!(%s).\n", timestamp);
-                fclose(fe);
-            }
+    escrever_log("O Servidor guardou a solucao");
     
 
     // Escrever a solução no ficheiro numa linha única
@@ -86,18 +105,11 @@ void gravar_solucao(int tabuleiro[TAMANHO][TAMANHO]) {
 
 // Função para printar o tabuleiro e salvar no ficheiro log.txt
 void imprimir_tabuleiro(int tabuleiro[TAMANHO][TAMANHO]) {
-    FILE *fe = fopen("log.txt", "a"); // abre o ficheiro "log.txt" para acrescentar
+    
     time_t mytime = time(NULL);
     char *timestamp = ctime(&mytime);
     timestamp[strlen(timestamp) - 1] = 0; // Remove a nova linha do timestamp
-
-    if (fe == NULL) {
-        printf("Erro ao abrir o ficheiro log.txt\n");
-        return;
-    }
-
-    fprintf(fe, "Mostrou o Tabuleiro Sudoku  (%s).\n", timestamp);
-    fclose(fe);
+    escrever_log("O Servidor mostrou o tabuleiro ao cliente");
 
     for (int i = 0; i < TAMANHO; i++) {
         for (int j = 0; j < TAMANHO; j++) {
@@ -179,7 +191,6 @@ int resolver_sudoku(int tabuleiro[TAMANHO][TAMANHO], int linha, int col) {
             tabuleiro[linha][col] = 0; // Remove o número se não levar a uma solução
         }
     }
-
     return 0; // Retorna 0 se não for possível resolver o Sudoku
 }
 
@@ -214,7 +225,8 @@ void gerar_sudoku(int tabuleiro[TAMANHO][TAMANHO], int dificuldade) {
             num_removidos--;
         }
     }
-
+   
+    escrever_log("O Servidor gera o Soduku");
 }
 
 void mudarLinhas(int tabuleiro[TAMANHO][TAMANHO], int fila1, int fila2) {
@@ -261,11 +273,12 @@ int verificar_vitoria(int tabuleiro[TAMANHO][TAMANHO]) {
             }
         }
     }
+    escrever_log("O Servidor verifica se ganhou");
     return 1;
 }
 
 
-void Menu(int tabuleiro[TAMANHO][TAMANHO], const char *nome_ficheiro) {
+void Menu(int tabuleiro[TAMANHO][TAMANHO], const char *nome_ficheiro,const char *nome_ficheiro_solucoes) {
     int dificuldade;
     printf("Escolha o nível de dificuldade (1 = Fácil, 2 = Médio, 3 = Difícil): ");
     scanf("%d", &dificuldade);
@@ -300,25 +313,27 @@ void Menu(int tabuleiro[TAMANHO][TAMANHO], const char *nome_ficheiro) {
 
         switch (opcao) {
             case 1:
+                escrever_log("Cliente clicou na opcao 1 do menu");
                 jogar_sudoku(tabuleiro);
                 break;
             case 2:
+                escrever_log("Cliente clicou na opcao 2 do menu");
                 resolver_sudoku(tabuleiro, 0, 0);
-                gravar_solucao(tabuleiro); // Corrigido: gravar solução com o tabuleiro
+                gravar_solucao(tabuleiro, nome_ficheiro_solucoes); // Corrigido: gravar solução com o tabuleiro
                 imprimir_tabuleiro(tabuleiro);
+                escrever_log("Cliente saiu do Sodoku");
                 return;
                 break;
             case 3:
-            
+                /*
+                */ escrever_log("Cliente clicou na opcao 3 do menu");
                 printf("Desistiu do jogo. A sair...\n");
-                FILE *fe = fopen("log.txt", "a");
-            if (fe != NULL) {
-                fprintf(fe, "Jogador desistiu. Até à próxima!(%s).\n", timestamp);
-                fclose(fe);
-            }
+                printf("Até a proxima.");
+                escrever_log("Jogador desistiu do Sodoku");
                 return; 
             default:
                 printf("Opção inválida! Tente novamente.\n");
+                escrever_log("O Jogador selecionou uma opcao invalida no Menu");
                 break;
         }
     }
@@ -344,7 +359,7 @@ int main(int argc, char *argv[]) {
 
     srand(time(NULL)); // Inicializa a semente para números aleatórios
 
-    Menu(tabuleiro, ficheiro_jogos); 
+    Menu(tabuleiro, ficheiro_jogos, ficheiro_solucoes); 
 
     return 0;
 }
