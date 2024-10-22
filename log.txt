@@ -34,3 +34,9 @@ Tue Oct 22 13:51:06 2024 | Cliente clicou na opcao 2 do menu.
 Tue Oct 22 13:51:06 2024 | O Servidor guardou a solucao.
 Tue Oct 22 13:51:06 2024 | O Servidor mostrou o tabuleiro ao cliente.
 Tue Oct 22 13:51:06 2024 | Cliente saiu do Sodoku.
+Tue Oct 22 18:06:58 2024 | Inicio do servidor: Configuração lida com sucesso.
+Tue Oct 22 18:07:11 2024 | O Servidor gera o Soduku.
+Tue Oct 22 18:07:11 2024 | O Servidor guardou o tabuleiro.
+Tue Oct 22 18:07:11 2024 | O Servidor mostrou o tabuleiro ao cliente.
+Tue Oct 22 18:07:14 2024 | Cliente clicou na opcao 3 do menu.
+Tue Oct 22 18:07:14 2024 | Jogador desistiu do Sodoku.
