@@ -1,23 +1,10 @@
-Tabuleiro de Sudoku em andamento (Fri Oct 18 18:56:05 2024).
-Cliente inseriu no Soduku!(Fri Oct 18 18:56:05 2024)
-Tabuleiro de Sudoku em andamento (Fri Oct 18 18:56:15 2024).
-Jogo terminado. Até à próxima!(Fri Oct 18 18:56:15 2024).
-Tabuleiro de Sudoku em andamento (Fri Oct 18 19:21:15 2024).
-Movimento inválido!(Fri Oct 18 19:21:15 2024)
-Tabuleiro de Sudoku em andamento (Fri Oct 18 19:21:24 2024).
-Cliente inseriu no Soduku!(Fri Oct 18 19:21:24 2024)
-Tabuleiro de Sudoku em andamento (Fri Oct 18 19:21:48 2024).
-Jogo terminado. Até à próxima!(Fri Oct 18 19:21:48 2024).
-Tabuleiro de Sudoku em andamento (Fri Oct 18 19:23:38 2024).
-Tabuleiro de Sudoku em andamento (Fri Oct 18 19:23:59 2024).
-Tabuleiro de Sudoku em andamento (Fri Oct 18 19:24:08 2024).
-Tabuleiro de Sudoku em andamento (Fri Oct 18 19:25:49 2024).
-Tabuleiro de Sudoku em andamento (Fri Oct 18 19:25:52 2024).
-Tabuleiro de Sudoku em andamento (Fri Oct 18 19:26:12 2024).
-Tabuleiro de Sudoku em andamento (Fri Oct 18 19:26:15 2024).
-Movimento inválido!(Fri Oct 18 19:26:15 2024)
-Tabuleiro de Sudoku em andamento (Fri Oct 18 19:26:18 2024).
-Jogo terminado. Até à próxima!(Fri Oct 18 19:26:18 2024).
-Tabuleiro de Sudoku em andamento (Fri Oct 18 19:26:23 2024).
-Tabuleiro de Sudoku em andamento (Fri Oct 18 19:28:48 2024).
-Jogo terminado. Até à próxima!(Fri Oct 18 19:28:48 2024).
+Mostrou o Tabuleiro Sudoku  (Mon Oct 21 16:16:33 2024).
+Jogador pediu a solucao. Até à próxima!(Mon Oct 21 16:16:44 2024).
+Mostrou o Tabuleiro Sudoku  (Mon Oct 21 16:16:44 2024).
+Mostrou o Tabuleiro Sudoku  (Mon Oct 21 16:17:14 2024).
+Mostrou o Tabuleiro Sudoku  (Mon Oct 21 16:17:20 2024).
+Jogador desistiu. Até à próxima!(Mon Oct 21 16:17:20 2024).
+Mostrou o Tabuleiro Sudoku  (Tue Oct 22 11:56:11 2024).
+Mostrou o Tabuleiro Sudoku  (Tue Oct 22 12:27:25 2024).
+Jogador pediu a solucao. Até à próxima!(Tue Oct 22 12:27:31 2024).
+Mostrou o Tabuleiro Sudoku  (Tue Oct 22 12:27:31 2024).

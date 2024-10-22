@@ -1,8 +1,8 @@
 #include "header.h"
 #define TAMANHO 9
 
-
-void ler_configuracao(char *config_path, char *ficheiro_jogos, char *ficheiro_solucoes) {
+// Função para, atraves da config.txt definir os caminhos dos ficheiros de jogos e de soluções
+void ler_configuracao(char *config_path, char *ficheiro_jogos, char *ficheiro_solucoes) {//recebe o caminho do ficheiro de configuração
     FILE *config = fopen(config_path, "r");
     if (config == NULL) {
         printf("Erro ao abrir o ficheiro de configuração.\n");
@@ -10,74 +10,177 @@ void ler_configuracao(char *config_path, char *ficheiro_jogos, char *ficheiro_so
     }
 
     char linha[256];
-    while (fgets(linha, sizeof(linha), config)) {
-        char *token = strtok(linha, "=");
-        if (strcmp(token, "ficheiro_jogos") == 0) {
-            token = strtok(NULL, "\n");
-            strcpy(ficheiro_jogos, token);
-        } else if (strcmp(token, "ficheiro_solucoes") == 0) {
-            token = strtok(NULL, "\n");
-            strcpy(ficheiro_solucoes, token);
-        }
+    while (fgets(linha, sizeof(linha), config)) { 
+        // Divide a linha pelo caractere '='
+        char *token = strtok(linha, "=");  
+    
+        // Verifica se o token é "ficheiro_jogos"
+        if (strcmp(token, "ficheiro_jogos") == 0) {  
+            // Pega o próximo token (após o '=') que é o \n
+            token = strtok(NULL, "\n");  
+            // Copia o valor do token para a variável ficheiro_jogos
+            strcpy(ficheiro_jogos, token);  
+        } 
+        // Verifica se o token é "ficheiro_solucoes"
+        else if (strcmp(token, "ficheiro_solucoes") == 0) {  
+            // Pega o próximo token (após o '=')
+            token = strtok(NULL, "\n");  
+            // Copia o valor do token para a variável ficheiro_solucoes
+            strcpy(ficheiro_solucoes, token);  
+        } 
+    } 
+
+    // Fecha o ficheiro de configuração após a leitura
+    fclose(config);  
+
+}
+
+void salvar_tabuleiro(const char *nome_ficheiro, int tabuleiro[TAMANHO][TAMANHO]) {
+    FILE *f = fopen(nome_ficheiro, "a"); // Abre o ficheiro para acrescentar
+    if (f == NULL) {
+        printf("Erro ao abrir o ficheiro %s para escrita.\n", nome_ficheiro);
+        return;
     }
 
-    fclose(config);
+    // Grava o tabuleiro no ficheiro
+    for (int i = 0; i < TAMANHO; i++) {
+        for (int j = 0; j < TAMANHO; j++) {
+            if (tabuleiro[i][j] == 0) {
+                fprintf(f, "_"); // Representa espaços vazios com "_"
+            } else {
+                fprintf(f, "%d", tabuleiro[i][j]);
+            }
+        }
+
+    }
+    fprintf(f,"\n");
+    fclose(f); // Fecha o ficheiro
+}
+
+// Função para gravar a solução num ficheiro
+void gravar_solucao(int tabuleiro[TAMANHO][TAMANHO]) {
+    FILE *ficheiro = fopen("./solucoes.txt", "a");
+      time_t mytime = time(NULL);
+    char *timestamp = ctime(&mytime);
+    timestamp[strlen(timestamp) - 1] = 0; // Remove a nova linha do timestamp
+    if (ficheiro == NULL) {
+        printf("Erro ao abrir o ficheiro!\n");
+        return;
+    }
+                    FILE *fe = fopen("log.txt", "a");
+            if (fe != NULL) {
+                fprintf(fe, "Jogador pediu a solucao. Até à próxima!(%s).\n", timestamp);
+                fclose(fe);
+            }
+    
+
+    // Escrever a solução no ficheiro numa linha única
+    for (int i = 0; i < TAMANHO; i++) {
+        for (int j = 0; j < TAMANHO; j++) {
+            fprintf(ficheiro, "%d", tabuleiro[i][j]);
+        }
+    }
+    fprintf(ficheiro, "\n");
+    fclose(ficheiro);
+}
+
+// Função para printar o tabuleiro e salvar no ficheiro log.txt
+void imprimir_tabuleiro(int tabuleiro[TAMANHO][TAMANHO]) {
+    FILE *fe = fopen("log.txt", "a"); // abre o ficheiro "log.txt" para acrescentar
+    time_t mytime = time(NULL);
+    char *timestamp = ctime(&mytime);
+    timestamp[strlen(timestamp) - 1] = 0; // Remove a nova linha do timestamp
+
+    if (fe == NULL) {
+        printf("Erro ao abrir o ficheiro log.txt\n");
+        return;
+    }
+
+    fprintf(fe, "Mostrou o Tabuleiro Sudoku  (%s).\n", timestamp);
+    fclose(fe);
+
+    for (int i = 0; i < TAMANHO; i++) {
+        for (int j = 0; j < TAMANHO; j++) {
+            if (j == 3 || j == 6) {
+                printf(" | ");
+            }
+            if (tabuleiro[i][j] == 0) {
+                printf(" _ ");
+            } else {
+                printf("%d ", tabuleiro[i][j]);
+            }
+        }
+        printf("\n");
+        if (i == 2 || i == 5) {
+            printf("-------------------------\n");
+        }
+    }
+    printf("\n");
+    
 }
 
 // Função para verificar se é seguro colocar um número no tabuleiro
 int pode_colocar(int tabuleiro[TAMANHO][TAMANHO], int linha, int col, int num) {
+
+    // Verifica se o número já existe na linha
     for (int x = 0; x < TAMANHO; x++) {
         if (tabuleiro[linha][x] == num) {
-            return 0;
+            return 0; // Se o número já existir na linha, retorna 0 (não é seguro)
         }
     }
 
-    // coluna
+    // Verifica se o número já existe na coluna
     for (int x = 0; x < TAMANHO; x++) {
         if (tabuleiro[x][col] == num) {
-            return 0;
+            return 0; // Se o número já existir na coluna, retorna 0 (não é seguro)
         }
     }
 
-    // subgrade 3x3
-    int startLinha = linha - linha % 3;
-    int startCol = col - col % 3;
+    // Verifica se o número já existe na subgrade 3x3
+    int startLinha = linha - linha % 3; // Calcula o início da linha da subgrade 3x3
+    int startCol = col - col % 3; // Calcula o início da coluna da subgrade 3x3
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
             if (tabuleiro[i + startLinha][j + startCol] == num) {
-                return 0;
+                return 0; // Se o número já existir na subgrade 3x3, retorna 0 (não é seguro)
             }
         }
     }
-    return 1;
+    return 1; // Se o número não existir na linha, coluna ou subgrade 3x3, retorna 1 (é seguro)
 }
 
-// para resolver só chamar a funçao
+// funçao para resolver o sudoku
 int resolver_sudoku(int tabuleiro[TAMANHO][TAMANHO], int linha, int col) {
+    // Verifica se chegou ao final do tabuleiro ao estares completado todas as linhas e colunas
     if (linha == TAMANHO - 1 && col == TAMANHO) {
-        return 1;
+        return 1; // Sudoku resolvido
     }
 
+    // Move para a próxima linha se a coluna atual for igual ao tamanho do tabuleiro
     if (col == TAMANHO) {
         linha++;
         col = 0;
     }
 
+    // Se a célula atual já estiver preenchida, move para a próxima coluna
     if (tabuleiro[linha][col] != 0) {
         return resolver_sudoku(tabuleiro, linha, col + 1);
     }
 
+    // Tenta preencher a célula atual com números de 1 a 9
     for (int num = 1; num <= 9; num++) {
+        // Verifica se é seguro colocar o número na célula atual
         if (pode_colocar(tabuleiro, linha, col, num)) {
-            tabuleiro[linha][col] = num;
+            tabuleiro[linha][col] = num; // Coloca o número na célula
+            // Continua para a próxima célula
             if (resolver_sudoku(tabuleiro, linha, col + 1)) {
-                return 1;
+                return 1; // Sudoku resolvido
             }
-            tabuleiro[linha][col] = 0;
+            tabuleiro[linha][col] = 0; // Remove o número se não levar a uma solução
         }
     }
 
-    return 0;
+    return 0; // Retorna 0 se não for possível resolver o Sudoku
 }
 
 // Função para gerar um tabuleiro de Sudoku parcialmente preenchido
@@ -102,7 +205,7 @@ void gerar_sudoku(int tabuleiro[TAMANHO][TAMANHO], int dificuldade) {
         num_removidos = 50; //Difícil
     }
 
-    // Remover os números do tabuleiro
+    // Remover os números do tabuleiro para criar um tabuleiro parcialmente preenchido
     while (num_removidos > 0) {
         int linha = rand() % TAMANHO;
         int col = rand() % TAMANHO;
@@ -113,7 +216,10 @@ void gerar_sudoku(int tabuleiro[TAMANHO][TAMANHO], int dificuldade) {
     }
 
 }
+
 void mudarLinhas(int tabuleiro[TAMANHO][TAMANHO], int fila1, int fila2) {
+    //troca uma linha por outra
+
     for (int j = 0; j < TAMANHO; j++) {
         int temp = tabuleiro[fila1][j];
         tabuleiro[fila1][j] = tabuleiro[fila2][j];
@@ -122,6 +228,7 @@ void mudarLinhas(int tabuleiro[TAMANHO][TAMANHO], int fila1, int fila2) {
 }
 
 void mudarColunas(int tabuleiro[TAMANHO][TAMANHO], int col1, int col2) {
+    //troca uma coluna por outra
     for (int i = 0; i < TAMANHO; i++) {
         int temp = tabuleiro[i][col1];
         tabuleiro[i][col1] = tabuleiro[i][col2];
@@ -130,93 +237,20 @@ void mudarColunas(int tabuleiro[TAMANHO][TAMANHO], int col1, int col2) {
 }
 void misturarSudoku(int tabuleiro[TAMANHO][TAMANHO]) {
     for (int i = 0; i < 3; i++) {
-        // Intercambiar filas dentro de cada subcuadrícula de 3x3
-        int fila1 = i * 3 + rand() % 3;
-        int fila2 = i * 3 + rand() % 3;
-        mudarLinhas(tabuleiro, fila1, fila2);
+        // trocar filas dentro de cada subgrade de 3x3
+        int fila1 = i * 3 + rand() % 3; // Seleciona uma linha aleatória dentro da subgrade
+        int fila2 = i * 3 + rand() % 3; // Seleciona outra linha aleatória dentro da subgrade
+        mudarLinhas(tabuleiro, fila1, fila2); // Troca as duas linhas selecionadas
 
-        // Intercambiar columnas dentro de cada subcuadrícula de 3x3
-        int col1 = i * 3 + rand() % 3;
-        int col2 = i * 3 + rand() % 3;
-        mudarColunas(tabuleiro, col1, col2);
+        // trocar colunas dentro de cada subgrade de 3x3
+        int col1 = i * 3 + rand() % 3; // Seleciona uma coluna aleatória dentro da subgrade
+        int col2 = i * 3 + rand() % 3; // Seleciona outra coluna aleatória dentro da subgrade
+        mudarColunas(tabuleiro, col1, col2); // Troca as duas colunas selecionadas
     }
 }
 
 
-void salvar_tabuleiro(const char *nome_ficheiro, int tabuleiro[TAMANHO][TAMANHO]) {
-    FILE *f = fopen(nome_ficheiro, "a"); // Abre o ficheiro para acrescentar
-    if (f == NULL) {
-        printf("Erro ao abrir o ficheiro %s para escrita.\n", nome_ficheiro);
-        return;
-    }
 
-    // Grava o tabuleiro no ficheiro
-    for (int i = 0; i < TAMANHO; i++) {
-        for (int j = 0; j < TAMANHO; j++) {
-            if (tabuleiro[i][j] == 0) {
-                fprintf(f, "_"); // Representa espaços vazios com "_"
-            } else {
-                fprintf(f, "%d", tabuleiro[i][j]);
-            }
-        }
-
-    }
-    fprintf(f,"\n");
-    fclose(f); // Fecha o ficheiro
-}
-
-void salvar_solucao(const char *nome_ficheiro, int tabuleiro[TAMANHO][TAMANHO]) {
-    FILE *f = fopen(nome_ficheiro, "a"); // Abre o ficheiro para acrescentar
-    if (f == NULL) {
-        printf("Erro ao abrir o ficheiro %s para escrita.\n", nome_ficheiro);
-        return;
-    }else{
-
-    // Grava o tabuleiro no ficheiro
-    for (int i = 0; i < TAMANHO; i++) {
-        for (int j = 0; j < TAMANHO; j++) {
-
-                fprintf(f, "%d", tabuleiro[i][j]);
-        }
-    }
-    fprintf(f,"\n");
-    fclose(f); // Fecha o ficheiro
-    }
-}
-// Função para printar o tabuleiro e salvar no ficheiro log.txt
-void imprimir_tabuleiro(int tabuleiro[TAMANHO][TAMANHO]) {
-    FILE *fe = fopen("log.txt", "a"); // abre o ficheiro "log.txt" para acrescentar
-    time_t mytime = time(NULL);
-    char *timestamp = ctime(&mytime);
-    timestamp[strlen(timestamp) - 1] = 0; // Remove a nova linha do timestamp
-
-    if (fe == NULL) {
-        printf("Erro ao abrir o ficheiro log.txt\n");
-        return;
-    }
-
-    fprintf(fe, "Tabuleiro de Sudoku em andamento (%s).\n", timestamp);
-    fclose(fe);
-
-    for (int i = 0; i < TAMANHO; i++) {
-        for (int j = 0; j < TAMANHO; j++) {
-            if (j == 3 || j == 6) {
-                printf(" | ");
-            }
-            if (tabuleiro[i][j] == 0) {
-                printf(" _ ");
-            } else {
-                printf("%d ", tabuleiro[i][j]);
-            }
-        }
-        printf("\n");
-        if (i == 2 || i == 5) {
-            printf("-------------------------\n");
-        }
-    }
-    printf("\n");
-    
-}
 
 // Função para verificar se o Sudoku está completo e válido
 int verificar_vitoria(int tabuleiro[TAMANHO][TAMANHO]) {
@@ -229,26 +263,10 @@ int verificar_vitoria(int tabuleiro[TAMANHO][TAMANHO]) {
     }
     return 1;
 }
-// Função para gravar a solução num ficheiro
-void gravar_solucao(int tabuleiro[TAMANHO][TAMANHO]) {
-    FILE *ficheiro = fopen("./solucoes.txt", "a");
-    if (ficheiro == NULL) {
-        printf("Erro ao abrir o ficheiro!\n");
-        return;
-    }
 
-    // Escrever a solução no ficheiro numa linha única
-    for (int i = 0; i < TAMANHO; i++) {
-        for (int j = 0; j < TAMANHO; j++) {
-            fprintf(ficheiro, "%d", tabuleiro[i][j]);
-        }
-    }
-    fprintf(ficheiro, "\n");
-    fclose(ficheiro);
-}
 
 void Menu(int tabuleiro[TAMANHO][TAMANHO], const char *nome_ficheiro) {
-int dificuldade;
+    int dificuldade;
     printf("Escolha o nível de dificuldade (1 = Fácil, 2 = Médio, 3 = Difícil): ");
     scanf("%d", &dificuldade);
     while (getchar() != '\n'); // Limpar o buffer de entrada
@@ -308,7 +326,7 @@ int dificuldade;
 
 int main(int argc, char *argv[]) {
     if (argc < 2) {
-        printf("Uso: %s <ficheiro de configuração>\n", argv[0]);
+        printf("Uso: %s <ficheiro de configuração>\n", argv[0]);//1 argumento passado na linha de comando
         return 1;
     }
 
@@ -316,8 +334,8 @@ int main(int argc, char *argv[]) {
     char ficheiro_solucoes[256];
 
     // Ler configuração
-    ler_configuracao(argv[1], ficheiro_jogos, ficheiro_solucoes);
-
+    ler_configuracao(argv[1], ficheiro_jogos, ficheiro_solucoes); //2argumento passado na linha de comando
+    //devolvendo o caminho dos ficheiros no sistema de configuração
     printf("Ficheiro de jogos: %s\n", ficheiro_jogos);
     printf("Ficheiro de soluções: %s\n", ficheiro_solucoes);
 
@@ -326,7 +344,7 @@ int main(int argc, char *argv[]) {
 
     srand(time(NULL)); // Inicializa a semente para números aleatórios
 
-    Menu(tabuleiro, ficheiro_jogos);
+    Menu(tabuleiro, ficheiro_jogos); 
 
     return 0;
 }

@@ -8,6 +8,7 @@ void jogar_sudoku(int tabuleiro[TAMANHO][TAMANHO]) {
     char buffer[20];
     int erros = 0;
 
+
     while (1) {
         FILE *fe = fopen("log.txt", "a");
         time_t mytime = time(NULL);
