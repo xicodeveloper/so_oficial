@@ -304,9 +304,9 @@ void Menu(int tabuleiro[TAMANHO][TAMANHO], const char *nome_ficheiro,const char 
 
         printf("----------Menu----------\n");
         printf("1. Inserir.\n");
-        printf("2. Revelar Solução.\n");
-        printf("3. Desistir.\n");
-        printf("4. Cliente resolve de imediato.\n");
+        printf("2. O Servidor revela a Solução.\n");
+        printf("3. O Cliente resolve a Solução.\n");
+        printf("4. Desistir.\n");
         printf("------------------------\n");
         printf("Selecione o que deseja: ");
         scanf("%d", &opcao);
@@ -326,17 +326,17 @@ void Menu(int tabuleiro[TAMANHO][TAMANHO], const char *nome_ficheiro,const char 
                 return;
                 break;
             case 3:
-                /*
+                resolver(tabuleiro);
+                imprimir_tabuleiro_cliente(tabuleiro);
+                gravar_solucao(tabuleiro, nome_ficheiro_solucoes);
+                return; 
+                break;
+            case 4:
+ /*
                 */ escrever_log("Cliente clicou na opcao 3 do menu");
                 printf("Desistiu do jogo. A sair...\n");
                 printf("Até a proxima.");
                 escrever_log("Jogador desistiu do Sodoku");
-                return; 
-                break;
-            case 4:
-
-                    resolver(tabuleiro);
-                 imprimir_tabuleiro_cliente(tabuleiro);
                     return;
                     break;
             default:

@@ -1,6 +1,20 @@
 #include "header.h"
 #define TAMANHO 9
 
+void escrever_log_cliente(const char *mensagem) {
+    FILE *f = fopen("log.txt", "a");
+    if (f == NULL) {
+        printf("Erro ao abrir o ficheiro log.txt\n");
+        return;
+    }
+
+    time_t mytime = time(NULL);
+    char *timestamp = ctime(&mytime);
+    timestamp[strlen(timestamp) - 1] = 0; // Remove a nova linha do timestamp
+
+    fprintf(f, "%s | %s.\n", timestamp, mensagem);
+    fclose(f);
+}
 
 // Função de jogo
 void jogar_sudoku(int tabuleiro[TAMANHO][TAMANHO]) {
@@ -19,7 +33,7 @@ void jogar_sudoku(int tabuleiro[TAMANHO][TAMANHO]) {
         // Verificar vitória
         if (verificar_vitoria(tabuleiro)) {
             printf("Parabéns! Completou o Sudoku corretamente!\n");
-            escrever_log("Jogador concluiu o jogo");
+            escrever_log_cliente("Cliente conclui o Sudoku corretamente");
             break;
         }
 
@@ -32,20 +46,23 @@ void jogar_sudoku(int tabuleiro[TAMANHO][TAMANHO]) {
             // Verificar os tres números foram lidos
             if (result != 3) {
                 printf("Erro se esperava 3 inteiros.\n");
-                escrever_log("Cliente inseriu mal as colunas/linhas/número");
+                escrever_log_cliente("  O Cliente inseriu mal as colunas/linhas/número");
                 continue; // Pedir input novamente
             }
 
         
         } else {
-              escrever_log("Erro a ler a entrada");
+            escrever_log_cliente("Erro a ler a entrada");
+
+              
             continue; // Pedir input novamente
         }
             
 
         if (linha == 0 && col == 0 && num == 0) {
             printf("Jogo terminado. Até à próxima!\n");
-          escrever_log("O jogador terminou");
+          escrever_log_cliente("O Cliente terminou");
+          
             break;
         }
 
@@ -54,17 +71,17 @@ void jogar_sudoku(int tabuleiro[TAMANHO][TAMANHO]) {
 
         // Verifica se a posição está vazia e o número é válido
         if (tabuleiro[linha][col] == 0 && pode_colocar(tabuleiro, linha, col, num)) {
-             escrever_log("Cliente inseriu no Soduku!");
+             escrever_log_cliente("O Cliente inseriu no Soduku!");
             printf("Cliente inseriu no Soduku!\n");
             
             tabuleiro[linha][col] = num;
         } else {
-           escrever_log("Movimento invalido");
+           escrever_log_cliente("Movimento invalido");
             printf("Movimento inválido!\n");
             erros++;
             if (erros >= 3) {
                 printf("Perdeu o jogo. Excedeu as 3 tentativas.\n");
-               escrever_log("O Cliente perdeu o jogo");
+               escrever_log_cliente("O Cliente perdeu o jogo");
                 break;
             }
         }
@@ -101,7 +118,7 @@ bool findEmptyCell(int tabuleiro[TAMANHO][TAMANHO], int *row, int *col) {
     }
     return false; // Não há células vazias, o tabuleiro está preenchido
 }
-
+ 
 // Função para resolver o Sudoku utilizando backtracking
 bool resolver(int tabuleiro[TAMANHO][TAMANHO]) {
     int row, col;
@@ -154,4 +171,5 @@ void imprimir_tabuleiro_cliente(int tabuleiro[TAMANHO][TAMANHO]) {
         }
     }
     printf("---------------\n");
+    escrever_log_cliente("O Cliente chegou a solucao");
 }

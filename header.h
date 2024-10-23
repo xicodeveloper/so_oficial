@@ -31,5 +31,6 @@ void escrever_log(const char *mensagem);
 
 bool resolver(int tabuleiro[TAMANHO][TAMANHO]);
 void imprimir_tabuleiro_cliente(int tabuleiro[TAMANHO][TAMANHO]);
+void escrever_log_cliente(const char *mensagem);
 //void connect_server();
 #endif
