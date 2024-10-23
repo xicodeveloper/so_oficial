@@ -3,6 +3,7 @@
 #define HEADER_H
 #include <string.h>
 #include <stdio.h>
+#include <stdbool.h>  
 #include <stdlib.h>
 #include <time.h>
 #include <sys/socket.h>
@@ -27,5 +28,8 @@ int verificar_vitoria(int tabuleiro[TAMANHO][TAMANHO]);
 int pode_colocar(int tabuleiro[TAMANHO][TAMANHO], int linha, int col, int num);
 void gravar_solucao(int tabuleiro[TAMANHO][TAMANHO], const char *nome_ficheiro_solucoes);
 void escrever_log(const char *mensagem);
+
+bool resolver(int tabuleiro[TAMANHO][TAMANHO]);
+void imprimir_tabuleiro_cliente(int tabuleiro[TAMANHO][TAMANHO]);
 //void connect_server();
 #endif

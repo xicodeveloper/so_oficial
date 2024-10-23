@@ -40,3 +40,27 @@ Tue Oct 22 18:07:11 2024 | O Servidor guardou o tabuleiro.
 Tue Oct 22 18:07:11 2024 | O Servidor mostrou o tabuleiro ao cliente.
 Tue Oct 22 18:07:14 2024 | Cliente clicou na opcao 3 do menu.
 Tue Oct 22 18:07:14 2024 | Jogador desistiu do Sodoku.
+Tue Oct 22 18:10:28 2024 | Inicio do servidor: Configuração lida com sucesso.
+Tue Oct 22 18:10:34 2024 | O Servidor gera o Soduku.
+Tue Oct 22 18:10:34 2024 | O Servidor guardou o tabuleiro.
+Tue Oct 22 18:10:34 2024 | O Servidor mostrou o tabuleiro ao cliente.
+Tue Oct 22 18:10:35 2024 | Cliente clicou na opcao 1 do menu.
+Tue Oct 22 18:10:35 2024 | O Servidor mostrou o tabuleiro ao cliente.
+Tue Oct 22 18:10:36 2024 | Cliente inseriu mal as colunas/linhas/número.
+Tue Oct 22 18:10:36 2024 | O Servidor mostrou o tabuleiro ao cliente.
+Tue Oct 22 18:10:40 2024 | Cliente inseriu no Soduku!.
+Tue Oct 22 18:10:40 2024 | O Servidor mostrou o tabuleiro ao cliente.
+Tue Oct 22 18:10:46 2024 | O jogador terminou.
+Tue Oct 22 18:10:46 2024 | O Servidor mostrou o tabuleiro ao cliente.
+Wed Oct 23 12:41:59 2024 | Inicio do servidor: Configuração lida com sucesso.
+Wed Oct 23 12:42:02 2024 | O Servidor gera o Soduku.
+Wed Oct 23 12:42:02 2024 | O Servidor guardou o tabuleiro.
+Wed Oct 23 12:42:02 2024 | O Servidor mostrou o tabuleiro ao cliente.
+Wed Oct 23 13:21:26 2024 | Inicio do servidor: Configuração lida com sucesso.
+Wed Oct 23 13:21:28 2024 | O Servidor gera o Soduku.
+Wed Oct 23 13:21:28 2024 | O Servidor guardou o tabuleiro.
+Wed Oct 23 13:21:28 2024 | O Servidor mostrou o tabuleiro ao cliente.
+Wed Oct 23 13:51:52 2024 | Inicio do servidor: Configuração lida com sucesso.
+Wed Oct 23 13:51:55 2024 | O Servidor gera o Soduku.
+Wed Oct 23 13:51:55 2024 | O Servidor guardou o tabuleiro.
+Wed Oct 23 13:51:55 2024 | O Servidor mostrou o tabuleiro ao cliente.

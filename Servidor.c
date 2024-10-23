@@ -306,6 +306,7 @@ void Menu(int tabuleiro[TAMANHO][TAMANHO], const char *nome_ficheiro,const char 
         printf("1. Inserir.\n");
         printf("2. Revelar Solução.\n");
         printf("3. Desistir.\n");
+        printf("4. Cliente resolve de imediato.\n");
         printf("------------------------\n");
         printf("Selecione o que deseja: ");
         scanf("%d", &opcao);
@@ -331,6 +332,13 @@ void Menu(int tabuleiro[TAMANHO][TAMANHO], const char *nome_ficheiro,const char 
                 printf("Até a proxima.");
                 escrever_log("Jogador desistiu do Sodoku");
                 return; 
+                break;
+            case 4:
+
+                    resolver(tabuleiro);
+                 imprimir_tabuleiro_cliente(tabuleiro);
+                    return;
+                    break;
             default:
                 printf("Opção inválida! Tente novamente.\n");
                 escrever_log("O Jogador selecionou uma opcao invalida no Menu");

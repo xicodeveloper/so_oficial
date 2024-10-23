@@ -70,3 +70,88 @@ void jogar_sudoku(int tabuleiro[TAMANHO][TAMANHO]) {
         }
     }
 }
+bool isValid(int tabuleiro[TAMANHO][TAMANHO], int row, int col, int num) {
+    // Verifica se o número já está na linha ou na coluna
+    for (int x = 0; x < TAMANHO; x++) {
+        if (tabuleiro[row][x] == num || tabuleiro[x][col] == num)
+            return false;
+    }
+
+    // Verifica se o número já está na subgrade 3x3
+    int startRow = row - row % 3;
+    int startCol = col - col % 3;
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            if (tabuleiro[i + startRow][j + startCol] == num)
+                return false;
+        }
+    }
+
+    return true;
+}
+
+// Função para encontrar uma célula vazia (com valor 0)
+bool findEmptyCell(int tabuleiro[TAMANHO][TAMANHO], int *row, int *col) {
+    for (*row = 0; *row < TAMANHO; (*row)++) {
+        for (*col = 0; *col < TAMANHO; (*col)++) {
+            if (tabuleiro[*row][*col] == 0) {
+                return true; // Encontrei uma célula vazia
+            }
+        }
+    }
+    return false; // Não há células vazias, o tabuleiro está preenchido
+}
+
+// Função para resolver o Sudoku utilizando backtracking
+bool resolver(int tabuleiro[TAMANHO][TAMANHO]) {
+    int row, col;
+
+    // Se não houver células vazias, o Sudoku está resolvido
+    if (!findEmptyCell(tabuleiro, &row, &col)) {
+        return true;
+    }
+
+    // Tenta números de 1 a 9
+    for (int num = 1; num <= 9; num++) {
+        if (isValid(tabuleiro, row, col, num)) {
+            // Coloca o número na célula
+            tabuleiro[row][col] = num;
+
+            // Recursivamente tenta resolver o resto do tabuleiro
+            if (resolver(tabuleiro)) {
+                return true;
+            }
+
+            // Se falhar, remove o número e tenta outro
+            tabuleiro[row][col] = 0;
+        }
+    }
+
+    // Se nenhum número puder ser colocado, retrocede (backtrack)
+    return false;
+}
+void imprimir_tabuleiro_cliente(int tabuleiro[TAMANHO][TAMANHO]) {
+    printf("---------------\n");
+    for (int i = 0; i < TAMANHO; i++) {
+        for (int j = 0; j < TAMANHO; j++) {
+            // Imprime o número se não for zero, caso contrário imprime um ponto
+            if (tabuleiro[i][j] == 0) {
+                printf("_ ");
+            } else {
+                printf("%d ", tabuleiro[i][j]);
+            }
+
+            // Adiciona uma linha vertical após cada 3 colunas
+            if ((j + 1) % 3 == 0 && j != TAMANHO - 1) {
+                printf("| ");
+            }
+        }
+        printf("\n");
+
+        // Adiciona uma linha horizontal após cada 3 linhas
+        if ((i + 1) % 3 == 0 && i != TAMANHO - 1) {
+            printf("---------------\n");
+        }
+    }
+    printf("---------------\n");
+}
