@@ -398,13 +398,14 @@ void Menu(int tabuleiro[TAMANHO][TAMANHO], const char *nome_ficheiro,const char 
                 return;
                 break;
             case 3:
+                escrever_log("Cliente clicou na opcao 3 do menu");
                 resolver(tabuleiro);
                 imprimir_tabuleiro_cliente(tabuleiro);
                 gravar_solucao(tabuleiro, nome_ficheiro_solucoes, idTabuleiro);
                 return; 
                 break;
             case 4:
-                escrever_log("Cliente clicou na opcao 3 do menu");
+                escrever_log("Cliente clicou na opcao 4 do menu");
                 printf("Desistiu do jogo. A sair...\n");
                 printf("Até a proxima.");
                 escrever_log("Jogador desistiu do Sodoku");
