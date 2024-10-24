@@ -30,3 +30,59 @@ Wed Oct 23 15:52:34 2024 | O Cliente terminou.
 Wed Oct 23 15:52:34 2024 | O Servidor mostrou o tabuleiro ao cliente.
 Wed Oct 23 15:52:44 2024 | O Cliente chegou a solucao.
 Wed Oct 23 15:52:44 2024 | O Servidor guardou a solucao.
+Thu Oct 24 13:47:29 2024 | Inicio do servidor: Configuração lida com sucesso.
+Thu Oct 24 13:47:30 2024 | O Servidor gera o Soduku.
+Thu Oct 24 13:47:30 2024 | O Servidor guardou o tabuleiro.
+Thu Oct 24 13:47:30 2024 | O Servidor mostrou o tabuleiro ao cliente.
+Thu Oct 24 13:47:43 2024 | Cliente clicou na opcao 1 do menu.
+Thu Oct 24 13:47:43 2024 | O Servidor mostrou o tabuleiro ao cliente.
+Thu Oct 24 13:47:46 2024 | O Cliente terminou.
+Thu Oct 24 13:47:46 2024 | O Servidor mostrou o tabuleiro ao cliente.
+Thu Oct 24 13:48:39 2024 | Cliente clicou na opcao 3 do menu.
+Thu Oct 24 13:48:39 2024 | Jogador desistiu do Sodoku.
+Thu Oct 24 15:10:03 2024 | Inicio do servidor: Configuração lida com sucesso.
+Thu Oct 24 15:10:04 2024 | O Servidor gera o Soduku.
+Thu Oct 24 15:10:04 2024 | O Servidor guardou o tabuleiro.
+Thu Oct 24 15:10:04 2024 | O Servidor mostrou o tabuleiro ao cliente.
+Thu Oct 24 15:12:15 2024 | Inicio do servidor: Configuração lida com sucesso.
+Thu Oct 24 15:12:16 2024 | O Servidor gera o Soduku.
+Thu Oct 24 15:12:16 2024 | O Servidor guardou o tabuleiro.
+Thu Oct 24 15:12:16 2024 | O Servidor mostrou o tabuleiro ao cliente.
+Thu Oct 24 15:12:51 2024 | Inicio do servidor: Configuração lida com sucesso.
+Thu Oct 24 15:12:55 2024 | O Servidor gera o Soduku.
+Thu Oct 24 15:12:55 2024 | O Servidor guardou o tabuleiro.
+Thu Oct 24 15:12:55 2024 | O Servidor mostrou o tabuleiro ao cliente.
+Thu Oct 24 15:14:23 2024 | Inicio do servidor: Configuração lida com sucesso.
+Thu Oct 24 15:14:24 2024 | O Servidor gera o Soduku.
+Thu Oct 24 15:14:24 2024 | O Servidor guardou o tabuleiro.
+Thu Oct 24 15:14:24 2024 | O Servidor mostrou o tabuleiro ao cliente.
+Thu Oct 24 15:15:07 2024 | Cliente clicou na opcao 2 do menu.
+Thu Oct 24 15:15:07 2024 | Solução lida com sucesso.
+Thu Oct 24 15:15:07 2024 | Cliente saiu do Sodoku.
+Thu Oct 24 15:16:04 2024 | Inicio do servidor: Configuração lida com sucesso.
+Thu Oct 24 15:16:05 2024 | O Servidor gera o Soduku.
+Thu Oct 24 15:16:05 2024 | O Servidor guardou o tabuleiro.
+Thu Oct 24 15:16:05 2024 | O Servidor guardou a solucao.
+Thu Oct 24 15:16:05 2024 | O Servidor mostrou o tabuleiro ao cliente.
+Thu Oct 24 15:18:39 2024 | Inicio do servidor: Configuração lida com sucesso.
+Thu Oct 24 15:18:40 2024 | O Servidor gera o Soduku.
+Thu Oct 24 15:18:40 2024 | O Servidor guardou o tabuleiro.
+Thu Oct 24 15:18:40 2024 | O Servidor guardou a solucao.
+Thu Oct 24 15:18:40 2024 | O Servidor mostrou o tabuleiro ao cliente.
+Thu Oct 24 15:22:01 2024 | Inicio do servidor: Configuração lida com sucesso.
+Thu Oct 24 15:22:19 2024 | O Servidor gera o Soduku.
+Thu Oct 24 15:22:19 2024 | O Servidor guardou o tabuleiro.
+Thu Oct 24 15:22:19 2024 | O Servidor guardou a solucao.
+Thu Oct 24 15:22:19 2024 | O Servidor mostrou o tabuleiro ao cliente.
+Thu Oct 24 15:22:41 2024 | Cliente clicou na opcao 2 do menu.
+Thu Oct 24 15:22:41 2024 | Solução lida com sucesso.
+Thu Oct 24 15:22:41 2024 | Cliente saiu do Sodoku.
+Thu Oct 24 15:23:35 2024 | Inicio do servidor: Configuração lida com sucesso.
+Thu Oct 24 15:23:36 2024 | O Servidor gera o Soduku.
+Thu Oct 24 15:23:36 2024 | O Servidor guardou o tabuleiro.
+Thu Oct 24 15:23:36 2024 | O Servidor guardou a solucao.
+Thu Oct 24 15:23:36 2024 | O Servidor mostrou o tabuleiro ao cliente.
+Thu Oct 24 15:23:45 2024 | Cliente clicou na opcao 2 do menu.
+Thu Oct 24 15:23:45 2024 | Solução lida com sucesso.
+Thu Oct 24 15:23:45 2024 | O Servidor mostrou o tabuleiro ao cliente.
+Thu Oct 24 15:23:45 2024 | Cliente saiu do Sodoku.

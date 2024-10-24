@@ -26,7 +26,7 @@ int resolver_sudoku(int tabuleiro[TAMANHO][TAMANHO], int linha, int col);
 void imprimir_tabuleiro(int tabuleiro[TAMANHO][TAMANHO]);
 int verificar_vitoria(int tabuleiro[TAMANHO][TAMANHO]);
 int pode_colocar(int tabuleiro[TAMANHO][TAMANHO], int linha, int col, int num);
-void gravar_solucao(int tabuleiro[TAMANHO][TAMANHO], const char *nome_ficheiro_solucoes);
+void gravar_solucao(int tabuleiro[TAMANHO][TAMANHO], const char *nome_ficheiro_solucoes, int idSudoku);
 void escrever_log(const char *mensagem);
 
 bool resolver(int tabuleiro[TAMANHO][TAMANHO]);

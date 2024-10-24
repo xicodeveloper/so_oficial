@@ -60,7 +60,7 @@ void jogar_sudoku(int tabuleiro[TAMANHO][TAMANHO]) {
             
 
         if (linha == 0 && col == 0 && num == 0) {
-            printf("Jogo terminado. Até à próxima!\n");
+            printf("Saindo.\n");
           escrever_log_cliente("O Cliente terminou");
           
             break;

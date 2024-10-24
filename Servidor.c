@@ -53,15 +53,34 @@ void ler_configuracao(char *config_path, char *ficheiro_jogos, char *ficheiro_so
     escrever_log("Inicio do servidor: Configuração lida com sucesso");
 
 }
-//permite guardar o tabuleiro no ficheiro jogos.txt
-void salvar_tabuleiro(const char *nome_ficheiro, int tabuleiro[TAMANHO][TAMANHO]) {
+
+int getNumSudokus(const char *nome_ficheiro) {
+    FILE *file = fopen(nome_ficheiro, "r");
+    if (file == NULL) {
+        printf("Erro ao abrir o ficheiro.\n");
+        return -1;
+    }
+
+    int num_sudokus = 0;
+    char linha[256];
+    while (fgets(linha, sizeof(linha), file)) { 
+        num_sudokus++;
+    } 
+    fclose(file);
+    return num_sudokus;
+}
+
+//permite guardar o tabuleiro no  ficheiro jogos.txt
+void salvar_tabuleiro(const char *nome_ficheiro, int tabuleiro[TAMANHO][TAMANHO], int id_Tabuleiro) {
     FILE *f = fopen(nome_ficheiro, "a"); // Abre o ficheiro para acrescentar
     if (f == NULL) {
         printf("Erro ao abrir o ficheiro %s para escrita.\n", nome_ficheiro);
         return;
     }
-
+        
     // Grava o tabuleiro no ficheiro
+    
+    fprintf(f, "%d,",id_Tabuleiro);
     for (int i = 0; i < TAMANHO; i++) {//percorre toda a matriz
         for (int j = 0; j < TAMANHO; j++) {
             if (tabuleiro[i][j] == 0) {
@@ -81,7 +100,7 @@ void salvar_tabuleiro(const char *nome_ficheiro, int tabuleiro[TAMANHO][TAMANHO]
 }
 
 // Função para gravar a solução no ficheiro solucoes.txt
-void gravar_solucao(int tabuleiro[TAMANHO][TAMANHO], const char *nome_ficheiro_solucoes) {
+void gravar_solucao(int tabuleiro[TAMANHO][TAMANHO], const char *nome_ficheiro_solucoes, int idTabuleiro) {
     FILE *ficheiro = fopen(nome_ficheiro_solucoes, "a");
       time_t mytime = time(NULL);
     char *timestamp = ctime(&mytime);
@@ -94,6 +113,7 @@ void gravar_solucao(int tabuleiro[TAMANHO][TAMANHO], const char *nome_ficheiro_s
     
 
     // Escrever a solução no ficheiro numa linha única
+    fprintf(ficheiro, "%d,", idTabuleiro);
     for (int i = 0; i < TAMANHO; i++) {
         for (int j = 0; j < TAMANHO; j++) {
             fprintf(ficheiro, "%d", tabuleiro[i][j]);
@@ -101,6 +121,46 @@ void gravar_solucao(int tabuleiro[TAMANHO][TAMANHO], const char *nome_ficheiro_s
     }
     fprintf(ficheiro, "\n");
     fclose(ficheiro);
+}
+
+
+void lerSolução(int tabuleiro[TAMANHO][TAMANHO], const char* nome_ficheiro_solucoes, int idTabuleiro){
+    FILE *ficheiro = fopen(nome_ficheiro_solucoes, "r");
+    if (ficheiro == NULL) {
+        printf("Erro ao abrir o ficheiro de soluções.\n");
+        exit(1);
+    }
+
+    char linha[256];
+    while (fgets(linha, sizeof(linha), ficheiro)) { 
+        // Divide a linha pelo caractere ','
+        char *token = strtok(linha, ",");  
+    
+        // Verifica se o token é o id do tabuleiro
+        if ( atoi(token) == idTabuleiro) {  
+            // Pega o próximo token (após o ',') que é o \n
+            token = strtok(NULL, "\n");  
+            // Copia o valor do token para a tabela
+            char *solucao = token;
+
+            for(int i = 0; i < TAMANHO; i++ ){
+                for(int j = 0; j < TAMANHO; j++ ){
+                    
+                        tabuleiro[i][j] = solucao[i * TAMANHO + j] - '0';
+                    
+                }
+            }
+
+            
+        } 
+        
+        
+    } 
+
+    // Fecha o ficheiro de configuração após a leitura
+    fclose(ficheiro); 
+  
+    escrever_log("Solução lida com sucesso");
 }
 
 // Função para printar o tabuleiro e salvar no ficheiro log.txt
@@ -285,8 +345,19 @@ void Menu(int tabuleiro[TAMANHO][TAMANHO], const char *nome_ficheiro,const char 
     while (getchar() != '\n'); // Limpar o buffer de entrada
 
     gerar_sudoku(tabuleiro, dificuldade);
+    int idTabuleiro = getNumSudokus(nome_ficheiro) + 1;
     misturarSudoku(tabuleiro); // Corrigido o nome da função
-    salvar_tabuleiro(nome_ficheiro, tabuleiro); // Corrigido para usar o nome do ficheiro corretamente
+    salvar_tabuleiro(nome_ficheiro, tabuleiro, idTabuleiro); // Corrigido para usar o nome do ficheiro corretamente
+
+
+    int tabuleiroResolvido[TAMANHO][TAMANHO];
+    for (int i = 0; i < TAMANHO; i++) {
+        for (int j = 0; j < TAMANHO; j++) {
+            tabuleiroResolvido[i][j] = tabuleiro[i][j];
+        }
+    }
+    resolver_sudoku(tabuleiroResolvido,  0, 0);
+    gravar_solucao(tabuleiroResolvido, nome_ficheiro_solucoes, idTabuleiro);
 
     printf("Tabuleiro de Sudoku gerado.\n");
 
@@ -319,8 +390,7 @@ void Menu(int tabuleiro[TAMANHO][TAMANHO], const char *nome_ficheiro,const char 
                 break;
             case 2:
                 escrever_log("Cliente clicou na opcao 2 do menu");
-                resolver_sudoku(tabuleiro, 0, 0);
-                gravar_solucao(tabuleiro, nome_ficheiro_solucoes); // Corrigido: gravar solução com o tabuleiro
+                lerSolução(tabuleiro, nome_ficheiro_solucoes, idTabuleiro);
                 imprimir_tabuleiro(tabuleiro);
                 escrever_log("Cliente saiu do Sodoku");
                 return;
@@ -328,17 +398,16 @@ void Menu(int tabuleiro[TAMANHO][TAMANHO], const char *nome_ficheiro,const char 
             case 3:
                 resolver(tabuleiro);
                 imprimir_tabuleiro_cliente(tabuleiro);
-                gravar_solucao(tabuleiro, nome_ficheiro_solucoes);
+                gravar_solucao(tabuleiro, nome_ficheiro_solucoes, idTabuleiro);
                 return; 
                 break;
             case 4:
- /*
-                */ escrever_log("Cliente clicou na opcao 3 do menu");
+                escrever_log("Cliente clicou na opcao 3 do menu");
                 printf("Desistiu do jogo. A sair...\n");
                 printf("Até a proxima.");
                 escrever_log("Jogador desistiu do Sodoku");
-                    return;
-                    break;
+                return;
+                break; 
             default:
                 printf("Opção inválida! Tente novamente.\n");
                 escrever_log("O Jogador selecionou uma opcao invalida no Menu");
@@ -362,7 +431,10 @@ int main(int argc, char *argv[]) {
     printf("Ficheiro de jogos: %s\n", ficheiro_jogos);
     printf("Ficheiro de soluções: %s\n", ficheiro_solucoes);
 
+
+
     int tabuleiro[TAMANHO][TAMANHO];
+    
 
 
     srand(time(NULL)); // Inicializa a semente para números aleatórios
