@@ -124,7 +124,7 @@ void gravar_solucao(int tabuleiro[TAMANHO][TAMANHO], const char *nome_ficheiro_s
 }
 
 
-void lerSolução(int tabuleiro[TAMANHO][TAMANHO], const char* nome_ficheiro_solucoes, int idTabuleiro){
+void lerSolucao(int tabuleiro[TAMANHO][TAMANHO], const char* nome_ficheiro_solucoes, int idTabuleiro){
     FILE *ficheiro = fopen(nome_ficheiro_solucoes, "r");
     if (ficheiro == NULL) {
         printf("Erro ao abrir o ficheiro de soluções.\n");
@@ -390,7 +390,7 @@ void Menu(int tabuleiro[TAMANHO][TAMANHO], const char *nome_ficheiro,const char 
                 break;
             case 2:
                 escrever_log("Cliente clicou na opcao 2 do menu");
-                lerSolução(tabuleiro, nome_ficheiro_solucoes, idTabuleiro);
+                lerSolucao(tabuleiro, nome_ficheiro_solucoes, idTabuleiro);
                 imprimir_tabuleiro(tabuleiro);
                 escrever_log("Cliente saiu do Sodoku");
                 return;
