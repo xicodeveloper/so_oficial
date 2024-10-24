@@ -363,16 +363,18 @@ void Menu(int tabuleiro[TAMANHO][TAMANHO], const char *nome_ficheiro,const char 
 
     while (1) {
         int opcao;
-         time_t mytime = time(NULL);
-        char *timestamp = ctime(&mytime);
-        timestamp[strlen(timestamp) - 1] = 0; // Remove a nova linha do timestamp
+        time_t agora;
+        struct tm *tempo_local;
+        // Obter o tempo atual
+        time(&agora);
+        // Converter para o tempo local
+        tempo_local = localtime(&agora);
         imprimir_tabuleiro(tabuleiro);
         // Exibir informações do jogo
-        printf("ID jogo a decorrer -> \n");
-        printf("Hora de inicio  -> \n");
-        printf("Tempo decorrido -> \n");
-        printf("Numero de Tarefas -> \n");
-
+        printf("ID jogo a decorrer ->%d \n", idTabuleiro);
+        printf("Hora de inicio  -> %02d:%02d:%02d \n", tempo_local->tm_hour, tempo_local->tm_min, tempo_local->tm_sec);
+        //printf("Tempo decorrido -> \n");
+        //printf("Numero de Tarefas -> \n");
         printf("----------Menu----------\n");
         printf("1. Inserir.\n");
         printf("2. O Servidor revela a Solução.\n");
