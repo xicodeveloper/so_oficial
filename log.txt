@@ -1,22 +1,26 @@
-Thu Oct 24 16:57:44 2024 | Inicio do servidor: Configuração lida com sucesso.
-Thu Oct 24 16:57:46 2024 | O Servidor gera o Soduku.
-Thu Oct 24 16:57:46 2024 | O Servidor guardou o tabuleiro.
-Thu Oct 24 16:57:46 2024 | O Servidor guardou a solucao.
-Thu Oct 24 16:57:46 2024 | O Servidor mostrou o tabuleiro ao cliente.
-Thu Oct 24 16:57:53 2024 | Cliente clicou na opcao 1 do menu.
-Thu Oct 24 16:57:53 2024 | O Servidor mostrou o tabuleiro ao cliente.
-Thu Oct 24 16:57:59 2024 | O Cliente inseriu no Soduku!.
-Thu Oct 24 16:57:59 2024 | O Servidor mostrou o tabuleiro ao cliente.
-Thu Oct 24 16:58:20 2024 | O Cliente terminou.
-Thu Oct 24 16:58:20 2024 | O Servidor mostrou o tabuleiro ao cliente.
-Thu Oct 24 16:58:35 2024 | Cliente clicou na opcao 2 do menu.
-Thu Oct 24 16:58:35 2024 | Solução lida com sucesso.
-Thu Oct 24 16:58:35 2024 | O Servidor mostrou o tabuleiro ao cliente.
-Thu Oct 24 16:58:35 2024 | Cliente saiu do Sodoku.
-Thu Oct 24 16:58:57 2024 | Inicio do servidor: Configuração lida com sucesso.
-Thu Oct 24 16:58:58 2024 | O Servidor gera o Soduku.
-Thu Oct 24 16:58:58 2024 | O Servidor guardou o tabuleiro.
-Thu Oct 24 16:58:58 2024 | O Servidor guardou a solucao.
-Thu Oct 24 16:58:58 2024 | O Servidor mostrou o tabuleiro ao cliente.
-Thu Oct 24 16:59:02 2024 | O Cliente chegou a solucao.
-Thu Oct 24 16:59:02 2024 | O Servidor guardou a solucao.
+Tue Oct 29 12:53:12 2024 | Configuração carregada com sucesso
+Tue Oct 29 13:02:44 2024 | Configuração carregada com sucesso
+Tue Oct 29 13:11:42 2024 | Conexão com cliente encerrada
+Tue Oct 29 15:23:04 2024 | Cliente recebeu resposta do Servidor.
+Tue Oct 29 15:23:22 2024 | Cliente recebeu resposta do Servidor.
+Tue Oct 29 15:32:49 2024 | Cliente recebeu resposta do Servidor.
+Tue Oct 29 15:52:12 2024 | Cliente recebeu resposta do Servidor.
+Tue Oct 29 15:52:13 2024 | Cliente recebeu resposta do Servidor.
+Tue Oct 29 15:52:16 2024 | Cliente recebeu resposta do Servidor.
+Tue Oct 29 15:52:17 2024 | Cliente recebeu resposta do Servidor.
+Tue Oct 29 15:52:21 2024 | Cliente recebeu resposta do Servidor.
+Tue Oct 29 15:52:27 2024 | Cliente recebeu resposta do Servidor.
+Tue Oct 29 15:52:28 2024 | Cliente recebeu resposta do Servidor.
+Tue Oct 29 16:04:44 2024 | Cliente recebeu resposta do Servidor.
+Tue Oct 29 16:04:58 2024 | Cliente recebeu resposta do Servidor.
+Tue Oct 29 16:12:16 2024 | Cliente erro ao conectar ao servidor.
+Tue Oct 29 16:12:45 2024 | Cliente erro ao conectar ao servidor.
+Tue Oct 29 16:13:53 2024 | Cliente recebeu resposta do Servidor.
+Tue Oct 29 16:18:42 2024 | Cliente recebeu resposta do Servidor.
+Tue Oct 29 16:18:50 2024 | Cliente recebeu resposta do Servidor.
+Tue Oct 29 16:23:22 2024 | Cliente recebeu resposta do Servidor.
+Tue Oct 29 16:23:30 2024 | Cliente recebeu resposta do Servidor.
+Tue Oct 29 16:29:09 2024 | Cliente recebeu resposta do Servidor.
+Tue Oct 29 16:39:24 2024 | Cliente recebeu resposta do Servidor.
+Tue Oct 29 16:42:26 2024 | Cliente recebeu resposta do Servidor.
+Tue Oct 29 16:47:39 2024 | Cliente recebeu resposta do Servidor.

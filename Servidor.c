@@ -1,7 +1,14 @@
-#include "header.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <pthread.h>
+#include <arpa/inet.h>
+#include <time.h>
+
+#define PORT 8080
+#define BUFFER_SIZE 1024
 #define TAMANHO 9
-
-
 void escrever_log(const char *mensagem) {
     FILE *f = fopen("log.txt", "a");
     if (f == NULL) {
@@ -16,433 +23,139 @@ void escrever_log(const char *mensagem) {
     fprintf(f, "%s | %s.\n", timestamp, mensagem);
     fclose(f);
 }
-
-// Função para, atraves da config.txt definir os caminhos dos ficheiros de jogos e de soluções
-void ler_configuracao(char *config_path, char *ficheiro_jogos, char *ficheiro_solucoes) {//recebe o caminho do ficheiro de configuração
-    FILE *config = fopen(config_path, "r");
-    if (config == NULL) {
-        printf("Erro ao abrir o ficheiro de configuração.\n");
-        exit(1);
-    }
-
-    char linha[256];
-    while (fgets(linha, sizeof(linha), config)) { 
-        // Divide a linha pelo caractere '='
-        char *token = strtok(linha, "=");  
-    
-        // Verifica se o token é "ficheiro_jogos"
-        if (strcmp(token, "ficheiro_jogos") == 0) {  
-            // Pega o próximo token (após o '=') que é o \n
-            token = strtok(NULL, "\n");  
-            // Copia o valor do token para a variável ficheiro_jogos
-            strcpy(ficheiro_jogos, token);  
-        } 
-        // Verifica se o token é "ficheiro_solucoes"
-        else if (strcmp(token, "ficheiro_solucoes") == 0) {  
-            // Pega o próximo token (após o '=')
-            token = strtok(NULL, "\n");  
-            // Copia o valor do token para a variável ficheiro_solucoes
-            strcpy(ficheiro_solucoes, token);  
-        } 
-        
-    } 
-
-    // Fecha o ficheiro de configuração após a leitura
-    fclose(config); 
-  
-    escrever_log("Inicio do servidor: Configuração lida com sucesso");
-
+void enviar_menu(int client_socket) {
+    char menu[] = 
+        "---------- Menu de Sudoku ----------\n"
+        "1. Inserir.\n"
+        "2. O Servidor revela a Solução.\n"
+        "3. O Cliente resolve a Solução.\n"
+        "4. Desistir.\n"
+        "------------------------------------\n"
+        "Escolha uma opção: ";
+    send(client_socket, menu, strlen(menu), 0);
 }
 
-int getNumSudokus(const char *nome_ficheiro) {
-    FILE *file = fopen(nome_ficheiro, "r");
-    if (file == NULL) {
-        printf("Erro ao abrir o ficheiro.\n");
-        return -1;
-    }
-
-    int num_sudokus = 0;
-    char linha[256];
-    while (fgets(linha, sizeof(linha), file)) { 
-        num_sudokus++;
-    } 
-    fclose(file);
-    return num_sudokus;
-}
-
-//permite guardar o tabuleiro no  ficheiro jogos.txt
-void salvar_tabuleiro(const char *nome_ficheiro, int tabuleiro[TAMANHO][TAMANHO], int id_Tabuleiro) {
-    FILE *f = fopen(nome_ficheiro, "a"); // Abre o ficheiro para acrescentar
-    if (f == NULL) {
-        printf("Erro ao abrir o ficheiro %s para escrita.\n", nome_ficheiro);
-        return;
-    }
-        
-    // Grava o tabuleiro no ficheiro
-    
-    fprintf(f, "%d,",id_Tabuleiro);
-    for (int i = 0; i < TAMANHO; i++) {//percorre toda a matriz
-        for (int j = 0; j < TAMANHO; j++) {
-            if (tabuleiro[i][j] == 0) {
-                fprintf(f, "_"); // Representa espaços vazios com "_"
-            } else {
-                fprintf(f, "%d", tabuleiro[i][j]); //coloca numeros no ficheiro_jogos
-            }
-        }
-
-    }
-    escrever_log("O Servidor guardou o tabuleiro");
-    fprintf(f,"\n");
-    fclose(f); // Fecha o ficheiro
-
-
-
-}
-
-// Função para gravar a solução no ficheiro solucoes.txt
-void gravar_solucao(int tabuleiro[TAMANHO][TAMANHO], const char *nome_ficheiro_solucoes, int idTabuleiro) {
-    FILE *ficheiro = fopen(nome_ficheiro_solucoes, "a");
-      time_t mytime = time(NULL);
-    char *timestamp = ctime(&mytime);
-    timestamp[strlen(timestamp) - 1] = 0; // Remove a nova linha do timestamp
-    if (ficheiro == NULL) {
-        printf("Erro ao abrir o ficheiro!\n");
-        return;
-    }
-    escrever_log("O Servidor guardou a solucao");
-    
-
-    // Escrever a solução no ficheiro numa linha única
-    fprintf(ficheiro, "%d,", idTabuleiro);
-    for (int i = 0; i < TAMANHO; i++) {
-        for (int j = 0; j < TAMANHO; j++) {
-            fprintf(ficheiro, "%d", tabuleiro[i][j]);
-        }
-    }
-    fprintf(ficheiro, "\n");
-    fclose(ficheiro);
-}
-
-
-void lerSolucao(int tabuleiro[TAMANHO][TAMANHO], const char* nome_ficheiro_solucoes, int idTabuleiro){
-    FILE *ficheiro = fopen(nome_ficheiro_solucoes, "r");
-    if (ficheiro == NULL) {
-        printf("Erro ao abrir o ficheiro de soluções.\n");
-        exit(1);
-    }
-
-    char linha[256];
-    while (fgets(linha, sizeof(linha), ficheiro)) { 
-        // Divide a linha pelo caractere ','
-        char *token = strtok(linha, ",");  
-    
-        // Verifica se o token é o id do tabuleiro
-        if ( atoi(token) == idTabuleiro) {  
-            // Pega o próximo token (após o ',') que é o \n
-            token = strtok(NULL, "\n");  
-            // Copia o valor do token para a tabela
-            char *solucao = token;
-
-            for(int i = 0; i < TAMANHO; i++ ){
-                for(int j = 0; j < TAMANHO; j++ ){
-                    
-                        tabuleiro[i][j] = solucao[i * TAMANHO + j] - '0';
-                    
-                }
-            }
-
-            
-        } 
-        
-        
-    } 
-
-    // Fecha o ficheiro de configuração após a leitura
-    fclose(ficheiro); 
-  
-    escrever_log("Solução lida com sucesso");
-}
-
-// Função para printar o tabuleiro e salvar no ficheiro log.txt
-void imprimir_tabuleiro(int tabuleiro[TAMANHO][TAMANHO]) {
-    
-    time_t mytime = time(NULL);
-    char *timestamp = ctime(&mytime);
-    timestamp[strlen(timestamp) - 1] = 0; // Remove a nova linha do timestamp
-    escrever_log("O Servidor mostrou o tabuleiro ao cliente");
-
-    for (int i = 0; i < TAMANHO; i++) {
-        for (int j = 0; j < TAMANHO; j++) {
-            if (j == 3 || j == 6) {
-                printf(" | ");
-            }
-            if (tabuleiro[i][j] == 0) {
-                printf(" _ ");
-            } else {
-                printf("%d ", tabuleiro[i][j]);
-            }
-        }
-        printf("\n");
-        if (i == 2 || i == 5) {
-            printf("-------------------------\n");
-        }
-    }
-    printf("\n");
-    
-}
-
-// Função para verificar se é seguro colocar um número no tabuleiro
-int pode_colocar(int tabuleiro[TAMANHO][TAMANHO], int linha, int col, int num) {
-
-    // Verifica se o número já existe na linha
-    for (int x = 0; x < TAMANHO; x++) {
-        if (tabuleiro[linha][x] == num) {
-            return 0; // Se o número já existir na linha, retorna 0 (não é seguro)
-        }
-    }
-
-    // Verifica se o número já existe na coluna
-    for (int x = 0; x < TAMANHO; x++) {
-        if (tabuleiro[x][col] == num) {
-            return 0; // Se o número já existir na coluna, retorna 0 (não é seguro)
-        }
-    }
-
-    // Verifica se o número já existe na subgrade 3x3
-    int startLinha = linha - linha % 3; // Calcula o início da linha da subgrade 3x3
-    int startCol = col - col % 3; // Calcula o início da coluna da subgrade 3x3
-    for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 3; j++) {
-            if (tabuleiro[i + startLinha][j + startCol] == num) {
-                return 0; // Se o número já existir na subgrade 3x3, retorna 0 (não é seguro)
-            }
-        }
-    }
-    return 1; // Se o número não existir na linha, coluna ou subgrade 3x3, retorna 1 (é seguro)
-}
-
-// funçao para resolver o sudoku
-int resolver_sudoku(int tabuleiro[TAMANHO][TAMANHO], int linha, int col) {
-    // Verifica se chegou ao final do tabuleiro ao estares completado todas as linhas e colunas
-    if (linha == TAMANHO - 1 && col == TAMANHO) {
-        return 1; // Sudoku resolvido
-    }
-
-    // Move para a próxima linha se a coluna atual for igual ao tamanho do tabuleiro
-    if (col == TAMANHO) {
-        linha++;
-        col = 0;
-    }
-
-    // Se a célula atual já estiver preenchida, move para a próxima coluna
-    if (tabuleiro[linha][col] != 0) {
-        return resolver_sudoku(tabuleiro, linha, col + 1);
-    }
-
-    // Tenta preencher a célula atual com números de 1 a 9
-    for (int num = 1; num <= 9; num++) {
-        // Verifica se é seguro colocar o número na célula atual
-        if (pode_colocar(tabuleiro, linha, col, num)) {
-            tabuleiro[linha][col] = num; // Coloca o número na célula
-            // Continua para a próxima célula
-            if (resolver_sudoku(tabuleiro, linha, col + 1)) {
-                return 1; // Sudoku resolvido
-            }
-            tabuleiro[linha][col] = 0; // Remove o número se não levar a uma solução
-        }
-    }
-    return 0; // Retorna 0 se não for possível resolver o Sudoku
-}
-
-// Função para gerar um tabuleiro de Sudoku parcialmente preenchido
-void gerar_sudoku(int tabuleiro[TAMANHO][TAMANHO], int dificuldade) {
-    // Inicializa o tabuleiro vazio
-    for (int i = 0; i < TAMANHO; i++) {
-        for (int j = 0; j < TAMANHO; j++) {
-            tabuleiro[i][j] = 0;
-        }
-    }
-
-    // Gerar uma solução completa de Sudoku
-    resolver_sudoku(tabuleiro, 0, 0);
-
-    // Definir a quantidade de números removidos com base na dificuldade
-    int num_removidos;
-    if (dificuldade == 1) {
-        num_removidos = 30; //Fácil
-    } else if (dificuldade == 2) {
-        num_removidos = 40; //Médio
-    } else {
-        num_removidos = 50; //Difícil
-    }
-
-    // Remover os números do tabuleiro para criar um tabuleiro parcialmente preenchido
-    while (num_removidos > 0) {
-        int linha = rand() % TAMANHO;
-        int col = rand() % TAMANHO;
-        if (tabuleiro[linha][col] != 0) {
-            tabuleiro[linha][col] = 0;
-            num_removidos--;
-        }
-    }
-   
-    escrever_log("O Servidor gera o Soduku");
-}
-
-void mudarLinhas(int tabuleiro[TAMANHO][TAMANHO], int fila1, int fila2) {
-    //troca uma linha por outra
-
-    for (int j = 0; j < TAMANHO; j++) {
-        int temp = tabuleiro[fila1][j];
-        tabuleiro[fila1][j] = tabuleiro[fila2][j];
-        tabuleiro[fila2][j] = temp;
-    }
-}
-
-void mudarColunas(int tabuleiro[TAMANHO][TAMANHO], int col1, int col2) {
-    //troca uma coluna por outra
-    for (int i = 0; i < TAMANHO; i++) {
-        int temp = tabuleiro[i][col1];
-        tabuleiro[i][col1] = tabuleiro[i][col2];
-        tabuleiro[i][col2] = temp;
-    }
-}
-void misturarSudoku(int tabuleiro[TAMANHO][TAMANHO]) {
-    for (int i = 0; i < 3; i++) {
-        // trocar filas dentro de cada subgrade de 3x3
-        int fila1 = i * 3 + rand() % 3; // Seleciona uma linha aleatória dentro da subgrade
-        int fila2 = i * 3 + rand() % 3; // Seleciona outra linha aleatória dentro da subgrade
-        mudarLinhas(tabuleiro, fila1, fila2); // Troca as duas linhas selecionadas
-
-        // trocar colunas dentro de cada subgrade de 3x3
-        int col1 = i * 3 + rand() % 3; // Seleciona uma coluna aleatória dentro da subgrade
-        int col2 = i * 3 + rand() % 3; // Seleciona outra coluna aleatória dentro da subgrade
-        mudarColunas(tabuleiro, col1, col2); // Troca as duas colunas selecionadas
-    }
-}
-
-
-
-
-// Função para verificar se o Sudoku está completo e válido
-int verificar_vitoria(int tabuleiro[TAMANHO][TAMANHO]) {
-    for (int i = 0; i < TAMANHO; i++) {
-        for (int j = 0; j < TAMANHO; j++) {
-            if (tabuleiro[i][j] == 0 || !pode_colocar(tabuleiro, i, j, tabuleiro[i][j])) {
-                return 0;
-            }
-        }
-    }
-    escrever_log("O Servidor verifica se ganhou");
-    return 1;
-}
-
-
-void Menu(int tabuleiro[TAMANHO][TAMANHO], const char *nome_ficheiro,const char *nome_ficheiro_solucoes) {
-    int dificuldade;
-    printf("Escolha o nível de dificuldade (1 = Fácil, 2 = Médio, 3 = Difícil): ");
-    scanf("%d", &dificuldade);
-    while (getchar() != '\n'); // Limpar o buffer de entrada
-
-    gerar_sudoku(tabuleiro, dificuldade);
-    int idTabuleiro = getNumSudokus(nome_ficheiro) + 1;
-    misturarSudoku(tabuleiro); // Corrigido o nome da função
-    salvar_tabuleiro(nome_ficheiro, tabuleiro, idTabuleiro); // Corrigido para usar o nome do ficheiro corretamente
-
-
-    int tabuleiroResolvido[TAMANHO][TAMANHO];
-    for (int i = 0; i < TAMANHO; i++) {
-        for (int j = 0; j < TAMANHO; j++) {
-            tabuleiroResolvido[i][j] = tabuleiro[i][j];
-        }
-    }
-    resolver_sudoku(tabuleiroResolvido,  0, 0);
-    gravar_solucao(tabuleiroResolvido, nome_ficheiro_solucoes, idTabuleiro);
-
-    printf("Tabuleiro de Sudoku gerado.\n");
+// Função que processa o menu e opções escolhidas pelo cliente
+void *handle_client(void *client_socket) {
+    int sock = *(int*)client_socket;
+    char buffer[BUFFER_SIZE];
+    int bytes_received;
+    int opcao;
+    int client_id;
 
     while (1) {
-        int opcao;
-        time_t agora;
-        struct tm *tempo_local;
-        // Obter o tempo atual
-        time(&agora);
-        // Converter para o tempo local
-        tempo_local = localtime(&agora);
-        imprimir_tabuleiro(tabuleiro);
-        // Exibir informações do jogo
-        printf("ID jogo a decorrer ->%d \n", idTabuleiro);
-        printf("Hora de inicio  -> %02d:%02d:%02d \n", tempo_local->tm_hour, tempo_local->tm_min, tempo_local->tm_sec);
-        //printf("Tempo decorrido -> \n");
-        //printf("Numero de Tarefas -> \n");
-        printf("----------Menu----------\n");
-        printf("1. Inserir.\n");
-        printf("2. O Servidor revela a Solução.\n");
-        printf("3. O Cliente resolve a Solução.\n");
-        printf("4. Desistir.\n");
-        printf("------------------------\n");
-        printf("Selecione o que deseja: ");
-        scanf("%d", &opcao);
-        while (getchar() != '\n'); // Limpar o buffer de entrada
+        // Envia o menu ao cliente
+        enviar_menu(sock);
+
+
+
+if (recv(sock, &client_id, sizeof(client_id), 0) <= 0) {
+    perror("Erro ao receber ID do cliente");
+    close(sock);
+    return NULL;
+}
+
+printf("Novo cliente conectado com ID: %d\n", client_id);
+printf("Iniciando jogo para o cliente %d.\n", client_id);
+        // Recebe a opção do cliente
+        bytes_received = recv(sock, buffer, BUFFER_SIZE, 0);
+        if (bytes_received <= 0) {
+            printf("Cliente desconectado\n");
+            break;
+        }
+        
+    // Inicia o jogo
+
+        buffer[bytes_received] = '\0';
+        opcao = atoi(buffer); // Converte a opção recebida para um número inteiro
 
         switch (opcao) {
             case 1:
-                escrever_log("Cliente clicou na opcao 1 do menu");
-                jogar_sudoku(tabuleiro);
+                printf("Cliente %d selecionou inserir um valor no Sudoku\n", client_id);
+                // Implementar a função jogar_sudoku(tabuleiro);
+                // Responder ao cliente após o movimento
+                send(sock, "Opção 1: Valor inserido.\n", 26, 0);
                 break;
             case 2:
-                escrever_log("Cliente clicou na opcao 2 do menu");
-                lerSolucao(tabuleiro, nome_ficheiro_solucoes, idTabuleiro);
-                imprimir_tabuleiro(tabuleiro);
-                escrever_log("Cliente saiu do Sodoku");
-                return;
+                printf("Cliente %d pediu para revelar a solução.\n", client_id);
+                // Implementar função de leitura e exibição da solução
+                // Ler solução e enviar ao cliente
+                send(sock, "Opção 2: Solução revelada.\n", 28, 0);
                 break;
             case 3:
-                escrever_log("Cliente clicou na opcao 3 do menu");
-                resolver(tabuleiro);
-                imprimir_tabuleiro_cliente(tabuleiro);
-                gravar_solucao(tabuleiro, nome_ficheiro_solucoes, idTabuleiro);
-                return; 
+                printf("Cliente %d selecionou para resolver a solução localmente.\n", client_id);
+                // Implementar função que resolve e envia ao cliente
+                send(sock, "Opção 3: Solução resolvida pelo cliente.\n", 41, 0);
                 break;
             case 4:
-                escrever_log("Cliente clicou na opcao 4 do menu");
-                printf("Desistiu do jogo. A sair...\n");
-                printf("Até a proxima.");
-                escrever_log("Jogador desistiu do Sodoku");
-                return;
-                break; 
+                printf("Cliente %d desistiu do jogo.\n", client_id);
+                send(sock, "Opção 4: Saindo do jogo.\n", 25, 0);
+                goto encerra_conexao; // Encerra o jogo para o cliente
+                break;
             default:
-                printf("Opção inválida! Tente novamente.\n");
-                escrever_log("O Jogador selecionou uma opcao invalida no Menu");
+                printf(" Cliente %d Opção inválida selecionada.\n", client_id);
+                send(sock, "Opção inválida! Tente novamente.\n", 35, 0);
                 break;
         }
     }
+
+encerra_conexao:
+    close(sock);
+    free(client_socket);
+    printf("Conexão com cliente %d encerrada\n", client_id);
+    return NULL;
 }
 
-int main(int argc, char *argv[]) {
-    if (argc < 2) {
-        printf("Uso: %s <ficheiro de configuração>\n", argv[0]);//1 argumento passado na linha de comando
-        return 1;
+int main() {
+    int server_socket, client_socket;
+    struct sockaddr_in server_addr, client_addr;
+    socklen_t addr_len = sizeof(client_addr);
+
+    server_socket = socket(AF_INET, SOCK_STREAM, 0);
+    if (server_socket == -1) {
+        perror("Erro ao criar socket");
+        exit(EXIT_FAILURE);
     }
 
-    char ficheiro_jogos[256];
-    char ficheiro_solucoes[256];
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_addr.s_addr = INADDR_ANY;
+    server_addr.sin_port = htons(PORT);
 
-    // Ler configuração
-    ler_configuracao(argv[1], ficheiro_jogos, ficheiro_solucoes); //2argumento passado na linha de comando
-    //devolvendo o caminho dos ficheiros no sistema de configuração
-    printf("Ficheiro de jogos: %s\n", ficheiro_jogos);
-    printf("Ficheiro de soluções: %s\n", ficheiro_solucoes);
+    if (bind(server_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
+        perror("Erro no bind");
+        close(server_socket);
+        exit(EXIT_FAILURE);
+    }
 
+    if (listen(server_socket, 10) < 0) {
+        perror("Erro no listen");
+        close(server_socket);
+        exit(EXIT_FAILURE);
+    }
 
+    printf("Servidor esperando conexões na porta %d...\n", PORT);
 
-    int tabuleiro[TAMANHO][TAMANHO];
-    
+    while (1) {
+        client_socket = accept(server_socket, (struct sockaddr*)&client_addr, &addr_len);
+        if (client_socket < 0) {
+            perror("Erro no accept");
+            continue;
+        }
 
+        printf("Novo cliente conectado\n");
 
-    srand(time(NULL)); // Inicializa a semente para números aleatórios
+        int *new_sock = malloc(sizeof(int));
+        *new_sock = client_socket;
+        pthread_t client_thread;
 
-    Menu(tabuleiro, ficheiro_jogos, ficheiro_solucoes); 
+        if (pthread_create(&client_thread, NULL, handle_client, (void*)new_sock) != 0) {
+            perror("Erro ao criar thread");
+            free(new_sock);
+        }
 
+        pthread_detach(client_thread);
+    }
+
+    close(server_socket);
     return 0;
 }

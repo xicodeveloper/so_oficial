@@ -1,5 +1,16 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <arpa/inet.h>
 #include "header.h"
-#define TAMANHO 9
+#define PORT 8080
+#define BUFFER_SIZE 1024
+
+
+
+
+// Função para obter um novo ID de usuário
 
 void escrever_log_cliente(const char *mensagem) {
     FILE *f = fopen("log.txt", "a");
@@ -16,160 +27,101 @@ void escrever_log_cliente(const char *mensagem) {
     fclose(f);
 }
 
-// Função de jogo
-void jogar_sudoku(int tabuleiro[TAMANHO][TAMANHO]) {
-    int linha, col, num;
-    char buffer[20];
-    int erros = 0;
+
+
+// Função para obter um novo ID de usuário
+int get_new_user_id() {
+    FILE *file = fopen("users.txt", "r+");
+    if (file == NULL) {
+        file = fopen("users.txt", "w+");
+        if (file == NULL) {
+            perror("Erro ao abrir o arquivo de ID");
+            exit(EXIT_FAILURE);
+        }
+        fprintf(file, "1");
+        fclose(file);
+        return 1;
+    }
+
+    int id;
+    fscanf(file, "%d", &id);
+    id++;
+    rewind(file);
+    fprintf(file, "%d", id);
+    fclose(file);
+
+    return id;
+}
+int main() {
+    int client_socket;
+    struct sockaddr_in server_addr;
+    char buffer[BUFFER_SIZE];
+
+    // Cria o socket do cliente
+    client_socket = socket(AF_INET, SOCK_STREAM, 0);
+    if (client_socket == -1) {
+        perror("Erro ao criar socket");
+        escrever_log_cliente("Cliente erro no socket");
+        exit(EXIT_FAILURE);
+    }
+
+    // Configura o endereço do servidor
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(PORT);
+    server_addr.sin_addr.s_addr = inet_addr("10.2.15.230");  // Conectando ao servidor
+
+    // Conecta ao servidor
+    if (connect(client_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
+        perror("Erro ao conectar ao servidor");
+        escrever_log_cliente("Cliente erro ao conectar ao servidor");
+        close(client_socket);
+        exit(EXIT_FAILURE);
+    }
+
+    
+     cliente_inf cliente; // Crie uma instância da estrutura cliente_inf
+    cliente.id = get_new_user_id(); // Atribua um novo ID de usuário
+    strcpy(cliente.nome, "Nome do Cliente"); // Exemplo de atribuição de nome
+    printf("Cliente %d Conectado ao servidor\n", cliente.id);
+      // Envia o ID do cliente para o servidor
+    if (send(client_socket, &cliente.id, sizeof(cliente.id), 0) < 0) {
+        perror("Erro ao enviar ID do cliente");
+        close(client_socket);
+        exit(EXIT_FAILURE);
+    }
+
 
 
     while (1) {
+        // Lê a mensagem do usuário
+        printf("Insira um numero (ou 'sair' para encerrar): ");
+        fgets(buffer, BUFFER_SIZE, stdin);
+        
+        // Verifica se o usuário quer encerrar a conexão
+        if (strncmp(buffer, "sair", 4) == 0) {
+            printf("Encerrando a conexão com o servidor...\n");
+            escrever_log_cliente("Cliente saiu do server");
+            break;
+        }
+
+        // Envia a mensagem para o servidor
+        send(client_socket, buffer, strlen(buffer), 0);
     
-        time_t mytime = time(NULL);
-        char *timestamp = ctime(&mytime);
-        timestamp[strlen(timestamp) - 1] = 0; // Remove a nova linha do timestamp
-        imprimir_tabuleiro(tabuleiro);
+       
+        // Recebe a resposta do servidor
+        int bytes_received = recv(client_socket, buffer, BUFFER_SIZE, 0);
+        if (bytes_received > 0) {
+            buffer[bytes_received] = '\0';
+            printf("Servidor resposta:\n %s\n", buffer);
+             escrever_log_cliente("Cliente recebeu resposta do Servidor");
 
-        // Verificar vitória
-        if (verificar_vitoria(tabuleiro)) {
-            printf("Parabéns! Completou o Sudoku corretamente!\n");
-            escrever_log_cliente("Cliente conclui o Sudoku corretamente");
+        } else {
+            printf("Servidor desconectado\n");
+            escrever_log_cliente("Cliente desconectado do serviodor");
             break;
         }
-
-        printf("Insira a linha (1-9), coluna (1-9) e o número (1-9) ou 0 0 0 para sair: ");
-        
-
-        if (fgets(buffer, sizeof(buffer), stdin) != NULL) {
-            // tentar extrair os tres números
-            int result = sscanf(buffer, "%d %d %d", &linha, &col, &num);
-            // Verificar os tres números foram lidos
-            if (result != 3) {
-                printf("Erro se esperava 3 inteiros.\n");
-                escrever_log_cliente("  O Cliente inseriu mal as colunas/linhas/número");
-                continue; // Pedir input novamente
-            }
-
-        
-        } else {
-            escrever_log_cliente("Erro a ler a entrada");
-
-              
-            continue; // Pedir input novamente
-        }
-            
-
-        if (linha == 0 && col == 0 && num == 0) {
-            printf("Saindo.\n");
-          escrever_log_cliente("O Cliente terminou");
-          
-            break;
-        }
-
-        linha--; // por a 0
-        col--;   // por a 0
-
-        // Verifica se a posição está vazia e o número é válido
-        if (tabuleiro[linha][col] == 0 && pode_colocar(tabuleiro, linha, col, num)) {
-             escrever_log_cliente("O Cliente inseriu no Soduku!");
-            printf("Cliente inseriu no Soduku!\n");
-            
-            tabuleiro[linha][col] = num;
-        } else {
-           escrever_log_cliente("Movimento invalido");
-            printf("Movimento inválido!\n");
-            erros++;
-            if (erros >= 3) {
-                printf("Perdeu o jogo. Excedeu as 3 tentativas.\n");
-               escrever_log_cliente("O Cliente perdeu o jogo");
-                break;
-            }
-        }
-    }
-}
-bool isValid(int tabuleiro[TAMANHO][TAMANHO], int row, int col, int num) {
-    // Verifica se o número já está na linha ou na coluna
-    for (int x = 0; x < TAMANHO; x++) {
-        if (tabuleiro[row][x] == num || tabuleiro[x][col] == num)
-            return false;
     }
 
-    // Verifica se o número já está na subgrade 3x3
-    int startRow = row - row % 3;
-    int startCol = col - col % 3;
-    for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 3; j++) {
-            if (tabuleiro[i + startRow][j + startCol] == num)
-                return false;
-        }
-    }
-
-    return true;
-}
-
-// Função para encontrar uma célula vazia (com valor 0)
-bool findEmptyCell(int tabuleiro[TAMANHO][TAMANHO], int *row, int *col) {
-    for (*row = 0; *row < TAMANHO; (*row)++) {
-        for (*col = 0; *col < TAMANHO; (*col)++) {
-            if (tabuleiro[*row][*col] == 0) {
-                return true; // Encontrei uma célula vazia
-            }
-        }
-    }
-    return false; // Não há células vazias, o tabuleiro está preenchido
-}
- 
-// Função para resolver o Sudoku utilizando backtracking
-bool resolver(int tabuleiro[TAMANHO][TAMANHO]) {
-    int row, col;
-
-    // Se não houver células vazias, o Sudoku está resolvido
-    if (!findEmptyCell(tabuleiro, &row, &col)) {
-        return true;
-    }
-
-    // Tenta números de 1 a 9
-    for (int num = 1; num <= 9; num++) {
-        if (isValid(tabuleiro, row, col, num)) {
-            // Coloca o número na célula
-            tabuleiro[row][col] = num;
-
-            // Recursivamente tenta resolver o resto do tabuleiro
-            if (resolver(tabuleiro)) {
-                return true;
-            }
-
-            // Se falhar, remove o número e tenta outro
-            tabuleiro[row][col] = 0;
-        }
-    }
-
-    // Se nenhum número puder ser colocado, retrocede (backtrack)
-    return false;
-}
-void imprimir_tabuleiro_cliente(int tabuleiro[TAMANHO][TAMANHO]) {
-    printf("---------------\n");
-    for (int i = 0; i < TAMANHO; i++) {
-        for (int j = 0; j < TAMANHO; j++) {
-            // Imprime o número se não for zero, caso contrário imprime um ponto
-            if (tabuleiro[i][j] == 0) {
-                printf("_ ");
-            } else {
-                printf("%d ", tabuleiro[i][j]);
-            }
-
-            // Adiciona uma linha vertical após cada 3 colunas
-            if ((j + 1) % 3 == 0 && j != TAMANHO - 1) {
-                printf("| ");
-            }
-        }
-        printf("\n");
-
-        // Adiciona uma linha horizontal após cada 3 linhas
-        if ((i + 1) % 3 == 0 && i != TAMANHO - 1) {
-            printf("---------------\n");
-        }
-    }
-    printf("---------------\n");
-    escrever_log_cliente("O Cliente chegou a solucao");
+    close(client_socket);
+    return 0;
 }

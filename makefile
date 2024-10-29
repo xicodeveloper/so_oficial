@@ -1,25 +1,26 @@
-# Compilador e flags
+# Nome dos executáveis
+SERVER = server
+CLIENT = client
+
+# Compilador e flags de compilação
 CC = gcc
-CFLAGS = -Wall
+CFLAGS = -Wall -pthread
 
-# Definir o executável principal (servidor)
-TARGET = servidor
+# Alvo para compilar todos os executáveis
+all: $(SERVER) $(CLIENT)
 
-# Regras para compilar o projeto principal
-all: $(TARGET)
+# Compilação do servidor
+$(SERVER): Servidor.c
+	$(CC) $(CFLAGS) -o $(SERVER) Servidor.c
 
-$(TARGET): Servidor.o Cliente.o
-	$(CC) -o $(TARGET) Servidor.o Cliente.o $(CFLAGS) -lpthread
+# Compilação do cliente
+$(CLIENT): Cliente.c
+	$(CC) $(CFLAGS) -o $(CLIENT) Cliente.c
 
-# Compilar Servidor.o
-Servidor.o: Servidor.c header.h
-	$(CC) -c Servidor.c -o Servidor.o $(CFLAGS)
+# Alvo para limpar os arquivos de compilação
+clean:
+	rm -f $(SERVER) $(CLIENT)
 
-# Compilar Cliente.o
-Cliente.o: Cliente.c header.h
-	$(CC) -c Cliente.c -o Cliente.o $(CFLAGS)
-
-# Limpar ficheiros objeto e executáveis
 clean:
 	rm -f *.o *~ $(TARGET)
 

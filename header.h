@@ -1,27 +1,33 @@
+// header.h
 #ifndef HEADER_H
 #define HEADER_H
 
-#include <stdbool.h>  // Inclui a definição de bool
-#include <stdio.h>    // Para printf, fprintf, etc.
-#include <stdlib.h>   // Para malloc, free, etc.
-#include <string.h>   // Para manipulação de strings (strcat, strcmp, etc.)
-#include <unistd.h>   // Para close (encerrar sockets)
-#include <arpa/inet.h> // Para definições de sockets (struct sockaddr_in, htons, etc.)
-#include <sys/types.h>  // Para tipos de dados de sockets
-#include <sys/socket.h> // Para funções de sockets
-#include <errno.h>      // Para tratamento de erros
-#include <time.h>       // Para manipulação de tempo
+#include <string.h>
+#include <stdio.h>
+#include <stdbool.h>
+#include <stdlib.h>
+#include <time.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <unistd.h>
 
 #define TAMANHO 9
 
+// Sockets --------------------------------------------------------------------------------
+#define SOCKET_NAME "/tmp/DemoSocket"
+//-----------------------------------------------------------------------------------------
+// Estrutura para armazenar informações do usuário
+typedef struct {
+    int id;
+    // Adicione outros campos conforme necessário
+    char nome[50]; // Exemplo de campo adicional
+} cliente_inf;
 // Funções relacionadas ao jogo de Sudoku
-void jogar_sudoku(int tabuleiro[TAMANHO][TAMANHO], int sock);
-void escrever_log_cliente(const char *mensagem);
-bool verificar_vitoria(int tabuleiro[TAMANHO][TAMANHO]);
-bool isValid(int tabuleiro[TAMANHO][TAMANHO], int linha, int col, int num);
-bool findEmptyCell(int tabuleiro[TAMANHO][TAMANHO], int *linha, int *col);
-bool pode_colocar(int tabuleiro[TAMANHO][TAMANHO], int linha, int col, int num);
-char* formatar_tabuleiro(int tabuleiro[TAMANHO][TAMANHO]);
+
+
+bool resolver(int tabuleiro[TAMANHO][TAMANHO]);
 void imprimir_tabuleiro_cliente(int tabuleiro[TAMANHO][TAMANHO]);
+void escrever_log_cliente(const char *mensagem);
+int get_new_user_id(); // Declaração da função para obter um novo ID de usuário
 
 #endif // HEADER_H
