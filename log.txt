@@ -24,3 +24,60 @@ Tue Oct 29 16:29:09 2024 | Cliente recebeu resposta do Servidor.
 Tue Oct 29 16:39:24 2024 | Cliente recebeu resposta do Servidor.
 Tue Oct 29 16:42:26 2024 | Cliente recebeu resposta do Servidor.
 Tue Oct 29 16:47:39 2024 | Cliente recebeu resposta do Servidor.
+Tue Oct 29 18:03:56 2024 | Cliente recebeu resposta do Servidor.
+Tue Oct 29 18:04:15 2024 | Cliente recebeu resposta do Servidor.
+Tue Oct 29 18:04:22 2024 | Cliente saiu do server.
+Tue Oct 29 22:56:43 2024 | Cliente recebeu resposta do Servidor.
+Tue Oct 29 22:56:51 2024 | Cliente recebeu resposta do Servidor.
+Tue Oct 29 22:59:32 2024 | Novo cliente conectado
+Tue Oct 29 22:59:42 2024 | Cliente inseriu um valor no Sudoku
+Tue Oct 29 22:59:42 2024 | Cliente recebeu resposta do Servidor.
+Tue Oct 29 22:59:50 2024 | Cliente recebeu resposta do Servidor.
+Tue Oct 29 22:59:50 2024 | Cliente inseriu um valor no Sudoku
+Tue Oct 29 22:59:52 2024 | Cliente recebeu resposta do Servidor.
+Tue Oct 29 22:59:52 2024 | Solução revelada ao cliente
+Tue Oct 29 22:59:55 2024 | Cliente recebeu resposta do Servidor.
+Tue Oct 29 22:59:55 2024 | Solução revelada ao cliente
+Tue Oct 29 23:00:00 2024 | Cliente recebeu resposta do Servidor.
+Tue Oct 29 23:00:00 2024 | Cliente resolveu a solução localmente
+Tue Oct 29 23:00:03 2024 | Cliente recebeu resposta do Servidor.
+Tue Oct 29 23:00:03 2024 | Cliente resolveu a solução localmente
+Tue Oct 29 23:00:14 2024 | Cliente recebeu resposta do Servidor.
+Tue Oct 29 23:00:14 2024 | Cliente desistiu do jogo
+Tue Oct 29 23:00:14 2024 | Conexão com cliente encerrada
+Tue Oct 29 23:00:21 2024 | Cliente recebeu resposta do Servidor.
+Tue Oct 29 23:02:19 2024 | Cliente conectado ao servidor
+Tue Oct 29 23:02:19 2024 | Novo cliente conectado
+Tue Oct 29 23:02:27 2024 | Resposta recebida do servidor
+Tue Oct 29 23:02:27 2024 | Cliente inseriu um valor no Sudoku
+Tue Oct 29 23:02:35 2024 | Resposta recebida do servidor
+Tue Oct 29 23:02:35 2024 | Cliente inseriu um valor no Sudoku
+Tue Oct 29 23:02:39 2024 | Resposta recebida do servidor
+Tue Oct 29 23:02:39 2024 | Solução revelada ao cliente
+Tue Oct 29 23:02:42 2024 | Resposta recebida do servidor
+Tue Oct 29 23:02:42 2024 | Cliente resolveu a solução localmente
+Tue Oct 29 23:02:52 2024 | Resposta recebida do servidor
+Tue Oct 29 23:02:52 2024 | Cliente desistiu do jogo
+Tue Oct 29 23:02:52 2024 | Conexão com cliente encerrada
+Tue Oct 29 23:04:44 2024 | Erro ao conectar ao servidor
+Tue Oct 29 23:08:04 2024 | Erro ao conectar ao servidor
+Tue Oct 29 23:08:50 2024 | Erro ao conectar ao servidor
+Tue Oct 29 23:09:21 2024 | Erro ao conectar ao servidor
+Tue Oct 29 23:14:02 2024 | Servidor iniciado e aguardando conexões
+Tue Oct 29 23:14:31 2024 | Novo cliente conectado
+Tue Oct 29 23:14:49 2024 | Novo cliente conectado
+Tue Oct 29 23:18:25 2024 | Cliente desconectado
+Tue Oct 29 23:18:25 2024 | Conexão com cliente encerrada
+Tue Oct 29 23:18:43 2024 | Servidor iniciado e aguardando conexões
+Tue Oct 29 23:18:49 2024 | Novo cliente conectado
+Tue Oct 29 23:19:19 2024 | Novo cliente conectado
+Tue Oct 29 23:20:21 2024 | Cliente desconectado
+Tue Oct 29 23:20:21 2024 | Conexão com cliente encerrada
+Tue Oct 29 23:20:49 2024 | Erro no bind do servidor
+Tue Oct 29 23:21:05 2024 | Erro no bind do servidor
+Tue Oct 29 23:24:37 2024 | Servidor iniciado e aguardando conexões
+Tue Oct 29 23:24:44 2024 | Novo cliente conectado
+Tue Oct 29 23:24:57 2024 | Conexão com cliente encerrada
+Tue Oct 29 23:26:42 2024 | Servidor iniciado e aguardando conexões
+Tue Oct 29 23:26:48 2024 | Novo cliente conectado
+Tue Oct 29 23:26:52 2024 | Conexão com cliente encerrada

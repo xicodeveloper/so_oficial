@@ -3,121 +3,88 @@
 #include <string.h>
 #include <unistd.h>
 #include <arpa/inet.h>
-#include "header.h"
+#include <time.h>
+
 #define PORT 8080
 #define BUFFER_SIZE 1024
 
-
-
-
-// Função para obter um novo ID de usuário
-
-void escrever_log_cliente(const char *mensagem) {
-    FILE *f = fopen("log.txt", "a");
-    if (f == NULL) {
-        printf("Erro ao abrir o ficheiro log.txt\n");
-        return;
-    }
-
-    time_t mytime = time(NULL);
-    char *timestamp = ctime(&mytime);
-    timestamp[strlen(timestamp) - 1] = 0; // Remove a nova linha do timestamp
-
-    fprintf(f, "%s | %s.\n", timestamp, mensagem);
-    fclose(f);
+// Função para gerar um ID aleatório para o cliente
+int gerar_id_cliente() {
+    srand(time(NULL));
+    return rand() % 1000 + 1;  // ID entre 1 e 1000
 }
 
-
-
-// Função para obter um novo ID de usuário
-int get_new_user_id() {
-    FILE *file = fopen("users.txt", "r+");
-    if (file == NULL) {
-        file = fopen("users.txt", "w+");
-        if (file == NULL) {
-            perror("Erro ao abrir o arquivo de ID");
-            exit(EXIT_FAILURE);
-        }
-        fprintf(file, "1");
-        fclose(file);
-        return 1;
-    }
-
-    int id;
-    fscanf(file, "%d", &id);
-    id++;
-    rewind(file);
-    fprintf(file, "%d", id);
-    fclose(file);
-
-    return id;
-}
 int main() {
     int client_socket;
     struct sockaddr_in server_addr;
     char buffer[BUFFER_SIZE];
+    int client_id = gerar_id_cliente();
 
     // Cria o socket do cliente
     client_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (client_socket == -1) {
         perror("Erro ao criar socket");
-        escrever_log_cliente("Cliente erro no socket");
         exit(EXIT_FAILURE);
     }
 
     // Configura o endereço do servidor
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(PORT);
-    server_addr.sin_addr.s_addr = inet_addr("10.2.15.230");  // Conectando ao servidor
+    server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");  // IP local para testes
 
     // Conecta ao servidor
     if (connect(client_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
         perror("Erro ao conectar ao servidor");
-        escrever_log_cliente("Cliente erro ao conectar ao servidor");
         close(client_socket);
         exit(EXIT_FAILURE);
     }
 
-    
-     cliente_inf cliente; // Crie uma instância da estrutura cliente_inf
-    cliente.id = get_new_user_id(); // Atribua um novo ID de usuário
-    strcpy(cliente.nome, "Nome do Cliente"); // Exemplo de atribuição de nome
-    printf("Cliente %d Conectado ao servidor\n", cliente.id);
-      // Envia o ID do cliente para o servidor
-    if (send(client_socket, &cliente.id, sizeof(cliente.id), 0) < 0) {
+    // Envia o ID do cliente ao servidor
+    if (send(client_socket, &client_id, sizeof(client_id), 0) <= 0) {
         perror("Erro ao enviar ID do cliente");
         close(client_socket);
-        exit(EXIT_FAILURE);
+        return 1;
     }
+    printf("Conectado ao servidor com ID %d\n", client_id);
 
-
-
+    // Loop de interação com o menu
     while (1) {
-        // Lê a mensagem do usuário
-        printf("Insira um numero (ou 'sair' para encerrar): ");
-        fgets(buffer, BUFFER_SIZE, stdin);
-        
-        // Verifica se o usuário quer encerrar a conexão
-        if (strncmp(buffer, "sair", 4) == 0) {
-            printf("Encerrando a conexão com o servidor...\n");
-            escrever_log_cliente("Cliente saiu do server");
-            break;
-        }
-
-        // Envia a mensagem para o servidor
-        send(client_socket, buffer, strlen(buffer), 0);
-    
-       
-        // Recebe a resposta do servidor
+        memset(buffer, 0, BUFFER_SIZE);  // Limpa o buffer antes de receber o menu
         int bytes_received = recv(client_socket, buffer, BUFFER_SIZE, 0);
         if (bytes_received > 0) {
             buffer[bytes_received] = '\0';
-            printf("Servidor resposta:\n %s\n", buffer);
-             escrever_log_cliente("Cliente recebeu resposta do Servidor");
-
+            printf("%s", buffer);  // Exibe o menu recebido
         } else {
-            printf("Servidor desconectado\n");
-            escrever_log_cliente("Cliente desconectado do serviodor");
+            printf("Servidor desconectado.\n");
+            break;
+        }
+
+        // Solicita a opção do usuário
+        printf("Insira um número (ou 'sair' para encerrar): ");
+        fgets(buffer, BUFFER_SIZE, stdin);
+
+        // Verifica se o usuário deseja sair
+        if (strncmp(buffer, "sair", 4) == 0) {
+            printf("Encerrando a conexão com o servidor...\n");
+            break;
+        }
+
+        send(client_socket, buffer, strlen(buffer), 0);
+        memset(buffer, 0, BUFFER_SIZE);  // Limpa o buffer antes de receber a resposta
+
+        // Recebe a resposta do servidor
+        bytes_received = recv(client_socket, buffer, BUFFER_SIZE, 0);
+        if (bytes_received > 0) {
+            buffer[bytes_received] = '\0';
+            printf("Resposta do servidor:\n%s", buffer);
+
+            // Verifica se o servidor mandou uma mensagem de término
+            if (strstr(buffer, "Saindo do jogo") != NULL) {
+                printf("O servidor encerrou a conexão.\n");
+                break;
+            }
+        } else {
+            printf("Servidor desconectado.\n");
             break;
         }
     }
