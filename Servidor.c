@@ -36,8 +36,7 @@ void enviar_menu(int client_socket) {
         "------------------------------------\n"
         "Escolha uma opção: ";
     send(client_socket, menu, strlen(menu), 0);
-}
-void *handle_client(void *client_socket) {
+}void *handle_client(void *client_socket) {
     int sock = *(int*)client_socket;
     free(client_socket);
     char buffer[BUFFER_SIZE];
@@ -53,10 +52,10 @@ void *handle_client(void *client_socket) {
     printf("Novo cliente conectado com ID: %d\n", client_id);
     escrever_log("Novo cliente conectado");
 
-    while (1) {
-        // Envia o menu para o cliente em cada iteração do loop
-        enviar_menu(sock);
+    // Envia o menu apenas uma vez, logo após o cliente se conectar
+    enviar_menu(sock);
 
+    while (1) {
         // Limpa o buffer antes de usá-lo
         memset(buffer, 0, BUFFER_SIZE);
         
@@ -106,6 +105,7 @@ encerra_conexao:
     escrever_log("Conexão com cliente encerrada");
     return NULL;
 }
+
 
 int main() {
     int server_socket, client_socket;
