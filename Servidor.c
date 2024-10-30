@@ -37,8 +37,6 @@ void enviar_menu(int client_socket) {
         "Escolha uma opção: ";
     send(client_socket, menu, strlen(menu), 0);
 }
-
-// Função para processar as opções do cliente
 void *handle_client(void *client_socket) {
     int sock = *(int*)client_socket;
     free(client_socket);
@@ -56,9 +54,12 @@ void *handle_client(void *client_socket) {
     escrever_log("Novo cliente conectado");
 
     while (1) {
-        // Envia o menu inicial
+        // Envia o menu para o cliente em cada iteração do loop
         enviar_menu(sock);
 
+        // Limpa o buffer antes de usá-lo
+        memset(buffer, 0, BUFFER_SIZE);
+        
         // Recebe a opção do cliente
         int bytes_received = recv(sock, buffer, BUFFER_SIZE, 0);
         if (bytes_received <= 0) {
@@ -70,9 +71,7 @@ void *handle_client(void *client_socket) {
         buffer[bytes_received] = '\0';
         opcao = atoi(buffer);
 
-        memset(buffer, 0, BUFFER_SIZE);  // Limpa o buffer antes de processar a opção
-
-        // Processa a opção recebida do cliente e envia apenas a resposta correspondente
+        // Processa a opção recebida do cliente e envia a resposta correspondente
         switch (opcao) {
             case 1:
                 printf("Cliente %d selecionou inserir um valor no Sudoku\n", client_id);
