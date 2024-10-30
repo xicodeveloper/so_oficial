@@ -16,7 +16,7 @@
 // Sockets --------------------------------------------------------------------------------
 #define SOCKET_NAME "/tmp/DemoSocket"
 //-----------------------------------------------------------------------------------------
-// Estrutura para armazenar informações do usuário
+// Estrutura para armazenar informações do utilizador
 typedef struct {
     int id;
     // Adicione outros campos conforme necessário
@@ -28,6 +28,6 @@ typedef struct {
 bool resolver(int tabuleiro[TAMANHO][TAMANHO]);
 void imprimir_tabuleiro_cliente(int tabuleiro[TAMANHO][TAMANHO]);
 void escrever_log_cliente(const char *mensagem);
-int get_new_user_id(); // Declaração da função para obter um novo ID de usuário
+int get_new_user_id(); // Declaração da função para obter um novo ID de utilizador
 
 #endif // HEADER_H

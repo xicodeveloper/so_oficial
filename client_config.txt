@@ -1,2 +1,0 @@
-porta=4001
-ip_servidor=10.2.15.230

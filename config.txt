@@ -1,3 +1,0 @@
-ficheiro_jogos=./jogos.txt
-ficheiro_solucoes=./solucoes.txt
-porta=4001
