@@ -47,40 +47,37 @@ int get_new_user_id() {
     return id;
 }
 
-int main() {
-    int client_socket;
-    struct sockaddr_in server_addr;
-    char buffer[BUFFER_SIZE];
-
-    // Cria o socket do cliente
-    client_socket = socket(AF_INET, SOCK_STREAM, 0);
+int criar_socket_cliente() {
+    int client_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (client_socket == -1) {
         perror("Erro ao criar socket");
         escrever_log_cliente("Cliente erro no socket");
         exit(EXIT_FAILURE);
     }
-
-    // Configura o endereço do servidor
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(PORT);
-    server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-
-    // Conecta ao servidor
-    if (connect(client_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
+    return client_socket;
+}
+void configurar_endereco_servidor(struct sockaddr_in *server_addr) {
+    server_addr->sin_family = AF_INET;
+    server_addr->sin_port = htons(PORT);
+    server_addr->sin_addr.s_addr = inet_addr("10.2.15.230");
+}
+void conectar_servidor(int client_socket, struct sockaddr_in *server_addr) {
+    if (connect(client_socket, (struct sockaddr*)server_addr, sizeof(*server_addr)) < 0) {
         perror("Erro ao conectar ao servidor");
         escrever_log_cliente("Cliente erro ao conectar ao servidor");
         close(client_socket);
         exit(EXIT_FAILURE);
     }
-
-    int client_id = get_new_user_id();
-    printf("Cliente %d conectado ao servidor\n", client_id);
-
+}
+void enviar_id_cliente(int client_socket, int client_id) {
     if (send(client_socket, &client_id, sizeof(client_id), 0) < 0) {
         perror("Erro ao enviar ID do cliente");
         close(client_socket);
         exit(EXIT_FAILURE);
     }
+}
+void comunicar_servidor(int client_socket) {
+    char buffer[BUFFER_SIZE];
 
     while (1) {
         // Recebe o menu ou a resposta do servidor
@@ -109,7 +106,23 @@ int main() {
             break;
         }
     }
-
+}
+int main() {
+    int client_socket;
+    struct sockaddr_in server_addr;
+    // Cria o socket do cliente
+    client_socket = criar_socket_cliente();
+    // Configura o endereço do servidor
+    configurar_endereco_servidor(&server_addr);
+    // Conecta ao servidor
+    conectar_servidor(client_socket, &server_addr);
+    // Gera e envia o ID do cliente
+    int client_id = get_new_user_id();
+    printf("Cliente %d conectado ao servidor\n", client_id);
+    enviar_id_cliente(client_socket, client_id);
+    // Comunica com o servidor
+    comunicar_servidor(client_socket);
+    // Fecha o socket e registra a desconexão
     close(client_socket);
     escrever_log_cliente("Cliente desconectado");
     return 0;
