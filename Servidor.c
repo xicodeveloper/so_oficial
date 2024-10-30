@@ -27,7 +27,7 @@ void escrever_log(const char *mensagem) {
 
 // Função para enviar o menu para o cliente
 void enviar_menu(int client_socket) {
-    char menu[] =
+    const char *menu =
         "---------- Menu de Sudoku ----------\n"
         "1. Inserir.\n"
         "2. O Servidor revela a Solução.\n"
@@ -56,7 +56,7 @@ void *handle_client(void *client_socket) {
     escrever_log("Novo cliente conectado");
 
     while (1) {
-        memset(buffer, 0, BUFFER_SIZE);  // Limpa o buffer antes de enviar o menu
+        // Envia o menu inicial
         enviar_menu(sock);
 
         // Recebe a opção do cliente
@@ -72,22 +72,19 @@ void *handle_client(void *client_socket) {
 
         memset(buffer, 0, BUFFER_SIZE);  // Limpa o buffer antes de processar a opção
 
-        // Processa a opção recebida do cliente
+        // Processa a opção recebida do cliente e envia apenas a resposta correspondente
         switch (opcao) {
             case 1:
                 printf("Cliente %d selecionou inserir um valor no Sudoku\n", client_id);
                 strcpy(buffer, "Opção 1: Valor inserido.\n");
-                send(sock, buffer, strlen(buffer), 0);
                 break;
             case 2:
                 printf("Cliente %d pediu para revelar a solução.\n", client_id);
                 strcpy(buffer, "Opção 2: Solução revelada.\n");
-                send(sock, buffer, strlen(buffer), 0);
                 break;
             case 3:
                 printf("Cliente %d resolveu a solução localmente.\n", client_id);
                 strcpy(buffer, "Opção 3: Solução resolvida pelo cliente.\n");
-                send(sock, buffer, strlen(buffer), 0);
                 break;
             case 4:
                 printf("Cliente %d desistiu do jogo.\n", client_id);
@@ -97,9 +94,11 @@ void *handle_client(void *client_socket) {
             default:
                 printf("Cliente %d selecionou uma opção inválida.\n", client_id);
                 strcpy(buffer, "Opção inválida! Tente novamente.\n");
-                send(sock, buffer, strlen(buffer), 0);
                 break;
         }
+
+        // Envia apenas a resposta da opção para o cliente
+        send(sock, buffer, strlen(buffer), 0);
     }
 
 encerra_conexao:

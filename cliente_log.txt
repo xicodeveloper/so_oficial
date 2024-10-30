@@ -1,0 +1,32 @@
+Tue Oct 29 23:40:47 2024 | Cliente 271 | Socket criado com sucesso
+Tue Oct 29 23:40:47 2024 | Cliente 271 | Conexão com o servidor estabelecida
+Tue Oct 29 23:40:47 2024 | Cliente 271 | ID do cliente enviado ao servidor
+Tue Oct 29 23:40:47 2024 | Cliente 271 | Menu recebido do servidor
+Tue Oct 29 23:40:49 2024 | Cliente 271 | Opção enviada ao servidor
+Tue Oct 29 23:40:49 2024 | Cliente 271 | Resposta recebida do servidor
+Tue Oct 29 23:44:27 2024 | Cliente 309 | Socket criado com sucesso
+Tue Oct 29 23:44:27 2024 | Cliente 309 | Conexão com o servidor estabelecida
+Tue Oct 29 23:44:27 2024 | Cliente 309 | ID do cliente enviado ao servidor
+Tue Oct 29 23:44:27 2024 | Cliente 309 | Menu recebido do servidor
+Tue Oct 29 23:44:33 2024 | Cliente 309 | Opção enviada ao servidor
+Tue Oct 29 23:44:33 2024 | Cliente 309 | Resposta recebida do servidor
+Tue Oct 29 23:47:26 2024 | Cliente 855 | Socket criado com sucesso
+Tue Oct 29 23:47:26 2024 | Cliente 855 | Conexão com o servidor estabelecida
+Tue Oct 29 23:47:26 2024 | Cliente 855 | ID do cliente enviado ao servidor
+Tue Oct 29 23:47:26 2024 | Cliente 855 | Menu recebido do servidor
+Tue Oct 29 23:47:32 2024 | Cliente 855 | Opção enviada ao servidor
+Tue Oct 29 23:47:32 2024 | Cliente 855 | Resposta recebida do servidor
+Tue Oct 29 23:52:25 2024 | Cliente 927 | Socket criado com sucesso
+Tue Oct 29 23:52:25 2024 | Cliente 927 | Conexão com o servidor estabelecida
+Tue Oct 29 23:52:25 2024 | Cliente 927 | ID do cliente enviado ao servidor
+Tue Oct 29 23:52:25 2024 | Cliente 927 | Menu recebido do servidor
+Tue Oct 29 23:52:26 2024 | Cliente 927 | Opção enviada ao servidor
+Tue Oct 29 23:52:26 2024 | Cliente 927 | Resposta recebida do servidor
+Tue Oct 29 23:55:05 2024 | Cliente 927 | Servidor desconectado
+Tue Oct 29 23:55:05 2024 | Cliente 927 | Conexão com o servidor encerrada
+Tue Oct 29 23:57:21 2024 | Cliente 927 | Socket criado com sucesso
+Tue Oct 29 23:57:21 2024 | Cliente 927 | Conexão com o servidor estabelecida
+Tue Oct 29 23:57:21 2024 | Cliente 927 | ID do cliente enviado ao servidor
+Tue Oct 29 23:57:21 2024 | Cliente 927 | Menu recebido do servidor
+Tue Oct 29 23:57:25 2024 | Cliente 927 | Opção enviada para o servidor
+Tue Oct 29 23:57:25 2024 | Cliente 927 | Resposta recebida do servidor
