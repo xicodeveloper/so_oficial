@@ -179,3 +179,12 @@ Wed Oct 30 20:37:51 2024 | Novo cliente conectado
 Wed Oct 30 20:38:09 2024 | Novo cliente conectado
 Wed Oct 30 20:38:13 2024 | Conexão com cliente encerrada
 Wed Oct 30 20:38:17 2024 | Cliente desconectado.
+Wed Oct 30 20:48:29 2024 | Inicio do servidor: Configuração lida com sucesso
+Wed Oct 30 20:48:29 2024 | Servidor iniciado e aguardando conexões
+Wed Oct 30 20:48:38 2024 | Novo cliente conectado
+Wed Oct 30 20:55:58 2024 | Inicio do servidor: Configuração lida com sucesso
+Wed Oct 30 20:55:58 2024 | Erro no bind do servidor
+Wed Oct 30 20:56:35 2024 | Inicio do servidor: Configuração lida com sucesso
+Wed Oct 30 20:56:35 2024 | Servidor iniciado e aguardando conexões
+Wed Oct 30 20:57:03 2024 | Inicio de um cliente:Configuracao lida com sucesso.
+Wed Oct 30 20:57:03 2024 | Novo cliente conectado

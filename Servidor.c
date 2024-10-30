@@ -6,7 +6,6 @@
 #include <arpa/inet.h>
 #include <time.h>
 
-#define PORT 8080
 #define BUFFER_SIZE 1024
 
 // Função para registrar logs do servidor
@@ -25,6 +24,35 @@ void escrever_log(const char *mensagem) {
     fclose(f);
 }
 
+// Função para ler configurações do arquivo config.txt
+void ler_configuracao(char *config_path, char *ficheiro_jogos, char *ficheiro_solucoes, int *porta) {
+    FILE *config = fopen(config_path, "r");
+    if (config == NULL) {
+        printf("Erro ao abrir o ficheiro de configuração.\n");
+        exit(1);
+    }
+
+    char linha[256];
+    while (fgets(linha, sizeof(linha), config)) { 
+        char *token = strtok(linha, "=");
+        
+        if (strcmp(token, "ficheiro_jogos") == 0) {
+            token = strtok(NULL, "\n");
+            strcpy(ficheiro_jogos, token);
+        } 
+        else if (strcmp(token, "ficheiro_solucoes") == 0) {
+            token = strtok(NULL, "\n");
+            strcpy(ficheiro_solucoes, token);
+        } 
+        else if (strcmp(token, "porta") == 0) {
+            token = strtok(NULL, "\n");
+            *porta = atoi(token);
+        } 
+    }
+    fclose(config); 
+    escrever_log("Inicio do servidor: Configuração lida com sucesso");
+}
+
 // Função para enviar o menu para o cliente
 void enviar_menu(int client_socket) {
     const char *menu =
@@ -36,7 +64,9 @@ void enviar_menu(int client_socket) {
         "------------------------------------\n"
         "Escolha uma opção: ";
     send(client_socket, menu, strlen(menu), 0);
-}void *handle_client(void *client_socket) {
+}
+
+void *handle_client(void *client_socket) {
     int sock = *(int*)client_socket;
     free(client_socket);
     char buffer[BUFFER_SIZE];
@@ -56,10 +86,8 @@ void enviar_menu(int client_socket) {
     enviar_menu(sock);
 
     while (1) {
-        // Limpa o buffer antes de usá-lo
         memset(buffer, 0, BUFFER_SIZE);
         
-        // Recebe a opção do cliente
         int bytes_received = recv(sock, buffer, BUFFER_SIZE, 0);
         if (bytes_received <= 0) {
             printf("Cliente %d desconectado\n", client_id);
@@ -70,7 +98,6 @@ void enviar_menu(int client_socket) {
         buffer[bytes_received] = '\0';
         opcao = atoi(buffer);
 
-        // Processa a opção recebida do cliente e envia a resposta correspondente
         switch (opcao) {
             case 1:
                 printf("Cliente %d selecionou inserir um valor no Sudoku\n", client_id);
@@ -95,7 +122,6 @@ void enviar_menu(int client_socket) {
                 break;
         }
 
-        // Envia apenas a resposta da opção para o cliente
         send(sock, buffer, strlen(buffer), 0);
     }
 
@@ -106,11 +132,26 @@ encerra_conexao:
     return NULL;
 }
 
-
-int main() {
+int main(int argc, char *argv[]) {
     int server_socket, client_socket;
+    int porta;
     struct sockaddr_in server_addr, client_addr;
     socklen_t addr_len = sizeof(client_addr);
+    
+    if (argc < 2) {
+        printf("Uso: %s <ficheiro de configuração>\n", argv[0]);
+        return 1;
+    }
+
+    char ficheiro_jogos[256];
+    char ficheiro_solucoes[256];
+
+    // Ler configuração
+    ler_configuracao(argv[1], ficheiro_jogos, ficheiro_solucoes, &porta);
+    
+    printf("Ficheiro de jogos: %s\n", ficheiro_jogos);
+    printf("Ficheiro de soluções: %s\n", ficheiro_solucoes);
+    printf("Porta: %d\n", porta);
 
     // Cria o socket do servidor
     server_socket = socket(AF_INET, SOCK_STREAM, 0);
@@ -123,7 +164,7 @@ int main() {
     // Configura o endereço do servidor
     server_addr.sin_family = AF_INET;
     server_addr.sin_addr.s_addr = INADDR_ANY;
-    server_addr.sin_port = htons(PORT);
+    server_addr.sin_port = htons(porta);
 
     // Faz o bind do socket
     if (bind(server_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
@@ -141,11 +182,10 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
-    printf("Servidor aguardando conexões na porta %d...\n", PORT);
+    printf("Servidor aguardando conexões na porta %d...\n", porta);
     escrever_log("Servidor iniciado e aguardando conexões");
 
     while (1) {
-        // Aceita uma nova conexão
         client_socket = accept(server_socket, (struct sockaddr*)&client_addr, &addr_len);
         if (client_socket < 0) {
             perror("Erro no accept");
@@ -156,7 +196,6 @@ int main() {
         *new_sock = client_socket;
         pthread_t client_thread;
 
-        // Cria uma nova thread para o cliente
         if (pthread_create(&client_thread, NULL, handle_client, (void*)new_sock) != 0) {
             perror("Erro ao criar thread");
             free(new_sock);

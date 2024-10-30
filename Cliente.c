@@ -5,7 +5,7 @@
 #include <arpa/inet.h>
 #include <time.h>
 
-#define PORT 8080
+#define PORT 4001
 #define BUFFER_SIZE 1024
 
 void escrever_log_cliente(const char *mensagem) {
@@ -21,6 +21,26 @@ void escrever_log_cliente(const char *mensagem) {
 
     fprintf(f, "%s | %s.\n", timestamp, mensagem);
     fclose(f);
+}
+// Função para ler configurações do arquivo config.txt
+void ler_configuracao_cliente(char *config_path,  int *porta) {
+    FILE *config = fopen(config_path, "r");
+    if (config == NULL) {
+        printf("Erro ao abrir o ficheiro de configuração.\n");
+        exit(1);
+    }
+
+    char linha[256];
+    while (fgets(linha, sizeof(linha), config)) { 
+        char *token = strtok(linha, "=");
+
+       if (strcmp(token, "porta") == 0) {
+            token = strtok(NULL, "\n");
+            *porta = atoi(token);
+        } 
+    }
+    fclose(config); 
+    escrever_log_cliente("Inicio de um cliente:Configuracao lida com sucesso");
 }
 
 // Função para obter um novo ID de usuário
@@ -121,8 +141,14 @@ void comunicar_servidor(int client_socket) {
 }
 
 
-int main() {
+int main(int argc, char *argv[]) {
     int client_socket;
+     int porta;
+       if (argc < 2) {
+        printf("Uso: %s <ficheiro de configuração>\n", argv[0]);
+        return 1;
+    }
+    ler_configuracao_cliente(argv[1], &porta);
     struct sockaddr_in server_addr;
     // Cria o socket do cliente
     client_socket = criar_socket_cliente();
