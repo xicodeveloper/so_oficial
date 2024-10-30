@@ -5,7 +5,6 @@
 #include <arpa/inet.h>
 #include <time.h>
 
-#define PORT 4001
 #define BUFFER_SIZE 1024
 
 void escrever_log_cliente(const char *mensagem) {
@@ -22,8 +21,9 @@ void escrever_log_cliente(const char *mensagem) {
     fprintf(f, "%s | %s.\n", timestamp, mensagem);
     fclose(f);
 }
+
 // Função para ler configurações do arquivo config.txt
-void ler_configuracao_cliente(char *config_path,  int *porta) {
+void ler_configuracao_cliente(char *config_path, int *porta, char *ip_server) {
     FILE *config = fopen(config_path, "r");
     if (config == NULL) {
         printf("Erro ao abrir o ficheiro de configuração.\n");
@@ -31,16 +31,19 @@ void ler_configuracao_cliente(char *config_path,  int *porta) {
     }
 
     char linha[256];
-    while (fgets(linha, sizeof(linha), config)) { 
+    while (fgets(linha, sizeof(linha), config)) {
         char *token = strtok(linha, "=");
 
-       if (strcmp(token, "porta") == 0) {
+        if (strcmp(token, "porta") == 0) {
             token = strtok(NULL, "\n");
             *porta = atoi(token);
-        } 
+        } else if (strcmp(token, "ip_servidor") == 0) {
+            token = strtok(NULL, "\n");
+            strcpy(ip_server, token);
+        }
     }
-    fclose(config); 
-    escrever_log_cliente("Inicio de um cliente:Configuracao lida com sucesso");
+    fclose(config);
+    escrever_log_cliente("Inicio de um cliente: Configuração lida com sucesso");
 }
 
 // Função para obter um novo ID de usuário
@@ -76,19 +79,22 @@ int criar_socket_cliente() {
     }
     return client_socket;
 }
-void configurar_endereco_servidor(struct sockaddr_in *server_addr) {
+
+void configurar_endereco_servidor(struct sockaddr_in *server_addr, int porta, const char *ip_server) {
     server_addr->sin_family = AF_INET;
-    server_addr->sin_port = htons(PORT);
-    server_addr->sin_addr.s_addr = inet_addr("10.2.15.230");
+    server_addr->sin_port = htons(porta);
+    server_addr->sin_addr.s_addr = inet_addr(ip_server);
 }
+
 void conectar_servidor(int client_socket, struct sockaddr_in *server_addr) {
-    if (connect(client_socket, (struct sockaddr*)server_addr, sizeof(*server_addr)) < 0) {
+    if (connect(client_socket, (struct sockaddr *)server_addr, sizeof(*server_addr)) < 0) {
         perror("Erro ao conectar ao servidor");
         escrever_log_cliente("Cliente erro ao conectar ao servidor");
         close(client_socket);
         exit(EXIT_FAILURE);
     }
 }
+
 void enviar_id_cliente(int client_socket, int client_id) {
     if (send(client_socket, &client_id, sizeof(client_id), 0) < 0) {
         perror("Erro ao enviar ID do cliente");
@@ -96,6 +102,7 @@ void enviar_id_cliente(int client_socket, int client_id) {
         exit(EXIT_FAILURE);
     }
 }
+
 void comunicar_servidor(int client_socket) {
     char buffer[BUFFER_SIZE];
 
@@ -140,28 +147,36 @@ void comunicar_servidor(int client_socket) {
     }
 }
 
-
 int main(int argc, char *argv[]) {
     int client_socket;
-     int porta;
-       if (argc < 2) {
+    int porta;
+    char ip[256];
+
+    if (argc < 2) {
         printf("Uso: %s <ficheiro de configuração>\n", argv[0]);
         return 1;
     }
-    ler_configuracao_cliente(argv[1], &porta);
+
+    ler_configuracao_cliente(argv[1], &porta, ip);
     struct sockaddr_in server_addr;
+
     // Cria o socket do cliente
     client_socket = criar_socket_cliente();
-    // Configura o endereço do servidor
-    configurar_endereco_servidor(&server_addr);
+
+    // Configura o endereço do servidor com IP e porta lidos
+    configurar_endereco_servidor(&server_addr, porta, ip);
+
     // Conecta ao servidor
     conectar_servidor(client_socket, &server_addr);
+
     // Gera e envia o ID do cliente
     int client_id = get_new_user_id();
     printf("Cliente %d conectado ao servidor\n", client_id);
     enviar_id_cliente(client_socket, client_id);
+
     // Comunica com o servidor
     comunicar_servidor(client_socket);
+
     // Fecha o socket e registra a desconexão
     close(client_socket);
     escrever_log_cliente("Cliente desconectado");
