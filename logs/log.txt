@@ -243,3 +243,7 @@ Wed Oct 30 23:27:31 2024 | Inicio do servidor: Configuração lida com sucesso
 Wed Oct 30 23:27:31 2024 | Erro no bind do servidor
 Wed Oct 30 23:27:45 2024 | Novo cliente conectado
 Wed Oct 30 23:27:54 2024 | Conexão com cliente encerrada
+Wed Oct 30 23:33:55 2024 | Inicio do servidor: Configuração lida com sucesso
+Wed Oct 30 23:33:55 2024 | Servidor iniciado e aguardando conexões
+Wed Oct 30 23:34:04 2024 | Novo cliente conectado
+Wed Oct 30 23:34:17 2024 | Conexão com cliente encerrada

@@ -59,7 +59,7 @@ void criar_configuracao_cliente(int client_id) {
 
     fprintf(config_file, "porta=4000\n");
     fprintf(config_file, "ip_servidor=10.2.15.230\n");
-    fprintf(config_file, "cliente=%d\n", client_id);
+    fprintf(config_file, "cliente_id=%d\n", client_id);
 
     fclose(config_file);
 }

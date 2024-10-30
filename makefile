@@ -17,13 +17,14 @@ $(SERVER): Servidor.c
 $(CLIENT): Cliente.c
 	$(CC) $(CFLAGS) -o $(CLIENT) Cliente.c
 
-# Alvo para limpar os arquivos de compilação
+# Alvo para limpar os arquivos de compilação e configurações
 clean:
 	rm -f $(SERVER) $(CLIENT)
+	rm -f ./configuracoes/clientes/client_config_*.txt
 
-clean:
-	rm -f *.o *~ $(TARGET)
-
-# Adicionar a regra clear
+# Alvo para limpeza com mensagem adicional
 clear: clean
-	@echo "Ficheiros limpos!"
+	@echo "Ficheiros e configurações limpos"
+
+# Força a execução do "clean" e "clear"
+.PHONY: all clean clear
