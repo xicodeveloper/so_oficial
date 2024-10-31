@@ -46,24 +46,6 @@ void ler_configuracao_cliente(const char *config_path, int *porta, char *ip_serv
     escrever_log_cliente("Inicio de um cliente: Configuração lida com sucesso");
 }
 
-// Função para criar o arquivo de configuração do cliente
-void criar_configuracao_cliente(int client_id) {
-    char filename[50];
-    sprintf(filename, "./configuracoes/clientes/client_config_%d.txt", client_id);
-
-    FILE *config_file = fopen(filename, "w");
-    if (config_file == NULL) {
-        perror("Erro ao criar o arquivo de configuração do cliente");
-        return;
-    }
-
-    fprintf(config_file, "porta=4000\n");
-    fprintf(config_file, "ip_servidor=10.2.15.230\n");
-    fprintf(config_file, "cliente_id=%d\n", client_id);
-
-    fclose(config_file);
-}
-
 // Função para obter um novo ID de usuário
 int get_new_user_id() {
     FILE *file = fopen("users.txt", "r+");
@@ -84,7 +66,6 @@ int get_new_user_id() {
     rewind(file);
     fprintf(file, "%d", id);
     fclose(file);
-    criar_configuracao_cliente(id);
     return id;
 }
 
@@ -164,20 +145,22 @@ void comunicar_servidor(int client_socket) {
         printf("Resposta do servidor:\n%s", buffer);
     }
 }
-int main() {
+
+int main(int argc, char *argv[]) {
     int client_socket;
     int porta;
     char ip[256];
+ 
+    if (argc < 2) {
+        printf("Uso: %s <ficheiro de configuração>\n", argv[0]);
+        return 1;
+    }
 
     // Gera o ID do cliente e cria o arquivo de configuração
     int client_id = get_new_user_id();
 
-    // Construir o caminho do arquivo de configuração com base no client_id
-    char config_path[50];
-    sprintf(config_path, "./configuracoes/clientes/client_config_%d.txt", client_id);
-
     // Lê as configurações
-    ler_configuracao_cliente(config_path, &porta, ip);
+    ler_configuracao_cliente(argv[1], &porta, ip);
 
     struct sockaddr_in server_addr;
 

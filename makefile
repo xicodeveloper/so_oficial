@@ -20,7 +20,6 @@ $(CLIENT): Cliente.c
 # Alvo para limpar os arquivos de compilação e configurações
 clean:
 	rm -f $(SERVER) $(CLIENT)
-	rm -f ./configuracoes/clientes/client_config_*.txt
 
 # Alvo para limpeza com mensagem adicional
 clear: clean
