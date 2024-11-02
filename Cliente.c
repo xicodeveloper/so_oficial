@@ -101,18 +101,35 @@ void enviar_id_cliente(int client_socket, int client_id) {
         exit(EXIT_FAILURE);
     }
 }
-
-void comunicar_servidor(int client_socket) {
-    char buffer[BUFFER_SIZE];
-
-    // Recebe o menu inicial do servidor apenas uma vez
+void receber_horas(int client_socket){
+ char buffer_hora[BUFFER_SIZE];
+    int bytes_received = recv(client_socket, buffer_hora, BUFFER_SIZE - 1, 0);
+    if (bytes_received <= 0) {
+        printf("Servidor nao mandou horas.\n");
+        return;
+    }
+    buffer_hora[bytes_received] = '\0';
+    printf("Hora inicio conexao:\n%s", buffer_hora);
+    
+}
+void receber_menu(int client_socket){
+ char buffer[BUFFER_SIZE];
     int bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
     if (bytes_received <= 0) {
-        printf("Servidor desconectado.\n");
+        printf("Servidor nao mandou o menu.\n");
         return;
     }
     buffer[bytes_received] = '\0';
     printf("Resposta do servidor:\n%s", buffer);
+}
+
+void comunicar_servidor(int client_socket) {
+    char buffer[BUFFER_SIZE];
+    receber_horas(client_socket);
+//---------------------------------------
+    receber_menu(client_socket);
+    
+
 
     // Inicia o loop para enviar e receber respostas
     while (1) {
@@ -135,7 +152,7 @@ void comunicar_servidor(int client_socket) {
         }
 
         // Recebe a resposta do servidor para a opção escolhida
-        bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+        int bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
         if (bytes_received <= 0) {
             printf("Servidor desconectado.\n");
             break;

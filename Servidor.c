@@ -350,6 +350,15 @@ void enviar_menu(int client_socket) {
         "Escolha uma opção: ";
     send(client_socket, menu, strlen(menu), 0);
 }
+// Função para enviar o menu para o cliente
+void enviar_inicio_conecao(int client_socket) {
+    // Envia a hora de início da conexão
+    time_t inicio_conexao = time(NULL);
+    struct tm *info_tempo = localtime(&inicio_conexao);
+    char mensagem_inicio[BUFFER_SIZE];
+    strftime(mensagem_inicio, sizeof(mensagem_inicio), "Hora de início: %H:%M:%S\n", info_tempo);
+    send(client_socket, mensagem_inicio, strlen(mensagem_inicio), 0);
+}
 
 void *handle_client(void *client_socket) {
     int sock = *(int*)client_socket;
@@ -368,6 +377,7 @@ void *handle_client(void *client_socket) {
     escrever_log("Novo cliente conectado");
 
     // Envia o menu apenas uma vez, logo após o cliente se conectar
+    enviar_inicio_conecao(sock);
     enviar_menu(sock);
 
     while (1) {
