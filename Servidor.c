@@ -9,6 +9,8 @@
 #define BUFFER_SIZE 1024
 #define TAMANHO 1024
 
+int num_clients_sessao = 0;
+pthread_mutex_t clients_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 // Função para registrar logs do servidor
 void escrever_log(const char *mensagem) {
@@ -338,21 +340,30 @@ int verificar_vitoria(int tabuleiro[TAMANHO][TAMANHO]) {
 }
 
 
+
 // Função para enviar o menu para o cliente
 void enviar_menu(int client_socket) {
-    const char *menu =
+    char buffer[BUFFER_SIZE]; // Definindo o buffer com o tamanho necessário
+
+    // Escrevendo o menu no buffer
+    snprintf(buffer, sizeof(buffer),
         "---------- Menu de Sudoku ----------\n"
         "1. Criar Tabuleiro.\n"
         "2. O Servidor revela a Solução.\n"
         "3. O Cliente resolve a Solução.\n"
         "4. Desistir.\n"
-        "------------------------------------\n"
-        "Escolha uma opção: ";
-    send(client_socket, menu, strlen(menu), 0);
+        "------------------------------------\n");
+
+    // Enviando o conteúdo do buffer ao cliente
+    send(client_socket, buffer, strlen(buffer), 0);
+
+    // Limpando o buffer
+    memset(buffer, 0, sizeof(buffer));
 }
-// Função para enviar o menu para o cliente
+
+
+// Função para enviar o horário de início da conexão para o cliente
 void enviar_inicio_conecao(int client_socket) {
-    // Envia a hora de início da conexão
     time_t inicio_conexao = time(NULL);
     struct tm *info_tempo = localtime(&inicio_conexao);
     char mensagem_inicio[BUFFER_SIZE];
@@ -360,69 +371,99 @@ void enviar_inicio_conecao(int client_socket) {
     send(client_socket, mensagem_inicio, strlen(mensagem_inicio), 0);
 }
 
-void *handle_client(void *client_socket) {
-    int sock = *(int*)client_socket;
-    free(client_socket);
-    char buffer[BUFFER_SIZE];
-    int opcao;
+// Função para receber o ID do cliente
+int receber_id(int sock) {
     int client_id;
-
-    // Recebe o ID do cliente
     if (recv(sock, &client_id, sizeof(client_id), 0) <= 0) {
         perror("Erro ao receber ID do cliente");
         close(sock);
-        return NULL;
+        return 0;
     }
     printf("Novo cliente conectado com ID: %d\n", client_id);
+    // Função de log (não incluída no código)
     escrever_log("Novo cliente conectado");
+    return client_id;
+}
+int receber_opcao(int client_socket, int client_id) {
+    char buffer[BUFFER_SIZE];
+    int bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
 
-    // Envia o menu apenas uma vez, logo após o cliente se conectar
-    enviar_inicio_conecao(sock);
-    enviar_menu(sock);
-
-    while (1) {
-        memset(buffer, 0, BUFFER_SIZE);
-        
-        int bytes_received = recv(sock, buffer, BUFFER_SIZE, 0);
-        if (bytes_received <= 0) {
-            printf("Cliente %d desconectado\n", client_id);
-            escrever_log("Cliente desconectado");
-            break;
-        }
-
-        buffer[bytes_received] = '\0';
-        opcao = atoi(buffer);
-
-        switch (opcao) {
-            case 1:
-                printf("Cliente %d selecionou inserir um valor no Sudoku\n", client_id);
-                strcpy(buffer, "Opção 1: Valor inserido.\n");
-                break;
-            case 2:
-                printf("Cliente %d pediu para revelar a solução.\n", client_id);
-                strcpy(buffer, "Opção 2: Solução revelada.\n");
-                break;
-            case 3:
-                printf("Cliente %d resolveu a solução localmente.\n", client_id);
-                strcpy(buffer, "Opção 3: Solução resolvida pelo cliente.\n");
-                break;
-            case 4:
-                printf("Cliente %d desistiu do jogo.\n", client_id);
-                strcpy(buffer, "Opção 4: Saindo do jogo.\n");
-                send(sock, buffer, strlen(buffer), 0);
-                goto encerra_conexao;
-            default:
-                printf("Cliente %d selecionou uma opção inválida.\n", client_id);
-                strcpy(buffer, "Opção inválida! Tente novamente.\n");
-                break;
-        }
-
-        send(sock, buffer, strlen(buffer), 0);
+    if (bytes_received <= 0) {
+        printf("Cliente %d desconectado\n", client_id);
+        escrever_log("Cliente desconectado");
+        return -1;  // Indicate disconnection or error
     }
 
-encerra_conexao:
+    buffer[bytes_received] = '\0';
+    return atoi(buffer);  // Convert the received option to integer
+}
+void pedir_opcao(int client_socket){
+    char buffer[BUFFER_SIZE];
+    strcpy(buffer, "Escolha uma opção: ");
+    send(client_socket, buffer, strlen(buffer), 0);
+}
+void enviar_resposta(int client_socket, int client_id, int opcao) {
+    char buffer[BUFFER_SIZE];
+
+    // Handle the option and prepare response
+    switch (opcao) {
+        case 1:
+            printf("Cliente %d selecionou inserir um valor no Sudoku\n", client_id);
+            strcpy(buffer, "Opção 1: Valor inserido.\n");
+            break;
+        case 2:
+            printf("Cliente %d pediu para revelar a solução.\n", client_id);
+            strcpy(buffer, "Opção 2: Solução revelada.\n");
+            break;
+        case 3:
+            printf("Cliente %d resolveu a solução localmente.\n", client_id);
+            strcpy(buffer, "Opção 3: Solução resolvida pelo cliente.\n");
+            break;
+        case 4:
+            printf("Cliente %d desistiu do jogo.\n", client_id);
+            strcpy(buffer, "Opção 4: Saindo do jogo.\n");
+            return; 
+        default:
+            printf("Cliente %d selecionou uma opção inválida.\n", client_id);
+            strcpy(buffer, "Opção inválida! Tente novamente.\n");
+            break;
+    }
+
+    // Send the prepared response
+    send(client_socket, buffer, strlen(buffer), 0);
+}
+
+void *handle_client(void *client_socket) {
+    int sock = *(int*)client_socket;
+    free(client_socket);
+
+    int client_id = receber_id(sock);
+    if (client_id == 0) {
+        return NULL;  // Connection failed
+    }
+
+    enviar_inicio_conecao(sock);
+    enviar_menu(sock);
+    
+    while (1) {
+        pedir_opcao(sock);
+        int opcao= receber_opcao( sock,  client_id);
+        enviar_resposta(sock,  client_id, opcao);
+       // int opcao = receber_opcao(sock, client_id);
+        //if (opcao == -1 || opcao == 4) {  // Disconnection or exit option
+          //  break;
+        //}
+        //enviar_resposta(sock, client_id, opcao);
+    }
+
     close(sock);
     printf("Conexão com cliente %d encerrada\n", client_id);
+
+    pthread_mutex_lock(&clients_mutex);
+    num_clients_sessao--;
+    pthread_mutex_unlock(&clients_mutex);
+
+    printf("Clientes atuais: %d\n", num_clients_sessao);
     escrever_log("Conexão com cliente encerrada");
     return NULL;
 }
@@ -486,6 +527,11 @@ int main(int argc, char *argv[]) {
             perror("Erro no accept");
             continue;
         }
+         // Incrementa o contador de clientes de forma sincronizada
+        pthread_mutex_lock(&clients_mutex);
+        num_clients_sessao++;
+        printf("Clientes atuais: %d\n", num_clients_sessao);
+        pthread_mutex_unlock(&clients_mutex);
 
         int *new_sock = malloc(sizeof(int));
         *new_sock = client_socket;

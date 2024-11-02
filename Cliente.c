@@ -112,56 +112,77 @@ void receber_horas(int client_socket){
     printf("Hora inicio conexao:\n%s", buffer_hora);
     
 }
-void receber_menu(int client_socket){
- char buffer[BUFFER_SIZE];
+void recebe_opcao(int client_socket){
+    char buffer[BUFFER_SIZE];
     int bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
     if (bytes_received <= 0) {
-        printf("Servidor nao mandou o menu.\n");
+        printf("Servidor nao mandou opcao.\n");
         return;
     }
     buffer[bytes_received] = '\0';
     printf("Resposta do servidor:\n%s", buffer);
 }
-
-void comunicar_servidor(int client_socket) {
+// Function to send the chosen option to the server
+int enviar_opcao(int client_socket) {
     char buffer[BUFFER_SIZE];
+
+    printf("Escolha uma opção: ");
+    fgets(buffer, BUFFER_SIZE, stdin);
+
+    // Remove the newline that `fgets` leaves in the buffer
+    buffer[strcspn(buffer, "\n")] = '\0';
+
+    // Send the chosen option to the server
+    send(client_socket, buffer, strlen(buffer), 0);
+
+    return 1;  // Indicate that the option was sent successfully
+}
+
+// Function to receive and display the server's response
+int receber_resposta(int client_socket) {
+    char buffer[BUFFER_SIZE];
+
+    // Receive the server's response for the chosen option
+    int bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+    if (bytes_received <= 0) {
+        printf("Servidor desconectado.\n");
+        return -1;  // Indicate disconnection or error
+    }
+
+    buffer[bytes_received] = '\0';
+    printf("Resposta do servidor:\n%s\n", buffer);
+    return 1;  // Indicate successful receipt of response
+}
+
+void receber_menu(int client_socket) {
+    char buffer[BUFFER_SIZE];
+    int bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+    if (bytes_received <= 0) {
+        printf("Erro ao receber o menu do servidor.\n");
+        return;
+    }
+    buffer[bytes_received] = '\0';
+    printf("Menu do servidor:\n%s", buffer);
+}
+void comunicar_servidor(int client_socket, int client_id) {
+    //-----------------ENVIO ID AO SERVIDOR
+    printf("Cliente %d conectado ao servidor\n", client_id);
+    enviar_id_cliente(client_socket, client_id);
+    //--------------------RECEBER HORAS INICIO CONEXAO
     receber_horas(client_socket);
-//---------------------------------------
+    //--------------------RECEBER MENU
     receber_menu(client_socket);
-    
-
-
+   
     // Inicia o loop para enviar e receber respostas
     while (1) {
-        printf("Insira um número (ou 'sair' para encerrar): ");
-        fgets(buffer, BUFFER_SIZE, stdin);
-
-        // Remove o newline que `fgets` deixa no buffer
-        buffer[strcspn(buffer, "\n")] = 0;
-
-        // Verifica se o usuário deseja sair
-        if (strncmp(buffer, "sair", 4) == 0) {
-            printf("Saindo do cliente...\n");
-            break;
-        }
-
-        // Envia a opção escolhida para o servidor
-        if (send(client_socket, buffer, strlen(buffer), 0) < 0) {
-            perror("Erro ao enviar dados");
-            break;
-        }
-
-        // Recebe a resposta do servidor para a opção escolhida
-        int bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
-        if (bytes_received <= 0) {
-            printf("Servidor desconectado.\n");
-            break;
-        }
-
-        buffer[bytes_received] = '\0';
-        printf("Resposta do servidor:\n%s", buffer);
+printf("ola");
+        // Send the option to the server
+         recebe_opcao(client_socket);
+         enviar_opcao(client_socket);
+         receber_resposta(client_socket);
     }
-}
+    }
+
 
 int main(int argc, char *argv[]) {
     int client_socket;
@@ -174,7 +195,7 @@ int main(int argc, char *argv[]) {
     }
 
     // Gera o ID do cliente e cria o arquivo de configuração
-    int client_id = get_new_user_id();
+   int client_id= get_new_user_id();
 
     // Lê as configurações
     ler_configuracao_cliente(argv[1], &porta, ip);
@@ -190,11 +211,8 @@ int main(int argc, char *argv[]) {
     // Conecta ao servidor
     conectar_servidor(client_socket, &server_addr);
 
-    printf("Cliente %d conectado ao servidor\n", client_id);
-    enviar_id_cliente(client_socket, client_id);
-
     // Comunica com o servidor
-    comunicar_servidor(client_socket);
+    comunicar_servidor(client_socket, client_id);
 
     // Fecha o socket e registra a desconexão
     close(client_socket);
