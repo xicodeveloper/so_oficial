@@ -353,13 +353,30 @@ void enviar_menu(int client_socket) {
         "Escolha uma opção: ";
     send(client_socket, menu, strlen(menu), 0);
 }
-
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/socket.h>
-
-#define BUFFER_SIZE 1024
+void formatar_tabuleiro(char *tabuleiro, char *formatted_board) {
+    int index = 0;
+    for (int i = 0; i < 9; i++) {
+        for (int j = 0; j < 9; j++) {
+            formatted_board[index++] = tabuleiro[i * 9 + j];
+            // Adiciona espaços e barras verticais para formatação
+            if ((j + 1) % 3 == 0 && j < 8) {
+                formatted_board[index++] = ' ';
+                formatted_board[index++] = '|';
+                formatted_board[index++] = ' ';
+            } else {
+                formatted_board[index++] = ' ';
+            }
+        }
+        formatted_board[index++] = '\n';
+        
+        // Adiciona uma linha divisória entre blocos de 3 linhas
+        if ((i + 1) % 3 == 0 && i < 8) {
+            snprintf(formatted_board + index, 24, "------+-------+------\n");
+            index += strlen("------+-------+------\n");
+        }
+    }
+    formatted_board[index] = '\0'; // Termina a string formatada
+}
 
 void envia_tabuleiro(int client_socket) {
     char buffer[BUFFER_SIZE];
@@ -369,35 +386,27 @@ void envia_tabuleiro(int client_socket) {
         return;
     }
 
-    int tabuleiro_num = 1;
     while (fgets(buffer, BUFFER_SIZE, f) != NULL) {
-        char formatted_board[BUFFER_SIZE] = {0};
-        int idx = 0;
+        // Remove o caractere de nova linha, se existir
+        buffer[strcspn(buffer, "\n")] = 0;
 
-        // Adiciona o cabeçalho do tabuleiro
-        snprintf(formatted_board, sizeof(formatted_board), "Tabuleiro %d:\n", tabuleiro_num++);
-        
-        for (int i = 0; i < 81; i++) {
-            char c = buffer[i];
+        // Obtém o ID do tabuleiro
+        char id[BUFFER_SIZE];
+        strncpy(id, buffer, BUFFER_SIZE);
 
-            // Converte '_' para espaços vazios
-            if (c == '_') {
-                c = ' ';
-            }
-
-            // Adiciona o caractere ao tabuleiro formatado
-            snprintf(formatted_board + strlen(formatted_board), sizeof(formatted_board) - strlen(formatted_board), "%c ", c);
-
-            // Adiciona divisores para a formatação do Sudoku
-            if ((i + 1) % 9 == 0) {
-                strcat(formatted_board, "\n");
-                if ((i + 1) % 27 == 0 && i < 80) {
-                    strcat(formatted_board, "------+-------+------\n");
-                }
-            } else if ((i + 1) % 3 == 0) {
-                strcat(formatted_board, "| ");
-            }
+        // Lê a próxima linha, que contém o tabuleiro
+        if (fgets(buffer, BUFFER_SIZE, f) == NULL) {
+            printf("Erro ao ler o tabuleiro para o ID %s.\n", id);
+            break;
         }
+        buffer[strcspn(buffer, "\n")] = 0; // Remove o caractere de nova linha
+
+        // Prepara o tabuleiro formatado
+        char formatted_board[BUFFER_SIZE];
+        char formatted_tabuleiro[BUFFER_SIZE];
+        formatar_tabuleiro(buffer, formatted_tabuleiro);
+
+        snprintf(formatted_board, BUFFER_SIZE, "ID: %s\nTabuleiro:\n%s\n\n", id, formatted_tabuleiro);
 
         // Envia o tabuleiro formatado para o cliente
         send(client_socket, formatted_board, strlen(formatted_board), 0);
@@ -405,7 +414,6 @@ void envia_tabuleiro(int client_socket) {
 
     fclose(f);
 }
-
 
 void *handle_client(void *client_socket) {
     int sock = *(int*)client_socket;
