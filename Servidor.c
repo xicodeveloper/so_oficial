@@ -9,6 +9,9 @@
 #define BUFFER_SIZE 1024
 #define TAMANHO 1024
 
+int num_clients_sessao = 0;
+pthread_mutex_t clients_mutex = PTHREAD_MUTEX_INITIALIZER;
+
 
 // Função para registrar logs do servidor
 void escrever_log(const char *mensagem) {
@@ -412,6 +415,11 @@ void *handle_client(void *client_socket) {
 
 encerra_conexao:
     close(sock);
+      pthread_mutex_lock(&clients_mutex);
+    num_clients_sessao--;
+    pthread_mutex_unlock(&clients_mutex);
+
+    printf("Clientes atuais: %d\n", num_clients_sessao);
     printf("Conexão com cliente %d encerrada\n", client_id);
     escrever_log("Conexão com cliente encerrada");
     return NULL;
@@ -476,7 +484,10 @@ int main(int argc, char *argv[]) {
             perror("Erro no accept");
             continue;
         }
-
+     pthread_mutex_lock(&clients_mutex);
+        num_clients_sessao++;
+        printf("Clientes atuais: %d\n", num_clients_sessao);
+        pthread_mutex_unlock(&clients_mutex);
         int *new_sock = malloc(sizeof(int));
         *new_sock = client_socket;
         pthread_t client_thread;
