@@ -288,3 +288,35 @@ Thu Nov  7 11:43:52 2024 | Conexão com cliente encerrada
 Thu Nov  7 11:43:56 2024 | Cliente desconectado
 Thu Nov  7 11:43:56 2024 | Conexão com cliente encerrada
 Thu Nov  7 11:44:07 2024 | Novo cliente conectado
+Thu Nov  7 11:53:45 2024 | Inicio do servidor: Configuração lida com sucesso
+Thu Nov  7 11:53:45 2024 | Servidor iniciado e aguardando conexões
+Thu Nov  7 11:53:50 2024 | Novo cliente conectado
+Thu Nov  7 11:53:53 2024 | Novo cliente conectado
+Thu Nov  7 11:54:12 2024 | Novo cliente conectado
+Thu Nov  7 11:54:22 2024 | Cliente desconectado
+Thu Nov  7 11:54:22 2024 | Conexão com cliente encerrada
+Thu Nov  7 11:54:23 2024 | Cliente desconectado
+Thu Nov  7 11:54:23 2024 | Conexão com cliente encerrada
+Thu Nov  7 11:54:23 2024 | Cliente desconectado
+Thu Nov  7 11:54:23 2024 | Conexão com cliente encerrada
+Thu Nov  7 16:09:04 2024 | Inicio do servidor: Configuração lida com sucesso
+Thu Nov  7 16:09:04 2024 | Servidor iniciado e aguardando conexões
+Thu Nov  7 16:09:12 2024 | Novo cliente conectado
+Thu Nov  7 16:10:11 2024 | Inicio do servidor: Configuração lida com sucesso
+Thu Nov  7 16:10:11 2024 | Erro no bind do servidor
+Thu Nov  7 16:10:31 2024 | Inicio do servidor: Configuração lida com sucesso
+Thu Nov  7 16:10:31 2024 | Servidor iniciado e aguardando conexões
+Thu Nov  7 16:10:42 2024 | Inicio do servidor: Configuração lida com sucesso
+Thu Nov  7 16:10:42 2024 | Erro no bind do servidor
+Thu Nov  7 16:10:56 2024 | Novo cliente conectado
+Thu Nov  7 16:14:45 2024 | Inicio do servidor: Configuração lida com sucesso
+Thu Nov  7 16:14:45 2024 | Servidor iniciado e aguardando conexões
+Thu Nov  7 16:14:50 2024 | Novo cliente conectado
+Thu Nov  7 16:15:00 2024 | Novo cliente conectado
+Thu Nov  7 16:16:24 2024 | Cliente desconectado
+Thu Nov  7 16:16:24 2024 | Conexão com cliente encerrada
+Thu Nov  7 16:16:24 2024 | Cliente desconectado
+Thu Nov  7 16:16:24 2024 | Conexão com cliente encerrada
+Thu Nov  7 16:16:28 2024 | Inicio do servidor: Configuração lida com sucesso
+Thu Nov  7 16:16:28 2024 | Servidor iniciado e aguardando conexões
+Thu Nov  7 16:16:31 2024 | Novo cliente conectado

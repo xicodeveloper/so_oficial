@@ -105,7 +105,7 @@ void enviar_id_cliente(int client_socket, int client_id) {
 void comunicar_servidor(int client_socket) {
     char buffer[BUFFER_SIZE];
 
-    // Recebe o menu inicial do servidor apenas uma vez
+    // Recebe o menu inicial do servidor
     int bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
     if (bytes_received <= 0) {
         printf("Servidor desconectado.\n");
@@ -134,17 +134,25 @@ void comunicar_servidor(int client_socket) {
             break;
         }
 
-        // Recebe a resposta do servidor para a opção escolhida
-        bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+        // Recebe a resposta do servidor em partes, caso o conteúdo seja grande
+        printf("Resposta do servidor:\n");
+        while ((bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0)) > 0) {
+            buffer[bytes_received] = '\0';
+            printf("%s", buffer);
+
+            // Verifica se o servidor enviou toda a resposta
+            if (bytes_received < BUFFER_SIZE - 1) {
+                break;
+            }
+        }
+
         if (bytes_received <= 0) {
             printf("Servidor desconectado.\n");
             break;
         }
-
-        buffer[bytes_received] = '\0';
-        printf("Resposta do servidor:\n%s", buffer);
     }
 }
+
 
 int main(int argc, char *argv[]) {
     int client_socket;

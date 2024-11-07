@@ -345,7 +345,7 @@ int verificar_vitoria(int tabuleiro[TAMANHO][TAMANHO]) {
 void enviar_menu(int client_socket) {
     const char *menu =
         "---------- Menu de Sudoku ----------\n"
-        "1. Criar Tabuleiro.\n"
+        "1. Escolher Tabuleiro.\n"
         "2. O Servidor revela a Solução.\n"
         "3. O Cliente resolve a Solução.\n"
         "4. Desistir.\n"
@@ -353,6 +353,59 @@ void enviar_menu(int client_socket) {
         "Escolha uma opção: ";
     send(client_socket, menu, strlen(menu), 0);
 }
+
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/socket.h>
+
+#define BUFFER_SIZE 1024
+
+void envia_tabuleiro(int client_socket) {
+    char buffer[BUFFER_SIZE];
+    FILE *f = fopen("./jogos_solucoes/jogos.txt", "r"); // Abre o ficheiro para leitura
+    if (f == NULL) {
+        printf("Erro ao abrir o ficheiro dos jogos para leitura.\n");
+        return;
+    }
+
+    int tabuleiro_num = 1;
+    while (fgets(buffer, BUFFER_SIZE, f) != NULL) {
+        char formatted_board[BUFFER_SIZE] = {0};
+        int idx = 0;
+
+        // Adiciona o cabeçalho do tabuleiro
+        snprintf(formatted_board, sizeof(formatted_board), "Tabuleiro %d:\n", tabuleiro_num++);
+        
+        for (int i = 0; i < 81; i++) {
+            char c = buffer[i];
+
+            // Converte '_' para espaços vazios
+            if (c == '_') {
+                c = ' ';
+            }
+
+            // Adiciona o caractere ao tabuleiro formatado
+            snprintf(formatted_board + strlen(formatted_board), sizeof(formatted_board) - strlen(formatted_board), "%c ", c);
+
+            // Adiciona divisores para a formatação do Sudoku
+            if ((i + 1) % 9 == 0) {
+                strcat(formatted_board, "\n");
+                if ((i + 1) % 27 == 0 && i < 80) {
+                    strcat(formatted_board, "------+-------+------\n");
+                }
+            } else if ((i + 1) % 3 == 0) {
+                strcat(formatted_board, "| ");
+            }
+        }
+
+        // Envia o tabuleiro formatado para o cliente
+        send(client_socket, formatted_board, strlen(formatted_board), 0);
+    }
+
+    fclose(f);
+}
+
 
 void *handle_client(void *client_socket) {
     int sock = *(int*)client_socket;
@@ -390,6 +443,7 @@ void *handle_client(void *client_socket) {
             case 1:
                 printf("Cliente %d selecionou inserir um valor no Sudoku\n", client_id);
                 strcpy(buffer, "Opção 1: Valor inserido.\n");
+                envia_tabuleiro(sock);
                 break;
             case 2:
                 printf("Cliente %d pediu para revelar a solução.\n", client_id);
@@ -413,16 +467,16 @@ void *handle_client(void *client_socket) {
         send(sock, buffer, strlen(buffer), 0);
     }
 
-encerra_conexao:
-    close(sock);
-      pthread_mutex_lock(&clients_mutex);
-    num_clients_sessao--;
-    pthread_mutex_unlock(&clients_mutex);
+    encerra_conexao:
+        close(sock);
+        pthread_mutex_lock(&clients_mutex);
+        num_clients_sessao--;
+        pthread_mutex_unlock(&clients_mutex);
 
-    printf("Clientes atuais: %d\n", num_clients_sessao);
-    printf("Conexão com cliente %d encerrada\n", client_id);
-    escrever_log("Conexão com cliente encerrada");
-    return NULL;
+        printf("Clientes atuais: %d\n", num_clients_sessao);
+        printf("Conexão com cliente %d encerrada\n", client_id);
+        escrever_log("Conexão com cliente encerrada");
+        return NULL;
 }
 
 int main(int argc, char *argv[]) {
