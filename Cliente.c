@@ -144,15 +144,6 @@ void comunicar_servidor(int client_socket) {
     // Converte a string para a matriz
     string_para_matriz(buffer2, matriz);
 
-    // Exibe a matriz para verificação
-    printf("Matriz do tabuleiro:\n");
-    for (int i = 0; i < SIZE; i++) {
-        for (int j = 0; j < SIZE; j++) {
-            printf("%d ", matriz[i][j]);
-        }
-        printf("\n");
-    }
-
     // Recebe o menu inicial do servidor
     int bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
     if (bytes_received <= 0) {

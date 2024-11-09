@@ -414,6 +414,11 @@ void escolhe_tabuleiro(int client_socket) {
 
     fclose(f);
 }
+void envia_solucao(int client_socket){
+
+
+
+}
 
 
 void *handle_client(void *client_socket) {
@@ -458,6 +463,7 @@ void *handle_client(void *client_socket) {
             case 2:
                 printf("Cliente %d pediu para revelar a solução.\n", client_id);
                 strcpy(buffer, "Opção 2: Solução revelada.\n");
+                //envia_solucao(sock);
                 break;
             case 3:
                 printf("Cliente %d resolveu a solução localmente.\n", client_id);

@@ -8,4 +8,4 @@ NA PARTE DO SERVIDOR:
 ./server ./configuracoes/config_server.txt
 
 NA PARTE DO CLIENTE:
-./client ./configuracoes/clientes/client_config.txt
+./client ./configuracoes/clientes/client_config_3.txt
