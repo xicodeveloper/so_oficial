@@ -449,8 +449,8 @@ void *handle_client(void *client_socket) {
     char buffer[BUFFER_SIZE];
     int opcao;
     int client_id;
-     srand(time(NULL));
-    int num = (rand() % 2) + 1; // Gera um número aleatório entre 1 e 2 para escolher o
+    srand(time(NULL));
+    int num = (rand() % 2) + 1; // Gera um número aleatório entre 1 e 2 para escolher o tabuleiro
 
     // Recebe o ID do cliente
     if (recv(sock, &client_id, sizeof(client_id), 0) <= 0) {
@@ -461,8 +461,8 @@ void *handle_client(void *client_socket) {
     printf("Novo cliente conectado com ID: %d\n", client_id);
     escrever_log("Novo cliente conectado");
 
-    // Envia o menu apenas uma vez, logo após o cliente se conectar
-    escolhe_tabuleiro(sock,num);
+    // Envia o menu e tabuleiro ao cliente
+    escolhe_tabuleiro(sock, num);
     enviar_menu(sock);
     
     while (1) {
@@ -482,7 +482,6 @@ void *handle_client(void *client_socket) {
             case 1:
                 printf("Cliente %d selecionou inserir um valor no Sudoku\n", client_id);
                 strcpy(buffer, "Opção 1: Valor inserido.\n");
-                //envia_tabuleiros(sock); 
                 break;
             case 2:
                 printf("Cliente %d pediu para revelar a solução.\n", client_id);
@@ -504,6 +503,7 @@ void *handle_client(void *client_socket) {
                 break;
         }
 
+        // Envia a resposta ao cliente
         send(sock, buffer, strlen(buffer), 0);
     }
 

@@ -161,42 +161,61 @@ void comunicar_servidor(int client_socket) {
         // Remove o newline que `fgets` deixa no buffer
         buffer[strcspn(buffer, "\n")] = 0;
 
-    int resposta = atoi(buffer);
+        // Verifica se o usuário digitou "sair"
+        if (strcmp(buffer, "sair") == 0) {
+            printf("Encerrando a conexão...\n");
+            break;
+        }
+
+        int resposta = atoi(buffer); // Converte a entrada para inteiro
         int bytes_received3;
         char buffer3[BUFFER_SIZE];
-        switch (resposta){
+
+        // Envia a opção para o servidor
+        if (send(client_socket, buffer, strlen(buffer), 0) < 0) {
+            perror("Erro ao enviar dados");
+            return;
+        }
+
+        switch (resposta) {
             case 1:
-
-            // send(client_socket, buffer, strlen(buffer), 0)
-                break;
-           case 2: {
-
+                // Recebe resposta para a opção 1
                 bytes_received3 = recv(client_socket, buffer3, BUFFER_SIZE - 1, 0);
                 if (bytes_received3 <= 0) {
                     printf("Servidor desconectado.\n");
-                return;
+                    return;
                 }
                 buffer3[bytes_received3] = '\0';
                 printf("Resposta do servidor:\n%s", buffer3);
                 break;
-            }
+
+            case 2:
+                // Recebe resposta para a opção 2
+                bytes_received3 = recv(client_socket, buffer3, BUFFER_SIZE - 1, 0);
+                if (bytes_received3 <= 0) {
+                    printf("Servidor desconectado.\n");
+                    return;
+                }
+                buffer3[bytes_received3] = '\0';
+                printf("Resposta do servidor:\n%s", buffer3);
+                break;
+
             case 3:
-            
-                //send(client_socket, buffer, strlen(buffer), 0)
+                // Recebe resposta para a opção 3
+                bytes_received3 = recv(client_socket, buffer3, BUFFER_SIZE - 1, 0);
+                if (bytes_received3 <= 0) {
+                    printf("Servidor desconectado.\n");
+                    return;
+                }
+                buffer3[bytes_received3] = '\0';
+                printf("Resposta do servidor:\n%s", buffer3);
                 break;
-            
+
             default:
+                printf("Opção inválida! Tente novamente.\n");
                 break;
         }
-
-
-        
     }
-            // Envia a opção escolhida para o servidor
-        if (send(client_socket, buffer, strlen(buffer), 0) < 0) {
-            perror("Erro ao enviar dados");
-            break;
-        }
 }
 
 int main(int argc, char *argv[]) {
