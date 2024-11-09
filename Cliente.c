@@ -166,10 +166,27 @@ void comunicar_servidor(int client_socket) {
             printf("Saindo do cliente...\n");
             break;
         }
+ 
 
         // Envia a opção escolhida para o servidor
         if (send(client_socket, buffer, strlen(buffer), 0) < 0) {
             perror("Erro ao enviar dados");
+            break;
+        }
+        // Recebe a resposta do servidor em partes, caso o conteúdo seja grande
+        printf("Resposta do servidor:\n");
+        while ((bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0)) > 0) {
+            buffer[bytes_received] = '\0';
+            printf("%s", buffer);
+
+            // Verifica se o servidor enviou toda a resposta
+            if (bytes_received < BUFFER_SIZE - 1) {
+                break;
+            }
+        }
+
+        if (bytes_received <= 0) {
+            printf("Servidor desconectado.\n");
             break;
         }
     }

@@ -377,10 +377,7 @@ void formatar_tabuleiro(char *tabuleiro, char *formatted_board) {
     }
     formatted_board[index] = '\0'; // Termina a string formatada
 }
-void escolhe_tabuleiro(int client_socket) {
-    srand(time(NULL));
-    int num = (rand() % 2) + 1; // Gera um número aleatório entre 1 e 2
-
+void escolhe_tabuleiro(int client_socket, int num) {
     char buffer[BUFFER_SIZE];
     FILE *f = fopen("./jogos_solucoes/jogos.txt", "r"); // Abre o ficheiro para leitura
     if (f == NULL) {
@@ -402,7 +399,7 @@ void escolhe_tabuleiro(int client_socket) {
         buffer[strcspn(buffer, "\n")] = 0; // Remove o caractere de nova linha
 
         // Verifica se o ID coincide com o número aleatório escolhido (1 ou 2)
-        if (id == num) {
+        if ( num==id) {
             char formatted_tabuleiro[BUFFER_SIZE];
             formatar_tabuleiro(buffer, formatted_tabuleiro);
 
@@ -414,7 +411,7 @@ void escolhe_tabuleiro(int client_socket) {
 
     fclose(f);
 }
-void envia_solucao(int client_socket){
+void envia_solucao(int client_socket, int num){
 
 
 
@@ -427,6 +424,8 @@ void *handle_client(void *client_socket) {
     char buffer[BUFFER_SIZE];
     int opcao;
     int client_id;
+     srand(time(NULL));
+    int num = (rand() % 2) + 1; // Gera um número aleatório entre 1 e 2 para escolher o
 
     // Recebe o ID do cliente
     if (recv(sock, &client_id, sizeof(client_id), 0) <= 0) {
@@ -438,7 +437,7 @@ void *handle_client(void *client_socket) {
     escrever_log("Novo cliente conectado");
 
     // Envia o menu apenas uma vez, logo após o cliente se conectar
-    escolhe_tabuleiro(sock);
+    escolhe_tabuleiro(sock,num);
     enviar_menu(sock);
     
     while (1) {
@@ -463,7 +462,7 @@ void *handle_client(void *client_socket) {
             case 2:
                 printf("Cliente %d pediu para revelar a solução.\n", client_id);
                 strcpy(buffer, "Opção 2: Solução revelada.\n");
-                //envia_solucao(sock);
+                envia_solucao(sock, num);
                 break;
             case 3:
                 printf("Cliente %d resolveu a solução localmente.\n", client_id);
