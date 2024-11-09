@@ -6,6 +6,32 @@
 #include <time.h>
 
 #define BUFFER_SIZE 1024
+#define SIZE 9
+void string_para_matriz(char *tabuleiro_str, int matriz[SIZE][SIZE]) {
+    int i = 0, j = 0;
+
+    // Percorre a string do tabuleiro diretamente, assumindo que não contém o ID
+    for (int k = 0; k < strlen(tabuleiro_str); k++) {
+        if (tabuleiro_str[k] >= '1' && tabuleiro_str[k] <= '9') {
+            matriz[i][j] = tabuleiro_str[k] - '0'; // Converte char para int
+        } else if (tabuleiro_str[k] == '_') {
+            matriz[i][j] = 0; // Converte underscore para 0
+        } else {
+            continue; // Ignora qualquer outro caractere
+        }
+
+        j++;
+        if (j == SIZE) {
+            j = 0;
+            i++;
+        }
+
+        if (i == SIZE) {
+            break;
+        }
+    }
+}
+
 
 void escrever_log_cliente(const char *mensagem) {
     FILE *f = fopen("./logs/cliente_log.txt", "a");
@@ -101,9 +127,31 @@ void enviar_id_cliente(int client_socket, int client_id) {
         exit(EXIT_FAILURE);
     }
 }
-
 void comunicar_servidor(int client_socket) {
     char buffer[BUFFER_SIZE];
+    char buffer2[BUFFER_SIZE];
+    int matriz[SIZE][SIZE] = {0}; // Inicializa a matriz com zeros
+
+    // Recebe o tabuleiro do servidor
+    int bytes_received2 = recv(client_socket, buffer2, BUFFER_SIZE - 1, 0);
+    if (bytes_received2 <= 0) {
+        printf("Servidor desconectado.\n");
+        return;
+    }
+    buffer2[bytes_received2] = '\0'; // Corrigido para usar buffer2
+    printf("\nTabuleiro enviado:\n%s\n", buffer2);
+
+    // Converte a string para a matriz
+    string_para_matriz(buffer2, matriz);
+
+    // Exibe a matriz para verificação
+    printf("Matriz do tabuleiro:\n");
+    for (int i = 0; i < SIZE; i++) {
+        for (int j = 0; j < SIZE; j++) {
+            printf("%d ", matriz[i][j]);
+        }
+        printf("\n");
+    }
 
     // Recebe o menu inicial do servidor
     int bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
@@ -133,26 +181,8 @@ void comunicar_servidor(int client_socket) {
             perror("Erro ao enviar dados");
             break;
         }
-
-        // Recebe a resposta do servidor em partes, caso o conteúdo seja grande
-        printf("Resposta do servidor:\n");
-        while ((bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0)) > 0) {
-            buffer[bytes_received] = '\0';
-            printf("%s", buffer);
-
-            // Verifica se o servidor enviou toda a resposta
-            if (bytes_received < BUFFER_SIZE - 1) {
-                break;
-            }
-        }
-
-        if (bytes_received <= 0) {
-            printf("Servidor desconectado.\n");
-            break;
-        }
     }
 }
-
 
 int main(int argc, char *argv[]) {
     int client_socket;

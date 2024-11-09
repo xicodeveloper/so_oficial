@@ -417,3 +417,69 @@ Fri Nov  8 15:56:42 2024 | Servidor iniciado e aguardando conexões
 Fri Nov  8 15:56:45 2024 | Novo cliente conectado
 Fri Nov  8 15:57:33 2024 | Cliente desconectado
 Fri Nov  8 15:57:33 2024 | Conexão com cliente encerrada
+Sat Nov  9 10:17:33 2024 | Inicio do servidor: Configuração lida com sucesso
+Sat Nov  9 10:17:33 2024 | Erro no bind do servidor
+Sat Nov  9 10:17:38 2024 | Inicio do servidor: Configuração lida com sucesso
+Sat Nov  9 10:17:38 2024 | Servidor iniciado e aguardando conexões
+Sat Nov  9 10:17:41 2024 | Novo cliente conectado
+Sat Nov  9 10:19:53 2024 | Inicio do servidor: Configuração lida com sucesso
+Sat Nov  9 10:19:53 2024 | Servidor iniciado e aguardando conexões
+Sat Nov  9 10:19:58 2024 | Novo cliente conectado
+Sat Nov  9 10:21:52 2024 | Cliente desconectado
+Sat Nov  9 10:21:52 2024 | Conexão com cliente encerrada
+Sat Nov  9 10:21:56 2024 | Inicio do servidor: Configuração lida com sucesso
+Sat Nov  9 10:21:56 2024 | Servidor iniciado e aguardando conexões
+Sat Nov  9 10:22:01 2024 | Novo cliente conectado
+Sat Nov  9 10:22:20 2024 | Inicio do servidor: Configuração lida com sucesso
+Sat Nov  9 10:22:20 2024 | Servidor iniciado e aguardando conexões
+Sat Nov  9 10:22:23 2024 | Novo cliente conectado
+Sat Nov  9 10:23:15 2024 | Inicio do servidor: Configuração lida com sucesso
+Sat Nov  9 10:23:15 2024 | Servidor iniciado e aguardando conexões
+Sat Nov  9 10:23:20 2024 | Novo cliente conectado
+Sat Nov  9 10:24:41 2024 | Inicio do servidor: Configuração lida com sucesso
+Sat Nov  9 10:24:41 2024 | Servidor iniciado e aguardando conexões
+Sat Nov  9 10:24:45 2024 | Novo cliente conectado
+Sat Nov  9 10:28:16 2024 | Inicio do servidor: Configuração lida com sucesso
+Sat Nov  9 10:28:16 2024 | Erro no bind do servidor
+Sat Nov  9 10:28:20 2024 | Inicio do servidor: Configuração lida com sucesso
+Sat Nov  9 10:28:20 2024 | Erro no bind do servidor
+Sat Nov  9 10:28:31 2024 | Inicio do servidor: Configuração lida com sucesso
+Sat Nov  9 10:28:31 2024 | Erro no bind do servidor
+Sat Nov  9 10:28:46 2024 | Inicio do servidor: Configuração lida com sucesso
+Sat Nov  9 10:28:46 2024 | Servidor iniciado e aguardando conexões
+Sat Nov  9 10:28:57 2024 | Novo cliente conectado
+Sat Nov  9 10:31:59 2024 | Inicio do servidor: Configuração lida com sucesso
+Sat Nov  9 10:31:59 2024 | Servidor iniciado e aguardando conexões
+Sat Nov  9 10:32:01 2024 | Novo cliente conectado
+Sat Nov  9 10:32:57 2024 | Inicio do servidor: Configuração lida com sucesso
+Sat Nov  9 10:32:57 2024 | Erro no bind do servidor
+Sat Nov  9 10:33:12 2024 | Inicio do servidor: Configuração lida com sucesso
+Sat Nov  9 10:33:12 2024 | Servidor iniciado e aguardando conexões
+Sat Nov  9 10:33:21 2024 | Novo cliente conectado
+Sat Nov  9 10:48:12 2024 | Inicio do servidor: Configuração lida com sucesso
+Sat Nov  9 10:48:12 2024 | Servidor iniciado e aguardando conexões
+Sat Nov  9 10:48:15 2024 | Novo cliente conectado
+Sat Nov  9 10:48:23 2024 | Cliente desconectado
+Sat Nov  9 10:48:23 2024 | Conexão com cliente encerrada
+Sat Nov  9 10:50:47 2024 | Inicio do servidor: Configuração lida com sucesso
+Sat Nov  9 10:50:47 2024 | Servidor iniciado e aguardando conexões
+Sat Nov  9 10:50:49 2024 | Novo cliente conectado
+Sat Nov  9 10:53:59 2024 | Inicio do servidor: Configuração lida com sucesso
+Sat Nov  9 10:53:59 2024 | Servidor iniciado e aguardando conexões
+Sat Nov  9 10:54:01 2024 | Novo cliente conectado
+Sat Nov  9 10:54:49 2024 | Inicio do servidor: Configuração lida com sucesso
+Sat Nov  9 10:54:49 2024 | Erro no bind do servidor
+Sat Nov  9 10:55:02 2024 | Inicio do servidor: Configuração lida com sucesso
+Sat Nov  9 10:55:02 2024 | Servidor iniciado e aguardando conexões
+Sat Nov  9 10:55:10 2024 | Novo cliente conectado
+Sat Nov  9 10:57:22 2024 | Inicio do servidor: Configuração lida com sucesso
+Sat Nov  9 10:57:22 2024 | Erro no bind do servidor
+Sat Nov  9 10:57:35 2024 | Inicio do servidor: Configuração lida com sucesso
+Sat Nov  9 10:57:35 2024 | Servidor iniciado e aguardando conexões
+Sat Nov  9 10:57:38 2024 | Novo cliente conectado
+Sat Nov  9 11:04:35 2024 | Inicio do servidor: Configuração lida com sucesso
+Sat Nov  9 11:04:35 2024 | Servidor iniciado e aguardando conexões
+Sat Nov  9 11:04:39 2024 | Novo cliente conectado
+Sat Nov  9 11:07:41 2024 | Inicio do servidor: Configuração lida com sucesso
+Sat Nov  9 11:07:41 2024 | Servidor iniciado e aguardando conexões
+Sat Nov  9 11:07:44 2024 | Novo cliente conectado

@@ -345,7 +345,7 @@ int verificar_vitoria(int tabuleiro[TAMANHO][TAMANHO]) {
 void enviar_menu(int client_socket) {
     const char *menu =
         "---------- Menu de Sudoku ----------\n"
-        "1. Escolher Tabuleiro.\n"
+        "1. Resolver Tabuleiro.\n"
         "2. O Servidor revela a Solução.\n"
         "3. O Cliente resolve a Solução.\n"
         "4. Desistir.\n"
@@ -368,7 +368,7 @@ void formatar_tabuleiro(char *tabuleiro, char *formatted_board) {
             }
         }
         formatted_board[index++] = '\n';
-        
+       
         // Adiciona uma linha divisória entre blocos de 3 linhas
         if ((i + 1) % 3 == 0 && i < 8) {
             snprintf(formatted_board + index, 24, "------+-------+------\n");
@@ -377,45 +377,7 @@ void formatar_tabuleiro(char *tabuleiro, char *formatted_board) {
     }
     formatted_board[index] = '\0'; // Termina a string formatada
 }
-
-void envia_tabuleiros(int client_socket) {
-    char buffer[BUFFER_SIZE];
-    FILE *f = fopen("./jogos_solucoes/jogos.txt", "r"); // Abre o ficheiro para leitura
-    if (f == NULL) {
-        printf("Erro ao abrir o ficheiro dos jogos para leitura.\n");
-        return;
-    }
-
-    while (fgets(buffer, BUFFER_SIZE, f) != NULL) {
-        // Remove o caractere de nova linha, se existir
-        buffer[strcspn(buffer, "\n")] = 0;
-
-        // Obtém o ID do tabuleiro
-        char id[BUFFER_SIZE];
-        strncpy(id, buffer, BUFFER_SIZE);
-
-        // Lê a próxima linha, que contém o tabuleiro
-        if (fgets(buffer, BUFFER_SIZE, f) == NULL) {
-            printf("Erro ao ler o tabuleiro para o ID %s.\n", id);
-            break;
-        }
-        buffer[strcspn(buffer, "\n")] = 0; // Remove o caractere de nova linha
-
-        // Prepara o tabuleiro formatado
-        char formatted_board[BUFFER_SIZE];
-        char formatted_tabuleiro[BUFFER_SIZE];
-        formatar_tabuleiro(buffer, formatted_tabuleiro);
-
-        snprintf(formatted_board, BUFFER_SIZE, "ID: %s\nTabuleiro:\n%s\n\n", id, formatted_tabuleiro);
-
-        // Envia o tabuleiro formatado para o cliente
-        send(client_socket, formatted_board, strlen(formatted_board), 0);
-    }
-
-    fclose(f);
-}
 void escolhe_tabuleiro(int client_socket) {
-    // Inicializa o gerador de números aleatórios
     srand(time(NULL));
     int num = (rand() % 2) + 1; // Gera um número aleatório entre 1 e 2
 
@@ -444,16 +406,15 @@ void escolhe_tabuleiro(int client_socket) {
             char formatted_tabuleiro[BUFFER_SIZE];
             formatar_tabuleiro(buffer, formatted_tabuleiro);
 
-            // Prepara o tabuleiro formatado com ID e envia para o cliente
-            char formatted_board[BUFFER_SIZE];
-            snprintf(formatted_board, BUFFER_SIZE, "ID: %d\nTabuleiro escolhido:\n%s\n\n", id, formatted_tabuleiro);
-            send(client_socket, formatted_board, strlen(formatted_board), 0);
+            // Envia o tabuleiro formatado para o cliente sem o ID
+            send(client_socket, formatted_tabuleiro, strlen(formatted_tabuleiro), 0);
             break;
         }
     }
 
     fclose(f);
 }
+
 
 void *handle_client(void *client_socket) {
     int sock = *(int*)client_socket;
@@ -472,8 +433,9 @@ void *handle_client(void *client_socket) {
     escrever_log("Novo cliente conectado");
 
     // Envia o menu apenas uma vez, logo após o cliente se conectar
+    escolhe_tabuleiro(sock);
     enviar_menu(sock);
-
+    
     while (1) {
         memset(buffer, 0, BUFFER_SIZE);
         
@@ -491,8 +453,7 @@ void *handle_client(void *client_socket) {
             case 1:
                 printf("Cliente %d selecionou inserir um valor no Sudoku\n", client_id);
                 strcpy(buffer, "Opção 1: Valor inserido.\n");
-                envia_tabuleiros(sock); 
-                escolhe_tabuleiro(sock);
+                //envia_tabuleiros(sock); 
                 break;
             case 2:
                 printf("Cliente %d pediu para revelar a solução.\n", client_id);
