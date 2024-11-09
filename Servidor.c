@@ -412,12 +412,37 @@ void escolhe_tabuleiro(int client_socket, int num) {
     fclose(f);
 }
 void envia_solucao(int client_socket, int num){
+   char buffer[BUFFER_SIZE];
+    FILE *f = fopen("./jogos_solucoes/solucoes.txt", "r"); // Abre o ficheiro para leitura
+    if (f == NULL) {
+        printf("Erro ao abrir o ficheiro dos jogos para leitura.\n");
+        return;
+    }
 
+    while (fgets(buffer, BUFFER_SIZE, f) != NULL) {
+        buffer[strcspn(buffer, "\n")] = 0; // Remove o caractere de nova linha
 
+        // Obtém o ID do tabuleiro
+        int id = atoi(buffer); // Converte o ID para um número inteiro
 
+        // Lê a próxima linha, que contém o tabuleiro
+        if (fgets(buffer, BUFFER_SIZE, f) == NULL) {
+            printf("Erro ao ler o tabuleiro para o ID %d.\n", id);
+            break;
+        }
+        buffer[strcspn(buffer, "\n")] = 0; // Remove o caractere de nova linha
+
+        // Verifica se o ID coincide com o número aleatório escolhido (1 ou 2)
+        if ( num==id) {
+            char formatted_tabuleiro[BUFFER_SIZE];
+            formatar_tabuleiro(buffer, formatted_tabuleiro);
+
+            // Envia o tabuleiro formatado para o cliente sem o ID
+            send(client_socket, formatted_tabuleiro, strlen(formatted_tabuleiro), 0);
+            break;
+        }
+    }
 }
-
-
 void *handle_client(void *client_socket) {
     int sock = *(int*)client_socket;
     free(client_socket);

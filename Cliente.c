@@ -161,35 +161,42 @@ void comunicar_servidor(int client_socket) {
         // Remove o newline que `fgets` deixa no buffer
         buffer[strcspn(buffer, "\n")] = 0;
 
-        // Verifica se o usuário deseja sair
-        if (strncmp(buffer, "sair", 4) == 0) {
-            printf("Saindo do cliente...\n");
-            break;
-        }
- 
+    int resposta = atoi(buffer);
+        int bytes_received3;
+        char buffer3[BUFFER_SIZE];
+        switch (resposta){
+            case 1:
 
-        // Envia a opção escolhida para o servidor
+            // send(client_socket, buffer, strlen(buffer), 0)
+                break;
+           case 2: {
+
+                bytes_received3 = recv(client_socket, buffer3, BUFFER_SIZE - 1, 0);
+                if (bytes_received3 <= 0) {
+                    printf("Servidor desconectado.\n");
+                return;
+                }
+                buffer3[bytes_received3] = '\0';
+                printf("Resposta do servidor:\n%s", buffer3);
+                break;
+            }
+            case 3:
+            
+                //send(client_socket, buffer, strlen(buffer), 0)
+                break;
+            
+            default:
+                break;
+        }
+
+
+        
+    }
+            // Envia a opção escolhida para o servidor
         if (send(client_socket, buffer, strlen(buffer), 0) < 0) {
             perror("Erro ao enviar dados");
             break;
         }
-        // Recebe a resposta do servidor em partes, caso o conteúdo seja grande
-        printf("Resposta do servidor:\n");
-        while ((bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0)) > 0) {
-            buffer[bytes_received] = '\0';
-            printf("%s", buffer);
-
-            // Verifica se o servidor enviou toda a resposta
-            if (bytes_received < BUFFER_SIZE - 1) {
-                break;
-            }
-        }
-
-        if (bytes_received <= 0) {
-            printf("Servidor desconectado.\n");
-            break;
-        }
-    }
 }
 
 int main(int argc, char *argv[]) {
