@@ -127,7 +127,7 @@ void enviar_id_cliente(int client_socket, int client_id) {
 void comunicar_servidor(int client_socket) {
     char buffer[BUFFER_SIZE];
     char buffer2[BUFFER_SIZE];
-    int matriz[SIZE][SIZE] = {0};
+    int matriz[SIZE][SIZE] = {0}; // Inicializa a matriz com zeros
 
     // Recebe o tabuleiro do servidor
     int bytes_received2 = recv(client_socket, buffer2, BUFFER_SIZE - 1, 0);
@@ -135,9 +135,10 @@ void comunicar_servidor(int client_socket) {
         printf("Servidor desconectado.\n");
         return;
     }
-    buffer2[bytes_received2] = '\0';
+    buffer2[bytes_received2] = '\0'; // Corrigido para usar buffer2
     printf("\nTabuleiro enviado:\n%s\n", buffer2);
 
+    // Converte a string para a matriz
     string_para_matriz(buffer2, matriz);
 
     // Recebe o menu inicial do servidor
@@ -149,38 +150,67 @@ void comunicar_servidor(int client_socket) {
     buffer[bytes_received] = '\0';
     printf("Resposta do servidor:\n%s", buffer);
 
-    // Loop principal de comunicação com o servidor
+    // Inicia o loop para enviar e receber respostas
     while (1) {
         printf("Insira um número (ou 'sair' para encerrar): ");
         fgets(buffer, BUFFER_SIZE, stdin);
 
+        // Remove o newline que `fgets` deixa no buffer
         buffer[strcspn(buffer, "\n")] = 0;
 
+        // Verifica se o usuário digitou "sair"
         if (strcmp(buffer, "sair") == 0) {
             printf("Encerrando a conexão...\n");
             break;
         }
 
-        int resposta = atoi(buffer);
+        int resposta = atoi(buffer); // Converte a entrada para inteiro
         int bytes_received3;
         char buffer3[BUFFER_SIZE];
 
+        // Envia a opção para o servidor
         if (send(client_socket, buffer, strlen(buffer), 0) < 0) {
             perror("Erro ao enviar dados");
             return;
         }
 
-        bytes_received3 = recv(client_socket, buffer3, BUFFER_SIZE - 1, 0);
-        if (bytes_received3 <= 0) {
-            printf("Servidor desconectado.\n");
-            return;
-        }
-        buffer3[bytes_received3] = '\0';
-        printf("Resposta do servidor:\n%s", buffer3);
+        switch (resposta) {
+            case 1:
+                // Recebe resposta para a opção 1
+                bytes_received3 = recv(client_socket, buffer3, BUFFER_SIZE - 1, 0);
+                if (bytes_received3 <= 0) {
+                    printf("Servidor desconectado.\n");
+                    return;
+                }
+                buffer3[bytes_received3] = '\0';
+                printf("Resposta do servidor:\n%s", buffer3);
+                break;
 
-        if (resposta == 4) { // Caso de "Desistir"
-            printf("Desistindo do jogo...\n");
-            break;
+            case 2:
+                // Recebe resposta para a opção 2
+                bytes_received3 = recv(client_socket, buffer3, BUFFER_SIZE - 1, 0);
+                if (bytes_received3 <= 0) {
+                    printf("Servidor desconectado.\n");
+                    return;
+                }
+                buffer3[bytes_received3] = '\0';
+                printf("Resposta do servidor:\n%s", buffer3);
+                break;
+
+            case 3:
+                // Recebe resposta para a opção 3
+                bytes_received3 = recv(client_socket, buffer3, BUFFER_SIZE - 1, 0);
+                if (bytes_received3 <= 0) {
+                    printf("Servidor desconectado.\n");
+                    return;
+                }
+                buffer3[bytes_received3] = '\0';
+                printf("Resposta do servidor:\n%s", buffer3);
+                break;
+
+            default:
+                printf("Opção inválida! Tente novamente.\n");
+                break;
         }
     }
 }
