@@ -95,33 +95,88 @@ void formatar_tabuleiro(char *tabuleiro, char *formatted_board) {
     }
     formatted_board[index] = '\0';
 }
-
 // Função para escolher e enviar o tabuleiro para o cliente
 void escolhe_tabuleiro(int client_socket, int num) {
     char buffer[BUFFER_SIZE];
-    FILE *f = fopen("./jogos_solucoes/jogos.txt", "r");
-    if (f == NULL) {
-        printf("Erro ao abrir o ficheiro dos jogos para leitura.\n");
-        return;
+    int id;
+    char formatted_tabuleiro[BUFFER_SIZE];
+    FILE *f;
+
+    // Primeiro verifica em jogosres.txt se o tabuleiro já foi usado anteriormente
+    f = fopen("./jogos_solucoes/jogosres.txt", "r");
+    if (f != NULL) {
+        while (fgets(buffer, BUFFER_SIZE, f) != NULL) {
+            buffer[strcspn(buffer, "\n")] = 0; // Remove nova linha do buffer
+            id = atoi(buffer);
+
+            if (id == num) {
+                memset(buffer, 0, BUFFER_SIZE);  // Limpa o buffer antes de ler o tabuleiro
+                if (fgets(buffer, BUFFER_SIZE, f) != NULL) {
+                    formatar_tabuleiro(buffer, formatted_tabuleiro);
+                    fclose(f);
+
+                    // Envia o tabuleiro do jogosres.txt para o cliente
+                    send(client_socket, formatted_tabuleiro, strlen(formatted_tabuleiro), 0);
+                    return;
+                }
+            } else {
+                fgets(buffer, BUFFER_SIZE, f);  // Avança para a próxima linha do tabuleiro
+            }
+        }
+        fclose(f);
     }
 
-    printf("Escolhendo tabuleiro com ID %d\n", num); // Debug
-    while (fgets(buffer, BUFFER_SIZE, f) != NULL) {
-        buffer[strcspn(buffer, "\n")] = 0;
-        int id = atoi(buffer);
-        if (fgets(buffer, BUFFER_SIZE, f) == NULL) {
-            break;
+    // Se não foi encontrado em jogosres.txt, procura em jogos.txt
+    f = fopen("./jogos_solucoes/jogos.txt", "r");
+    if (f != NULL) {
+        while (fgets(buffer, BUFFER_SIZE, f) != NULL) {
+            buffer[strcspn(buffer, "\n")] = 0; // Remove nova linha do buffer
+            id = atoi(buffer);
+
+            if (id == num) {
+                memset(buffer, 0, BUFFER_SIZE);  // Limpa o buffer antes de ler o tabuleiro
+                if (fgets(buffer, BUFFER_SIZE, f) != NULL) {
+                    formatar_tabuleiro(buffer, formatted_tabuleiro);
+                    fclose(f);
+
+                    // Verifica novamente em jogosres.txt para evitar duplicação
+                    FILE *f_res_check = fopen("./jogos_solucoes/jogosres.txt", "r");
+                    int encontrado = 0;
+                    if (f_res_check != NULL) {
+                        char line[BUFFER_SIZE];
+                        while (fgets(line, BUFFER_SIZE, f_res_check) != NULL) {
+                            if (atoi(line) == id) {
+                                encontrado = 1;
+                                break;
+                            }
+                            fgets(line, BUFFER_SIZE, f_res_check); // Avança para o tabuleiro correspondente
+                        }
+                        fclose(f_res_check);
+                    }
+
+                    // Se o tabuleiro ainda não está em jogosres.txt, escreve-o
+                    if (!encontrado) {
+                        FILE *f_res = fopen("./jogos_solucoes/jogosres.txt", "a");
+                        if (f_res != NULL) {
+                            fprintf(f_res, "%d\n%s\n", id, buffer);
+                            fclose(f_res);
+                        }
+                    }
+
+                    // Envia o tabuleiro lido de jogos.txt para o cliente
+                    send(client_socket, formatted_tabuleiro, strlen(formatted_tabuleiro), 0);
+                    return;
+                }
+            } else {
+                fgets(buffer, BUFFER_SIZE, f);  // Avança para a próxima linha do tabuleiro
+            }
         }
-        buffer[strcspn(buffer, "\n")] = 0;
-        if (num == id) {
-            char formatted_tabuleiro[BUFFER_SIZE];
-            formatar_tabuleiro(buffer, formatted_tabuleiro);
-            printf("Enviando tabuleiro para o cliente\n"); // Debug
-            send(client_socket, formatted_tabuleiro, strlen(formatted_tabuleiro), 0);
-            break;
-        }
+        fclose(f);
     }
-    fclose(f);
+
+    // Se nenhum tabuleiro for encontrado, envia uma mensagem de erro para o cliente
+    const char *msg_erro = "Erro: Tabuleiro não encontrado.\n";
+    send(client_socket, msg_erro, strlen(msg_erro), 0);
 }
 
 // Função para enviar solução para o cliente
