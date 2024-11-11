@@ -205,7 +205,13 @@ void envia_solucao(int client_socket, int num) {
     }
     fclose(f);
 }
-
+void enviar_id_tabuleiro(int client_socket, int num) {
+    if (send(client_socket, &num, sizeof(num), 0) < 0) {
+        perror("Erro ao enviar ID do tabuleiro");
+        close(client_socket);
+        exit(EXIT_FAILURE);
+    }
+}
 // Função para gerenciar cada cliente
 void *handle_client(void *client_socket) {
     int sock = *(int *)client_socket;
@@ -221,7 +227,7 @@ void *handle_client(void *client_socket) {
     }
     printf("Novo cliente conectado com ID: %d\n", client_id); // Debug
     escrever_log("Novo cliente conectado");
-
+    enviar_id_tabuleiro(sock, num);
     escolhe_tabuleiro(sock, num);
     enviar_menu(sock);
 

@@ -128,7 +128,13 @@ void comunicar_servidor(int client_socket) {
     char buffer[BUFFER_SIZE];
     char buffer2[BUFFER_SIZE];
     int matriz[SIZE][SIZE] = {0}; // Inicializa a matriz com zeros
-
+    int id_tabuleiro;
+    if (recv(client_socket, &id_tabuleiro, sizeof(id_tabuleiro), 0) <= 0) {
+        perror("Erro ao receber ID do tabuleiro");
+        close(client_socket);
+        return;
+    }
+    printf("Id recebido %d", id_tabuleiro);
     // Recebe o tabuleiro do servidor
     int bytes_received2 = recv(client_socket, buffer2, BUFFER_SIZE - 1, 0);
     if (bytes_received2 <= 0) {
