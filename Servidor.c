@@ -4,13 +4,19 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <arpa/inet.h>
+#include <signal.h>
 #include <time.h>
 
 #define BUFFER_SIZE 1024
 #define TAMANHO 1024
+#define SIZE 4
+#define LC 9
 
+int matriz_of[SIZE][LC][LC] = {{{0}}};
 int num_clients_sessao = 0;
+int server_socket, client_socket, porta;
 pthread_mutex_t clients_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t clients_mutex_board = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t log_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 // Função para registrar logs do servidor
@@ -30,6 +36,63 @@ void escrever_log(const char *mensagem) {
     fprintf(f, "%s | %s\n", timestamp, mensagem);
     fclose(f);
     pthread_mutex_unlock(&log_mutex);
+}
+
+
+void transforma_matriz(int matriz_of[SIZE][LC][LC]) {
+    char buffer[BUFFER_SIZE];
+    FILE *f = fopen("./jogos_solucoes/jogos.txt", "r");
+    
+    if (f == NULL) {
+        printf("Erro ao abrir o ficheiro dos jogos para leitura.\n");
+        return;
+    }
+
+    int jogo_index = 0;
+    while (fgets(buffer, BUFFER_SIZE, f) != NULL && jogo_index < SIZE) {
+        buffer[strcspn(buffer, "\n")] = 0; // Remover o '\n'        
+        if (fgets(buffer, BUFFER_SIZE, f) == NULL) {
+            break; // Se não houver outra linha, encerra o loop
+        }
+        buffer[strcspn(buffer, "\n")] = 0; // Remover o '\n'
+
+        // Preencher a matriz 9x9 com os valores do buffer
+        int k = 0; // Índice do caractere no buffer
+        for (int i = 0; i < LC; i++) {
+            for (int j = 0; j < LC; j++) {
+                if (buffer[k] == '_') {
+                    matriz_of[jogo_index][i][j] = 0; // Usar 0 para posições desconhecidas
+                } else {
+                    matriz_of[jogo_index][i][j] = buffer[k] - '0'; // Converter caractere para inteiro
+                }
+                k++; // Avançar para o próximo caractere do buffer
+            }
+        }
+        jogo_index++; // Próximo jogo
+    }
+    
+    fclose(f);
+    return; // Retornar a quantidade de jogos lidos
+}
+
+void ler_matrizes(int matriz_of[SIZE][LC][LC]) {
+    for (int i = 0; i < SIZE; i++) {
+        printf("Jogo %d:\n", i + 1);
+        for (int j = 0; j < LC; j++) {
+            for (int l = 0; l < LC; l++) {
+                printf("%d ", matriz_of[i][j][l]);
+            }
+            printf("\n");  // Nova linha após cada linha da matriz
+        }
+        printf("\n");  // Linha em branco entre jogos
+    }
+}
+
+
+void handle_sigint(int sig) {
+    printf("\nSIGINT received. Closing server socket...\n");
+    close(server_socket);
+    exit(0);
 }
 
 // Função para ler configurações do arquivo config.txt
@@ -99,6 +162,7 @@ void formatar_tabuleiro(char *tabuleiro, char *formatted_board) {
 // Função para escolher e enviar o tabuleiro para o cliente
 void escolhe_tabuleiro(int client_socket, int num) {
     char buffer[BUFFER_SIZE];
+    char received_message[BUFFER_SIZE];
     FILE *f = fopen("./jogos_solucoes/jogos.txt", "r");
     if (f == NULL) {
         printf("Erro ao abrir o ficheiro dos jogos para leitura.\n");
@@ -118,7 +182,13 @@ void escolhe_tabuleiro(int client_socket, int num) {
             formatar_tabuleiro(buffer, formatted_tabuleiro);
             printf("Enviando tabuleiro para o cliente\n"); // Debug
             send(client_socket, formatted_tabuleiro, strlen(formatted_tabuleiro), 0);
-            break;
+            recv(client_socket, received_message, BUFFER_SIZE - 1, 0);
+            if(strcmp(received_message, "Tabuleiro recebido") == 0) {
+                printf("Tabuleiro recebido pelo cliente\n");
+                break;
+            }else{
+                printf("Erro ao receber tabuleiro\n");
+            }
         }
     }
     fclose(f);
@@ -253,7 +323,10 @@ void *handle_client(void *client_socket) {
 
 
 int main(int argc, char *argv[]) {
-    int server_socket, client_socket, porta;
+    
+    transforma_matriz(matriz_of);
+    ler_matrizes(matriz_of);
+
     struct sockaddr_in server_addr, client_addr;
     socklen_t addr_len = sizeof(client_addr);
 
@@ -264,6 +337,12 @@ int main(int argc, char *argv[]) {
 
     char ficheiro_jogos[100], ficheiro_solucoes[100];
     ler_configuracao(argv[1], ficheiro_jogos, ficheiro_solucoes, &porta);
+
+    struct sigaction sa;
+    sa.sa_handler = handle_sigint;
+    sa.sa_flags = 0;
+    sigemptyset(&sa.sa_mask);
+    sigaction(SIGINT, &sa, NULL);
 
     server_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (server_socket < 0) {
@@ -314,6 +393,7 @@ int main(int argc, char *argv[]) {
         }
         *new_sock = client_socket;
 
+        pthread_mutex_lock(&clients_mutex_board);
         pthread_t tid;
         if (pthread_create(&tid, NULL, handle_client, (void *)new_sock) != 0) {
             perror("Erro ao criar thread para o cliente");
@@ -321,6 +401,7 @@ int main(int argc, char *argv[]) {
             close(client_socket);
             continue;
         }
+        pthread_mutex_unlock(&clients_mutex_board);
 
         pthread_detach(tid);
     }

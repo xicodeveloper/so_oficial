@@ -5,7 +5,6 @@
 #include <arpa/inet.h>
 #include <time.h>
 
-
 #define BUFFER_SIZE 1024
 #define SIZE 9
 
@@ -127,7 +126,6 @@ void enviar_id_cliente(int client_socket, int client_id) {
 
 void comunicar_servidor(int client_socket) {
     char buffer[BUFFER_SIZE];
-    char buffer2[BUFFER_SIZE];
     int matriz[SIZE][SIZE] = {0}; // Inicializa a matriz com zeros
     int id_tabuleiro;
     if (recv(client_socket, &id_tabuleiro, sizeof(id_tabuleiro), 0) <= 0) {
@@ -137,16 +135,17 @@ void comunicar_servidor(int client_socket) {
     }
     printf("Id recebido %d", id_tabuleiro);
     // Recebe o tabuleiro do servidor
-    int bytes_received2 = recv(client_socket, buffer2, BUFFER_SIZE - 1, 0);
+    int bytes_received2 = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
     if (bytes_received2 <= 0) {
         printf("Servidor desconectado.\n");
         return;
     }
-    buffer2[bytes_received2] = '\0'; // Corrigido para usar buffer2
-    printf("\nTabuleiro enviado:\n%s\n", buffer2);
+    buffer[bytes_received2] = '\0'; // Corrigido para usar buffer
+    printf("\nTabuleiro enviado:\n%s\n", buffer);
+    send(client_socket, "Tabuleiro recebido\0", 19, 0);
 
     // Converte a string para a matriz
-    string_para_matriz(buffer2, matriz);
+    string_para_matriz(buffer, matriz);
     printf("Matriz transformada:\n");
 
     // Recebe o menu inicial do servidor
@@ -172,7 +171,6 @@ void comunicar_servidor(int client_socket) {
 
         int resposta = atoi(buffer); // Converte a entrada para inteiro
         int bytes_received3;
-        char buffer3[BUFFER_SIZE];
 
         // Envia a opção para o servidor
         if (send(client_socket, buffer, strlen(buffer), 0) < 0) {
@@ -183,55 +181,55 @@ void comunicar_servidor(int client_socket) {
         switch (resposta) {
             case 1:
                 // Recebe resposta para a opção 1
-                bytes_received3 = recv(client_socket, buffer3, BUFFER_SIZE - 1, 0);
+                bytes_received3 = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
                 if (bytes_received3 <= 0) {
                     printf("Servidor desconectado.\n");
                     return;
                 }
-                buffer3[bytes_received3] = '\0';
-                printf("Resposta do servidor:\n%s", buffer3);
+                buffer[bytes_received3] = '\0';
+                printf("Resposta do servidor:\n%s", buffer);
                 break;
 
             case 2:
                 // Recebe resposta para a opção 2
-                bytes_received3 = recv(client_socket, buffer3, BUFFER_SIZE - 1, 0);
+                bytes_received3 = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
                 if (bytes_received3 <= 0) {
                     printf("Servidor desconectado.\n");
                     return;
                 }
-                buffer3[bytes_received3] = '\0';
-                printf("Resposta do servidor:\n%s", buffer3);
+                buffer[bytes_received3] = '\0';
+                printf("Resposta do servidor:\n%s", buffer);
                 break;
 
             case 3:
                 // Recebe resposta para a opção 3
-                bytes_received3 = recv(client_socket, buffer3, BUFFER_SIZE - 1, 0);
+                bytes_received3 = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
                 if (bytes_received3 <= 0) {
                     printf("Servidor desconectado.\n");
                     return;
                 }
-                buffer3[bytes_received3] = '\0';
-                printf("Resposta do servidor:\n%s", buffer3);
+                buffer[bytes_received3] = '\0';
+                printf("Resposta do servidor:\n%s", buffer);
                 break;
             case 4:
                 // Recebe resposta para a opção 3
-                bytes_received3 = recv(client_socket, buffer3, BUFFER_SIZE - 1, 0);
+                bytes_received3 = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
                 if (bytes_received3 <= 0) {
                     printf("Servidor desconectado.\n");
                     return;
                 }
-                buffer3[bytes_received3] = '\0';
-                printf("Resposta do servidor:\n%s", buffer3);
+                buffer[bytes_received3] = '\0';
+                printf("Resposta do servidor:\n%s", buffer);
                 break;
             case 5:
                 // Recebe resposta para a opção 3
-                bytes_received3 = recv(client_socket, buffer3, BUFFER_SIZE - 1, 0);
+                bytes_received3 = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
                 if (bytes_received3 <= 0) {
                     printf("Servidor desconectado.\n");
                     return;
                 }
-                buffer3[bytes_received3] = '\0';
-                printf("Resposta do servidor:\n%s", buffer3);
+                buffer[bytes_received3] = '\0';
+                printf("Resposta do servidor:\n%s", buffer);
                 break;
             default:
                 printf("Opção inválida! Tente novamente.\n");

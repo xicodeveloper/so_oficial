@@ -1,11 +1,13 @@
 {
     "files.associations": {
+        "*.ejs": "html",
         "pthread.h": "c",
         "inet.h": "c",
         "stdio.h": "c",
         "header.h": "c",
         "time.h": "c",
         "unistd.h": "c",
-        "stdlib.h": "c"
+        "stdlib.h": "c",
+        "signal.h": "c"
     }
 }
