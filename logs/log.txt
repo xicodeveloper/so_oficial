@@ -1320,3 +1320,27 @@ Thu Nov 14 17:14:40 2024 | Client disconnected
 Thu Nov 14 17:14:40 2024 | Client connection closed
 Thu Nov 14 17:14:40 2024 | Client disconnected
 Thu Nov 14 17:14:40 2024 | Client connection closed
+Thu Nov 14 17:56:17 2024 | Inicio do servidor: Configuração lida com sucesso
+Thu Nov 14 17:56:27 2024 | New client connected
+Thu Nov 14 17:56:33 2024 | New client connected
+Thu Nov 14 19:14:42 2024 | Inicio do servidor: Configuração lida com sucesso
+Thu Nov 14 19:14:47 2024 | New client connected
+Thu Nov 14 19:14:56 2024 | New client connected
+Thu Nov 14 19:15:00 2024 | New client connected
+Thu Nov 14 19:15:05 2024 | New client connected
+Thu Nov 14 19:15:09 2024 | New client connected
+Thu Nov 14 19:15:13 2024 | Client disconnected
+Thu Nov 14 19:15:13 2024 | Client connection closed
+Thu Nov 14 19:15:13 2024 | Client disconnected
+Thu Nov 14 19:15:13 2024 | Client connection closed
+Thu Nov 14 19:15:16 2024 | Client disconnected
+Thu Nov 14 19:15:16 2024 | Client connection closed
+Thu Nov 14 19:17:17 2024 | Client disconnected due to receive error
+Thu Nov 14 19:17:17 2024 | Client connection closed
+Thu Nov 14 19:17:18 2024 | Client disconnected due to receive error
+Thu Nov 14 19:17:18 2024 | Client connection closed
+Thu Nov 14 19:17:25 2024 | New client connected
+Thu Nov 14 19:21:58 2024 | Inicio do servidor: Configuração lida com sucesso
+Thu Nov 14 19:22:16 2024 | Inicio do servidor: Configuração lida com sucesso
+Thu Nov 14 19:22:24 2024 | New client connected
+Thu Nov 14 19:22:45 2024 | New client connected

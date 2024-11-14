@@ -123,7 +123,17 @@ void enviar_id_cliente(int client_socket, int client_id) {
         exit(EXIT_FAILURE);
     }
 }
+void imprima_matriz(int matriz[9][9]){
+for(int i=0;i<9;i++){
+    for (int j = 0; j < 9; j++)
+    {
+        printf("%d ", matriz[i][j]);
+    }
+    printf("\n");
+}
 
+
+}
 void comunicar_servidor(int client_socket) {
     char buffer[BUFFER_SIZE];
     int matriz[SIZE][SIZE] = {0}; // Inicializa a matriz com zeros
@@ -147,10 +157,10 @@ void comunicar_servidor(int client_socket) {
     // Converte a string para a matriz
     string_para_matriz(buffer, matriz);
     printf("Matriz transformada:\n");
-
+    imprima_matriz(matriz);
     // Recebe o menu inicial do servidor
     printf("Recebe menu inicial\n");
-    int bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0); // ------------------- ERRO ESTÁ AQUI
+    int bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
     printf("Depois de receber menu inicial\n");
     if (bytes_received <= 0) {
         printf("Servidor desconectado.\n");

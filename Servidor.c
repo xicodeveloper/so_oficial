@@ -138,6 +138,23 @@ void enviar_menu(int client_socket) {
     send(client_socket, menu, strlen(menu), 0);
 }
 
+
+// Função auxiliar para converter o tabuleiro 2D em uma string unidimensional
+void converter_tabuleiro_para_string(int tabuleiro[LC][LC], char *tabuleiro_str) {
+    int index = 0;
+    for (int i = 0; i < LC; i++) {
+        for (int j = 0; j < LC; j++) {
+            if (tabuleiro[i][j] == 0) {
+                tabuleiro_str[index++] = '_'; // Representação para valores desconhecidos
+            } else {
+                tabuleiro_str[index++] = tabuleiro[i][j] + '0'; // Converte para caractere
+            }
+        }
+    }
+    tabuleiro_str[index] = '\0'; // Termina a string
+}
+
+// Formata a string do tabuleiro com as linhas e colunas do jogo
 void formatar_tabuleiro(char *tabuleiro, char *formatted_board) {
     int index = 0;
     for (int i = 0; i < 9; i++) {
@@ -159,39 +176,36 @@ void formatar_tabuleiro(char *tabuleiro, char *formatted_board) {
     }
     formatted_board[index] = '\0';
 }
+
 // Função para escolher e enviar o tabuleiro para o cliente
-void escolhe_tabuleiro(int client_socket, int num) {
-    char buffer[BUFFER_SIZE];
+void escolhe_tabuleiro(int client_socket, int num, int matriz[SIZE][LC][LC]) {
+    char tabuleiro_str[LC * LC + 1];  // String temporária para armazenar o tabuleiro unidimensional
+    char formatted_tabuleiro[BUFFER_SIZE];
     char received_message[BUFFER_SIZE];
-    FILE *f = fopen("./jogos_solucoes/jogos.txt", "r");
-    if (f == NULL) {
-        printf("Erro ao abrir o ficheiro dos jogos para leitura.\n");
+
+    if (num < 1 || num > SIZE) {
+        printf("ID do tabuleiro inválido: %d\n", num);
         return;
     }
 
     printf("Escolhendo tabuleiro com ID %d\n", num); // Debug
-    while (fgets(buffer, BUFFER_SIZE, f) != NULL) {
-        buffer[strcspn(buffer, "\n")] = 0;
-        int id = atoi(buffer);
-        if (fgets(buffer, BUFFER_SIZE, f) == NULL) {
-            break;
+    converter_tabuleiro_para_string(matriz[num - 1], tabuleiro_str); // Converte para string unidimensional
+    formatar_tabuleiro(tabuleiro_str, formatted_tabuleiro); // Formata o tabuleiro
+
+    printf("Enviando tabuleiro para o cliente\n"); // Debug
+    send(client_socket, formatted_tabuleiro, strlen(formatted_tabuleiro), 0);
+
+    // Recebe a confirmação de que o cliente recebeu o tabuleiro
+    if (recv(client_socket, received_message, BUFFER_SIZE - 1, 0) > 0) {
+        received_message[BUFFER_SIZE - 1] = '\0'; // Assegura-se de que a mensagem recebida seja terminada com '\0'
+        if (strcmp(received_message, "Tabuleiro recebido") == 0) {
+            printf("Tabuleiro recebido pelo cliente\n");
+        } else {
+            printf("Erro ao receber tabuleiro: %s\n", received_message);
         }
-        buffer[strcspn(buffer, "\n")] = 0;
-        if (num == id) {
-            char formatted_tabuleiro[BUFFER_SIZE];
-            formatar_tabuleiro(buffer, formatted_tabuleiro);
-            printf("Enviando tabuleiro para o cliente\n"); // Debug
-            send(client_socket, formatted_tabuleiro, strlen(formatted_tabuleiro), 0);
-            recv(client_socket, received_message, BUFFER_SIZE - 1, 0);
-            if(strcmp(received_message, "Tabuleiro recebido") == 0) {
-                printf("Tabuleiro recebido pelo cliente\n");
-                break;
-            }else{
-                printf("Erro ao receber tabuleiro\n");
-            }
-        }
+    } else {
+        printf("Erro na recepção da confirmação do cliente\n");
     }
-    fclose(f);
 }
 
 // Função para enviar solução para o cliente
@@ -243,7 +257,7 @@ void *handle_client(void *client_socket) {
     printf("New client connected with ID: %d\n", client_id);
     escrever_log("New client connected");
     enviar_id_tabuleiro(sock, num);
-    escolhe_tabuleiro(sock, num);
+    escolhe_tabuleiro(sock, num, matriz_of);
     enviar_menu(sock);
     printf("Sending menu to client: %d\n", client_id);
 
