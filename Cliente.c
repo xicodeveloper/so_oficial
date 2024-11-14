@@ -163,10 +163,10 @@ int escolhe_celula_sem_nada_aleatoria(int matriz[9][9], int *linha, int *coluna)
 
     return 1; // Retorna 1 para indicar sucesso
 }
-// Função para enviar uma tentativa para o servidor
 void envia_tentativa(int client_socket, int num, int linha, int coluna) {
-    int tentativa = (rand() % 9) + 1;  // Gera um número entre 1 e 9
+    int tentativa = (rand() % 9) + 1; // Gera um número entre 1 e 9
     char buffer[BUFFER_SIZE];
+    printf("Tentativa: %d\n", tentativa);
 
     // Formata a mensagem para envio
     snprintf(buffer, BUFFER_SIZE, "%d %d %d %d", num, linha, coluna, tentativa);
@@ -177,19 +177,33 @@ void envia_tentativa(int client_socket, int num, int linha, int coluna) {
         return;
     }
 
+    // Recebe a confirmação de que o servidor recebeu a tentativa
+    char received_message[BUFFER_SIZE];
+    int bytes_received = recv(client_socket, received_message, BUFFER_SIZE - 1, 0);
+    if (bytes_received > 0) {
+        received_message[bytes_received] = '\0'; // Garante o final da string
+        if (strcmp(received_message, "Tentativa recebida") == 0) {
+            printf("Tentativa recebida pelo servidor.\n");
+        } else {
+            printf("Erro ao receber confirmação: %s\n", received_message);
+        }
+    } else {
+        perror("Erro na recepção da confirmação do servidor");
+    }
 }
-void recebe_feed_back_tentativa(int client_socket){
- char buffer[BUFFER_SIZE];
-    // Recebe a resposta do servidor
+
+void recebe_feed_back_tentativa(int client_socket) {
+    char buffer[BUFFER_SIZE];
+    // Recebe a resposta do servidor com o feedback
     int bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
     if (bytes_received < 0) {
         perror("Erro ao receber resposta do servidor");
         return;
     }
-    buffer[bytes_received] = '\0';  // Garante que a mensagem recebida seja uma string válida
+    buffer[bytes_received] = '\0';
 
+    // Exibe o feedback do servidor
     printf("Resposta do servidor: %s\n", buffer);
-    
 }
 void comunicar_servidor(int client_socket) {
     char buffer[BUFFER_SIZE];
@@ -260,7 +274,7 @@ void comunicar_servidor(int client_socket) {
                 if (escolhe_celula_sem_nada_aleatoria(matriz, &linha_branca, &coluna_branca)) {
                     printf("Posição vazia encontrada em: linha %d, coluna %d\n", linha_branca, coluna_branca);
                     printf("O id do tabuleiro é: %d\n",id_tabuleiro);
-                    //envia_tentativa(client_socket,id_tabuleiro, linha_branca, coluna_branca);
+                   // envia_tentativa(client_socket,id_tabuleiro, linha_branca, coluna_branca);
                     //recebe_feed_back_tentativa(client_socket);
                 } else {
                     printf("Nenhuma posição vazia encontrada.\n");

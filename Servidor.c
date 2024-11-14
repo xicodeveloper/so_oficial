@@ -13,6 +13,8 @@
 #define LC 9
 
 int matriz_of[SIZE][LC][LC] = {{{0}}};
+int matriz_solucao[SIZE][LC][LC] = {{{0}}};
+
 int num_clients_sessao = 0;
 int server_socket, client_socket, porta;
 pthread_mutex_t clients_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -36,6 +38,48 @@ void escrever_log(const char *mensagem) {
     fprintf(f, "%s | %s\n", timestamp, mensagem);
     fclose(f);
     pthread_mutex_unlock(&log_mutex);
+}
+void transforma_matriz_solucao(int matriz_of[SIZE][LC][LC]) {
+    char buffer[BUFFER_SIZE];
+    FILE *f = fopen("./jogos_solucoes/solucoes.txt", "r");
+    
+    if (f == NULL) {
+        printf("Erro ao abrir o ficheiro dos jogos para leitura.\n");
+        return;
+    }
+
+    int jogo_index = 0;
+    while (jogo_index < SIZE) {
+        // Ignora a linha do índice do jogo (1, 2, 3, etc.)
+        if (fgets(buffer, BUFFER_SIZE, f) == NULL) {
+            break; // Encerra o loop se não houver mais linhas
+        }
+
+        // Lê a linha contendo a solução do jogo (81 caracteres)
+        if (fgets(buffer, BUFFER_SIZE, f) == NULL) {
+            break; // Encerra o loop se não houver linha de solução
+        }
+        buffer[strcspn(buffer, "\n")] = 0; // Remove o '\n' no final da linha, se houver
+
+        // Verifica se a linha de solução tem o tamanho correto (81 caracteres)
+        if (strlen(buffer) != 81) {
+            printf("Linha de solução do jogo %d tem tamanho incorreto.\n", jogo_index + 1);
+            continue; // Passa para o próximo jogo se o tamanho for incorreto
+        }
+
+        // Preenche a matriz 9x9 com os valores do buffer
+        int k = 0; // Índice do caractere no buffer
+        for (int i = 0; i < LC; i++) {
+            for (int j = 0; j < LC; j++) {
+                matriz_of[jogo_index][i][j] = buffer[k] - '0'; // Converte caractere para inteiro
+                k++; // Avança para o próximo caractere do buffer
+            }
+        }
+        
+        jogo_index++; // Próximo jogo
+    }
+    
+    fclose(f);
 }
 
 
@@ -241,7 +285,7 @@ void enviar_id_tabuleiro(int client_socket, int num) {
         exit(EXIT_FAILURE);
     }
 }
-void recebe_tentativa(int client_socket, int matriz_of[4][9][9]) {
+void recebe_tentativa_e_envia_certo_errado(int client_socket, int matriz_of[4][9][9]) {
     char buffer[BUFFER_SIZE];
     int num, linha, coluna, tentativa;
 
@@ -251,7 +295,10 @@ void recebe_tentativa(int client_socket, int matriz_of[4][9][9]) {
         perror("Erro ao receber dados do cliente");
         return;
     }
-    buffer[bytes_received] = '\0';  // Garante que a mensagem recebida seja uma string válida
+    buffer[bytes_received] = '\0';
+
+    // Envia confirmação ao cliente de que a tentativa foi recebida
+    send(client_socket, "Tentativa recebida", strlen("Tentativa recebida"), 0);
 
     // Extrai os valores de `num`, `linha`, `coluna`, e `tentativa` da mensagem
     if (sscanf(buffer, "%d %d %d %d", &num, &linha, &coluna, &tentativa) != 4) {
@@ -266,17 +313,15 @@ void recebe_tentativa(int client_socket, int matriz_of[4][9][9]) {
     printf("Coluna: %d\n", coluna);
     printf("Tentativa: %d\n", tentativa);
 
-    // Processa a tentativa (a lógica de processamento pode variar dependendo do seu programa)
-    // Por exemplo: validar a tentativa e enviar uma resposta de sucesso ou falha
-
-    // Exemplo de resposta ao cliente
+    // Prepara a resposta com feedback correto ou errado
     char resposta[BUFFER_SIZE];
-    if(matriz_of[num-1][linha-1][coluna-1]==tentativa){
+    if (matriz_of[num - 1][linha - 1][coluna - 1] == tentativa) {
         snprintf(resposta, BUFFER_SIZE, "Tentativa %d em posição (%d, %d) certa.", tentativa, linha, coluna);
-    }else{
+    } else {
         snprintf(resposta, BUFFER_SIZE, "Tentativa %d em posição (%d, %d) errada.", tentativa, linha, coluna);
     }
-    
+
+    // Envia a resposta com o feedback ao cliente
     send(client_socket, resposta, strlen(resposta), 0);
 }
 // Function to manage each client
@@ -328,7 +373,7 @@ void *handle_client(void *client_socket) {
             case 1:
                 printf("Client %d selected to Resolve Full Board\n", client_id);
                 strcpy(buffer, "Option 1: Full solution requested.\n");
-                //recebe_tentativa( sock,  matriz_of);
+                //recebe_tentativa_e_envia_certo_errado(sock,matriz_solucao);
                 break;
             case 2:
                 envia_solucao(sock, num);
@@ -378,7 +423,12 @@ void *handle_client(void *client_socket) {
 int main(int argc, char *argv[]) {
     
     transforma_matriz(matriz_of);
+    transforma_matriz_solucao(matriz_solucao);
     ler_matrizes(matriz_of);
+    printf("----------");
+    ler_matrizes(matriz_solucao);
+  
+
 
     struct sockaddr_in server_addr, client_addr;
     socklen_t addr_len = sizeof(client_addr);
