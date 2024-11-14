@@ -146,29 +146,28 @@ void comunicar_servidor(int client_socket) {
 
     // Converte a string para a matriz
     string_para_matriz(buffer2, matriz);
+    printf("Matriz transformada:\n");
 
     // Recebe o menu inicial do servidor
-    int bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+    printf("Recebe menu inicial\n");
+    int bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0); // ------------------- ERRO ESTÁ AQUI
+    printf("Depois de receber menu inicial\n");
     if (bytes_received <= 0) {
         printf("Servidor desconectado.\n");
         return;
     }
+    printf("bytes_received: %d\n", bytes_received);
     buffer[bytes_received] = '\0';
     printf("Resposta do servidor:\n%s", buffer);
 
     // Inicia o loop para enviar e receber respostas
+    printf("Antes de while do problema");
     while (1) {
         printf("Insira um número (ou 'sair' para encerrar): ");
         fgets(buffer, BUFFER_SIZE, stdin);
 
         // Remove o newline que `fgets` deixa no buffer
         buffer[strcspn(buffer, "\n")] = 0;
-
-        // Verifica se o usuário digitou "sair"
-        if (strcmp(buffer, "sair") == 0) {
-            printf("Encerrando a conexão...\n");
-            break;
-        }
 
         int resposta = atoi(buffer); // Converte a entrada para inteiro
         int bytes_received3;

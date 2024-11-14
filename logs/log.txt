@@ -710,3 +710,202 @@ Mon Nov 11 17:31:03 2024 | Inicio do servidor: Configuração lida com sucesso
 Mon Nov 11 17:31:06 2024 | Novo cliente conectado
 Mon Nov 11 17:31:16 2024 | Novo cliente conectado
 Mon Nov 11 17:31:29 2024 | Novo cliente conectado
+Tue Nov 12 18:52:07 2024 | Inicio do servidor: Configuração lida com sucesso
+Tue Nov 12 18:52:11 2024 | Novo cliente conectado
+Tue Nov 12 18:52:18 2024 | Novo cliente conectado
+Tue Nov 12 18:52:26 2024 | Novo cliente conectado
+Tue Nov 12 18:54:05 2024 | Inicio do servidor: Configuração lida com sucesso
+Tue Nov 12 18:54:10 2024 | Cliente desconectado
+Tue Nov 12 18:54:10 2024 | Conexão com cliente encerrada
+Tue Nov 12 18:54:10 2024 | Cliente desconectado
+Tue Nov 12 18:54:10 2024 | Conexão com cliente encerrada
+Tue Nov 12 18:54:10 2024 | Cliente desconectado
+Tue Nov 12 18:54:10 2024 | Conexão com cliente encerrada
+Tue Nov 12 18:54:22 2024 | Inicio do servidor: Configuração lida com sucesso
+Tue Nov 12 18:54:26 2024 | Novo cliente conectado
+Tue Nov 12 18:54:30 2024 | Novo cliente conectado
+Tue Nov 12 18:54:38 2024 | Novo cliente conectado
+Tue Nov 12 18:58:06 2024 | Cliente desconectado
+Tue Nov 12 18:58:06 2024 | Conexão com cliente encerrada
+Tue Nov 12 18:58:08 2024 | Novo cliente conectado
+Tue Nov 12 19:02:30 2024 | Cliente desconectado
+Tue Nov 12 19:02:30 2024 | Conexão com cliente encerrada
+Tue Nov 12 19:02:30 2024 | Cliente desconectado
+Tue Nov 12 19:02:30 2024 | Conexão com cliente encerrada
+Tue Nov 12 19:02:30 2024 | Cliente desconectado
+Tue Nov 12 19:02:30 2024 | Conexão com cliente encerrada
+Tue Nov 12 19:02:48 2024 | Inicio do servidor: Configuração lida com sucesso
+Tue Nov 12 19:02:54 2024 | Novo cliente conectado
+Tue Nov 12 19:03:00 2024 | Novo cliente conectado
+Tue Nov 12 19:03:05 2024 | Novo cliente conectado
+Tue Nov 12 19:06:04 2024 | Novo cliente conectado
+Tue Nov 12 19:07:49 2024 | Inicio do servidor: Configuração lida com sucesso
+Tue Nov 12 19:07:49 2024 | Erro no bind do servidor
+Tue Nov 12 19:08:14 2024 | Inicio do servidor: Configuração lida com sucesso
+Tue Nov 12 19:08:14 2024 | Servidor iniciado e aguardando conexões
+Tue Nov 12 19:08:16 2024 | Novo cliente conectado
+Tue Nov 12 19:08:20 2024 | Novo cliente conectado
+Tue Nov 12 19:08:23 2024 | Novo cliente conectado
+Tue Nov 12 19:09:11 2024 | Inicio do servidor: Configuração lida com sucesso
+Tue Nov 12 19:09:11 2024 | Erro no bind do servidor
+Tue Nov 12 19:09:26 2024 | Inicio do servidor: Configuração lida com sucesso
+Tue Nov 12 19:09:26 2024 | Servidor iniciado e aguardando conexões
+Tue Nov 12 19:09:30 2024 | Novo cliente conectado
+Tue Nov 12 19:09:35 2024 | Novo cliente conectado
+Tue Nov 12 19:10:55 2024 | Cliente desconectado
+Tue Nov 12 19:10:55 2024 | Conexão com cliente encerrada
+Tue Nov 12 19:11:42 2024 | Inicio do servidor: Configuração lida com sucesso
+Tue Nov 12 19:11:42 2024 | Erro no bind do servidor
+Tue Nov 12 19:11:57 2024 | Inicio do servidor: Configuração lida com sucesso
+Tue Nov 12 19:11:57 2024 | Servidor iniciado e aguardando conexões
+Tue Nov 12 19:12:11 2024 | Novo cliente conectado
+Tue Nov 12 19:12:15 2024 | Novo cliente conectado
+Tue Nov 12 19:14:18 2024 | Inicio do servidor: Configuração lida com sucesso
+Tue Nov 12 19:14:29 2024 | Inicio do servidor: Configuração lida com sucesso
+Tue Nov 12 19:14:35 2024 | Inicio do servidor: Configuração lida com sucesso
+Tue Nov 12 19:15:06 2024 | Inicio do servidor: Configuração lida com sucesso
+Tue Nov 12 19:15:12 2024 | Novo cliente conectado
+Tue Nov 12 19:16:04 2024 | Novo cliente conectado
+Tue Nov 12 19:16:09 2024 | Novo cliente conectado
+Tue Nov 12 19:16:17 2024 | Novo cliente conectado
+Tue Nov 12 19:16:24 2024 | Novo cliente conectado
+Tue Nov 12 19:16:49 2024 | Novo cliente conectado
+Tue Nov 12 19:17:41 2024 | Cliente desconectado
+Tue Nov 12 19:17:41 2024 | Conexão com cliente encerrada
+Tue Nov 12 19:17:41 2024 | Cliente desconectado
+Tue Nov 12 19:17:41 2024 | Conexão com cliente encerrada
+Tue Nov 12 19:17:42 2024 | Cliente desconectado
+Tue Nov 12 19:17:42 2024 | Conexão com cliente encerrada
+Tue Nov 12 19:17:44 2024 | Cliente desconectado
+Tue Nov 12 19:17:44 2024 | Conexão com cliente encerrada
+Tue Nov 12 19:17:47 2024 | Novo cliente conectado
+Tue Nov 12 19:19:56 2024 | Inicio do servidor: Configuração lida com sucesso
+Tue Nov 12 19:19:59 2024 | Novo cliente conectado
+Tue Nov 12 19:20:08 2024 | Novo cliente conectado
+Tue Nov 12 19:20:28 2024 | Cliente desconectado
+Tue Nov 12 19:20:28 2024 | Conexão com cliente encerrada
+Tue Nov 12 19:20:32 2024 | Novo cliente conectado
+Tue Nov 12 19:20:37 2024 | Cliente desconectado
+Tue Nov 12 19:20:37 2024 | Conexão com cliente encerrada
+Tue Nov 12 19:23:51 2024 | Cliente desconectado
+Tue Nov 12 19:23:51 2024 | Conexão com cliente encerrada
+Tue Nov 12 19:24:17 2024 | Inicio do servidor: Configuração lida com sucesso
+Tue Nov 12 19:24:21 2024 | Novo cliente conectado
+Tue Nov 12 19:29:16 2024 | Novo cliente conectado
+Tue Nov 12 19:29:30 2024 | Cliente desconectado
+Tue Nov 12 19:29:30 2024 | Conexão com cliente encerrada
+Tue Nov 12 19:29:32 2024 | Novo cliente conectado
+Tue Nov 12 19:29:35 2024 | Novo cliente conectado
+Tue Nov 12 19:29:38 2024 | Novo cliente conectado
+Tue Nov 12 19:29:41 2024 | Novo cliente conectado
+Tue Nov 12 19:29:43 2024 | Novo cliente conectado
+Tue Nov 12 19:29:51 2024 | Novo cliente conectado
+Tue Nov 12 19:29:54 2024 | Cliente desconectado
+Tue Nov 12 19:29:54 2024 | Conexão com cliente encerrada
+Tue Nov 12 19:35:14 2024 | Cliente desconectado
+Tue Nov 12 19:35:14 2024 | Conexão com cliente encerrada
+Tue Nov 12 19:35:31 2024 | Conexão com cliente encerrada
+Tue Nov 12 19:35:58 2024 | Conexão com cliente encerrada
+Tue Nov 12 19:36:15 2024 | Conexão com cliente encerrada
+Tue Nov 12 19:42:51 2024 | Cliente desconectado
+Tue Nov 12 19:42:51 2024 | Conexão com cliente encerrada
+Tue Nov 12 19:44:37 2024 | Inicio do servidor: Configuração lida com sucesso
+Tue Nov 12 19:44:47 2024 | Inicio do servidor: Configuração lida com sucesso
+Tue Nov 12 19:44:52 2024 | Novo cliente conectado
+Tue Nov 12 19:44:58 2024 | Novo cliente conectado
+Tue Nov 12 19:45:04 2024 | Novo cliente conectado
+Tue Nov 12 19:48:20 2024 | Cliente desconectado
+Tue Nov 12 19:48:20 2024 | Conexão com cliente encerrada
+Tue Nov 12 19:48:21 2024 | Cliente desconectado
+Tue Nov 12 19:48:21 2024 | Conexão com cliente encerrada
+Tue Nov 12 19:48:28 2024 | Novo cliente conectado
+Tue Nov 12 19:48:33 2024 | Novo cliente conectado
+Tue Nov 12 19:48:43 2024 | Novo cliente conectado
+Tue Nov 12 19:48:48 2024 | Cliente desconectado
+Tue Nov 12 19:48:48 2024 | Conexão com cliente encerrada
+Tue Nov 12 19:48:48 2024 | Cliente desconectado
+Tue Nov 12 19:48:48 2024 | Conexão com cliente encerrada
+Tue Nov 12 19:48:50 2024 | Novo cliente conectado
+Tue Nov 12 19:48:53 2024 | Novo cliente conectado
+Tue Nov 12 19:48:55 2024 | Novo cliente conectado
+Tue Nov 12 19:48:57 2024 | Cliente desconectado
+Tue Nov 12 19:48:57 2024 | Conexão com cliente encerrada
+Tue Nov 12 19:51:05 2024 | Cliente desconectado
+Tue Nov 12 19:51:05 2024 | Conexão com cliente encerrada
+Tue Nov 12 19:51:05 2024 | Cliente desconectado
+Tue Nov 12 19:51:05 2024 | Conexão com cliente encerrada
+Tue Nov 12 19:51:06 2024 | Cliente desconectado
+Tue Nov 12 19:51:06 2024 | Conexão com cliente encerrada
+Tue Nov 12 19:51:29 2024 | Novo cliente conectado
+Tue Nov 12 19:51:33 2024 | Novo cliente conectado
+Tue Nov 12 19:52:40 2024 | Inicio do servidor: Configuração lida com sucesso
+Tue Nov 12 19:52:50 2024 | Inicio do servidor: Configuração lida com sucesso
+Tue Nov 12 19:52:54 2024 | Novo cliente conectado
+Tue Nov 12 19:53:00 2024 | Novo cliente conectado
+Tue Nov 12 19:53:18 2024 | Novo cliente conectado
+Tue Nov 12 19:53:20 2024 | Cliente desconectado
+Tue Nov 12 19:53:20 2024 | Conexão com cliente encerrada
+Tue Nov 12 19:53:23 2024 | Novo cliente conectado
+Tue Nov 12 19:54:17 2024 | Cliente desconectado
+Tue Nov 12 19:54:17 2024 | Conexão com cliente encerrada
+Tue Nov 12 19:54:17 2024 | Cliente desconectado
+Tue Nov 12 19:54:17 2024 | Conexão com cliente encerrada
+Tue Nov 12 19:54:17 2024 | Cliente desconectado
+Tue Nov 12 19:54:17 2024 | Conexão com cliente encerrada
+Tue Nov 12 19:54:21 2024 | Novo cliente conectado
+Tue Nov 12 19:54:24 2024 | Novo cliente conectado
+Tue Nov 12 19:54:27 2024 | Novo cliente conectado
+Tue Nov 12 19:54:28 2024 | Novo cliente conectado
+Tue Nov 12 19:54:31 2024 | Cliente desconectado
+Tue Nov 12 19:54:31 2024 | Conexão com cliente encerrada
+Tue Nov 12 19:54:31 2024 | Cliente desconectado
+Tue Nov 12 19:54:31 2024 | Conexão com cliente encerrada
+Tue Nov 12 19:54:31 2024 | Cliente desconectado
+Tue Nov 12 19:54:31 2024 | Conexão com cliente encerrada
+Tue Nov 12 19:57:29 2024 | Inicio do servidor: Configuração lida com sucesso
+Tue Nov 12 19:57:40 2024 | Inicio do servidor: Configuração lida com sucesso
+Tue Nov 12 19:57:43 2024 | Inicio do servidor: Configuração lida com sucesso
+Tue Nov 12 19:57:45 2024 | Novo cliente conectado
+Tue Nov 12 19:57:50 2024 | Novo cliente conectado
+Tue Nov 12 20:06:21 2024 | Inicio do servidor: Configuração lida com sucesso
+Tue Nov 12 20:06:35 2024 | Inicio do servidor: Configuração lida com sucesso
+Tue Nov 12 20:06:38 2024 | Novo cliente conectado
+Tue Nov 12 20:06:42 2024 | Novo cliente conectado
+Tue Nov 12 20:06:45 2024 | Novo cliente conectado
+Tue Nov 12 20:06:48 2024 | Novo cliente conectado
+Tue Nov 12 20:06:50 2024 | Novo cliente conectado
+Tue Nov 12 20:06:52 2024 | Novo cliente conectado
+Tue Nov 12 20:06:54 2024 | Novo cliente conectado
+Tue Nov 12 20:09:05 2024 | Inicio do servidor: Configuração lida com sucesso
+Tue Nov 12 20:09:11 2024 | Novo cliente conectado
+Tue Nov 12 20:09:15 2024 | Novo cliente conectado
+Tue Nov 12 20:09:20 2024 | Novo cliente conectado
+Tue Nov 12 20:09:25 2024 | Novo cliente conectado
+Tue Nov 12 20:13:47 2024 | Cliente desconectado
+Tue Nov 12 20:13:47 2024 | Conexão com cliente encerrada
+Tue Nov 12 20:13:47 2024 | Cliente desconectado
+Tue Nov 12 20:13:47 2024 | Conexão com cliente encerrada
+Tue Nov 12 20:13:47 2024 | Cliente desconectado
+Tue Nov 12 20:13:47 2024 | Conexão com cliente encerrada
+Tue Nov 12 20:13:48 2024 | Cliente desconectado
+Tue Nov 12 20:13:48 2024 | Conexão com cliente encerrada
+Tue Nov 12 20:15:47 2024 | Inicio do servidor: Configuração lida com sucesso
+Tue Nov 12 20:15:59 2024 | Novo cliente conectado
+Tue Nov 12 20:16:24 2024 | Novo cliente conectado
+Tue Nov 12 20:16:31 2024 | Novo cliente conectado
+Tue Nov 12 20:16:43 2024 | Novo cliente conectado
+Tue Nov 12 20:16:50 2024 | Novo cliente conectado
+Tue Nov 12 20:17:57 2024 | Inicio do servidor: Configuração lida com sucesso
+Tue Nov 12 20:18:22 2024 | Inicio do servidor: Configuração lida com sucesso
+Tue Nov 12 20:18:24 2024 | Novo cliente conectado
+Tue Nov 12 20:18:28 2024 | Novo cliente conectado
+Tue Nov 12 20:18:32 2024 | Novo cliente conectado
+Tue Nov 12 20:21:23 2024 | Cliente desconectado
+Tue Nov 12 20:21:23 2024 | Conexão com cliente encerrada
+Tue Nov 12 20:21:23 2024 | Cliente desconectado
+Tue Nov 12 20:21:23 2024 | Conexão com cliente encerrada
+Tue Nov 12 20:21:23 2024 | Cliente desconectado
+Tue Nov 12 20:21:23 2024 | Conexão com cliente encerrada
+Thu Nov 14 11:15:52 2024 | Inicio do servidor: Configuração lida com sucesso
+Thu Nov 14 11:15:56 2024 | Novo cliente conectado
+Thu Nov 14 11:16:01 2024 | Novo cliente conectado

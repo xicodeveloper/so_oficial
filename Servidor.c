@@ -60,19 +60,37 @@ void ler_configuracao(char *config_path, char *ficheiro_jogos, char *ficheiro_so
     printf("Configuração carregada com sucesso\n"); // Debug
 }
 
-// Função para enviar o menu para o cliente
+#include <stdio.h>
+#include <string.h>
+#include <sys/socket.h>
+
 void enviar_menu(int client_socket) {
-    const char *menu =
-        "---------- Menu de Sudoku ----------\n"
-        "1. Resolver Tabuleiro.\n"
-        "2. O Servidor revela a Solução.\n"
-        "3. O Cliente resolve a Solução.\n"
-        "4. Desistir.\n"
-        "------------------------------------\n"
-        "Escolha uma opção: ";
-    printf("Enviando menu para o cliente\n"); // Debug
-    send(client_socket, menu, strlen(menu), 0);
+    // Definindo cada linha do menu como um array de strings
+    const char *menu[] = {
+        "---------- Menu de Sudoku ----------\n",
+        "1. Resolver Tabuleiro.\n",
+        "2. O Servidor revela a Solução.\n",
+        "3. O Cliente resolve a Solução.\n",
+        "4. Desistir.\n",
+        "------------------------------------\n",
+        "Escolha uma opção: "
+    };
+    int num_linhas = sizeof(menu) / sizeof(menu[0]);  // Contagem de linhas do menu
+    
+    printf("Enviando menu para o socket: %d\n", client_socket); // Debug
+
+    // Envia cada linha do menu separadamente
+    for (int i = 0; i < num_linhas; i++) {
+        int bytes_enviados = send(client_socket, menu[i], strlen(menu[i]), 0);
+        
+        // Verifica se o envio foi bem-sucedido
+        if (bytes_enviados == -1) {
+            perror("Erro ao enviar o menu");
+            return; // Finaliza a função em caso de erro
+        }
+    }
 }
+
 
 void formatar_tabuleiro(char *tabuleiro, char *formatted_board) {
     int index = 0;
@@ -218,7 +236,8 @@ void *handle_client(void *client_socket) {
     free(client_socket);
     char buffer[BUFFER_SIZE];
     int opcao, client_id;
-    int num = (rand() % 2) + 1;
+    int num = (rand() % 4
+    ) + 1;
 
     if (recv(sock, &client_id, sizeof(client_id), 0) <= 0) {
         perror("Erro ao receber ID do cliente");
@@ -230,47 +249,55 @@ void *handle_client(void *client_socket) {
     enviar_id_tabuleiro(sock, num);
     escolhe_tabuleiro(sock, num);
     enviar_menu(sock);
+    printf("enviando menu a cliente: %d\n", client_id); // Debug
 
     int running = 1;
     while (running) {
+        printf("Esperando opção do cliente: %d\n", client_id); // Debug
         memset(buffer, 0, BUFFER_SIZE);
-        int bytes_received = recv(sock, buffer, BUFFER_SIZE, 0);
+
+        int bytes_received = recv(sock, buffer, BUFFER_SIZE, 0); // ___________________________-ERRO ESTA AQUI  ___________________________
+        printf("recebendo resposta do cliente: %d\n %s", client_id, buffer);
         if (bytes_received <= 0) {
             printf("Cliente %d desconectado\n", client_id);
             escrever_log("Cliente desconectado");
             break;
         }
+        else{
 
-        buffer[bytes_received] = '\0';
-        opcao = atoi(buffer);
-        printf("Cliente %d selecionou a opção %d\n", client_id, opcao); // Debug
+            buffer[bytes_received] = '\0';
+            opcao = atoi(buffer);
+            printf("Cliente %d selecionou a opção %d\n", client_id, opcao); // Debug
 
-        switch (opcao) {
-            case 1:
-                printf("Cliente %d selecionou inserir um valor no Sudoku\n", client_id);
-                strcpy(buffer, "Opção 1: Valor inserido.\n");
-                break;
-            case 2:
-                printf("Cliente %d pediu para revelar a solução.\n", client_id);
-                envia_solucao(sock, num);
-                strcpy(buffer, "Opção 2: Solução revelada.\n");
-                break;
-            case 3:
-                printf("Cliente %d resolveu a solução localmente.\n", client_id);
-                strcpy(buffer, "Opção 3: Solução resolvida pelo cliente.\n");
-                break;
-            case 4:
-                printf("Cliente %d desistiu do jogo.\n", client_id);
-                strcpy(buffer, "Opção 4: Saindo do jogo.\n");
-                running = 0;
-                break;
-            default:
-                printf("Cliente %d selecionou uma opção inválida.\n", client_id);
-                strcpy(buffer, "Opção inválida! Tente novamente.\n");
-                break;
+            switch (opcao) {
+                case 1:
+                    printf("Cliente %d selecionou inserir um valor no Sudoku\n", client_id);
+                    strcpy(buffer, "Opção 1: Valor inserido.\n");
+                    break;
+                case 2:
+                    printf("Cliente %d pediu para revelar a solução.\n", client_id);
+                    envia_solucao(sock, num);
+                    strcpy(buffer, "Opção 2: Solução revelada.\n");
+                    break;
+                case 3:
+                    printf("Cliente %d resolveu a solução localmente.\n", client_id);
+                    strcpy(buffer, "Opção 3: Solução resolvida pelo cliente.\n");
+                    break;
+                case 4:
+                    printf("Cliente %d desistiu do jogo.\n", client_id);
+                    strcpy(buffer, "Opção 4: Saindo do jogo.\n");
+                    running = 0;
+                    break;
+                default:
+                    printf("Cliente %d selecionou uma opção inválida.\n", client_id);
+                    strcpy(buffer, "Opção inválida! Tente novamente.\n");
+                    break;
+            }
+
+            send(sock, buffer, strlen(buffer), 0);
+            printf("running: %d\n", running);
         }
-
-        send(sock, buffer, strlen(buffer), 0);
+        
     }
 
     close(sock);
