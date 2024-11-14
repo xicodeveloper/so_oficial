@@ -212,7 +212,26 @@ void comunicar_servidor(int client_socket) {
                 buffer3[bytes_received3] = '\0';
                 printf("Resposta do servidor:\n%s", buffer3);
                 break;
-
+            case 4:
+                // Recebe resposta para a opção 3
+                bytes_received3 = recv(client_socket, buffer3, BUFFER_SIZE - 1, 0);
+                if (bytes_received3 <= 0) {
+                    printf("Servidor desconectado.\n");
+                    return;
+                }
+                buffer3[bytes_received3] = '\0';
+                printf("Resposta do servidor:\n%s", buffer3);
+                break;
+            case 5:
+                // Recebe resposta para a opção 3
+                bytes_received3 = recv(client_socket, buffer3, BUFFER_SIZE - 1, 0);
+                if (bytes_received3 <= 0) {
+                    printf("Servidor desconectado.\n");
+                    return;
+                }
+                buffer3[bytes_received3] = '\0';
+                printf("Resposta do servidor:\n%s", buffer3);
+                break;
             default:
                 printf("Opção inválida! Tente novamente.\n");
                 break;

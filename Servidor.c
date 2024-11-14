@@ -60,37 +60,20 @@ void ler_configuracao(char *config_path, char *ficheiro_jogos, char *ficheiro_so
     printf("Configuração carregada com sucesso\n"); // Debug
 }
 
-#include <stdio.h>
-#include <string.h>
-#include <sys/socket.h>
 
+// Função para enviar o menu para o cliente
 void enviar_menu(int client_socket) {
-    // Definindo cada linha do menu como um array de strings
-    const char *menu[] = {
-        "---------- Menu de Sudoku ----------\n",
-        "1. Resolver Tabuleiro.\n",
-        "2. O Servidor revela a Solução.\n",
-        "3. O Cliente resolve a Solução.\n",
-        "4. Desistir.\n",
-        "------------------------------------\n",
-        "Escolha uma opção: "
-    };
-    int num_linhas = sizeof(menu) / sizeof(menu[0]);  // Contagem de linhas do menu
-    
-    printf("Enviando menu para o socket: %d\n", client_socket); // Debug
-
-    // Envia cada linha do menu separadamente
-    for (int i = 0; i < num_linhas; i++) {
-        int bytes_enviados = send(client_socket, menu[i], strlen(menu[i]), 0);
-        
-        // Verifica se o envio foi bem-sucedido
-        if (bytes_enviados == -1) {
-            perror("Erro ao enviar o menu");
-            return; // Finaliza a função em caso de erro
-        }
-    }
+    const char *menu =
+        "---------- Menu de Sudoku ----------\n"
+        "1. Resolver Tabuleiro Total.\n"
+        "2. Resolver Tabuleiro Parcial.\n"
+        "3. O Servidor revela a Solução.\n"
+        "4. O Servidor revela a Solução Parcial.\n"
+        "5. Desistir.\n"
+        "------------------------------------\n";
+    printf("Enviando menu para o cliente\n"); // Debug
+    send(client_socket, menu, strlen(menu), 0);
 }
-
 
 void formatar_tabuleiro(char *tabuleiro, char *formatted_board) {
     int index = 0;
@@ -116,85 +99,29 @@ void formatar_tabuleiro(char *tabuleiro, char *formatted_board) {
 // Função para escolher e enviar o tabuleiro para o cliente
 void escolhe_tabuleiro(int client_socket, int num) {
     char buffer[BUFFER_SIZE];
-    int id;
-    char formatted_tabuleiro[BUFFER_SIZE];
-    FILE *f;
-
-    // Primeiro verifica em jogosres.txt se o tabuleiro já foi usado anteriormente
-    f = fopen("./jogos_solucoes/jogosres.txt", "r");
-    if (f != NULL) {
-        while (fgets(buffer, BUFFER_SIZE, f) != NULL) {
-            buffer[strcspn(buffer, "\n")] = 0; // Remove nova linha do buffer
-            id = atoi(buffer);
-
-            if (id == num) {
-                memset(buffer, 0, BUFFER_SIZE);  // Limpa o buffer antes de ler o tabuleiro
-                if (fgets(buffer, BUFFER_SIZE, f) != NULL) {
-                    formatar_tabuleiro(buffer, formatted_tabuleiro);
-                    fclose(f);
-
-                    // Envia o tabuleiro do jogosres.txt para o cliente
-                    send(client_socket, formatted_tabuleiro, strlen(formatted_tabuleiro), 0);
-                    return;
-                }
-            } else {
-                fgets(buffer, BUFFER_SIZE, f);  // Avança para a próxima linha do tabuleiro
-            }
-        }
-        fclose(f);
+    FILE *f = fopen("./jogos_solucoes/jogos.txt", "r");
+    if (f == NULL) {
+        printf("Erro ao abrir o ficheiro dos jogos para leitura.\n");
+        return;
     }
 
-    // Se não foi encontrado em jogosres.txt, procura em jogos.txt
-    f = fopen("./jogos_solucoes/jogos.txt", "r");
-    if (f != NULL) {
-        while (fgets(buffer, BUFFER_SIZE, f) != NULL) {
-            buffer[strcspn(buffer, "\n")] = 0; // Remove nova linha do buffer
-            id = atoi(buffer);
-
-            if (id == num) {
-                memset(buffer, 0, BUFFER_SIZE);  // Limpa o buffer antes de ler o tabuleiro
-                if (fgets(buffer, BUFFER_SIZE, f) != NULL) {
-                    formatar_tabuleiro(buffer, formatted_tabuleiro);
-                    fclose(f);
-
-                    // Verifica novamente em jogosres.txt para evitar duplicação
-                    FILE *f_res_check = fopen("./jogos_solucoes/jogosres.txt", "r");
-                    int encontrado = 0;
-                    if (f_res_check != NULL) {
-                        char line[BUFFER_SIZE];
-                        while (fgets(line, BUFFER_SIZE, f_res_check) != NULL) {
-                            if (atoi(line) == id) {
-                                encontrado = 1;
-                                break;
-                            }
-                            fgets(line, BUFFER_SIZE, f_res_check); // Avança para o tabuleiro correspondente
-                        }
-                        fclose(f_res_check);
-                    }
-
-                    // Se o tabuleiro ainda não está em jogosres.txt, escreve-o
-                    if (!encontrado) {
-                        FILE *f_res = fopen("./jogos_solucoes/jogosres.txt", "a");
-                        if (f_res != NULL) {
-                            fprintf(f_res, "%d\n%s\n", id, buffer);
-                            fclose(f_res);
-                        }
-                    }
-
-                    // Envia o tabuleiro lido de jogos.txt para o cliente
-                    send(client_socket, formatted_tabuleiro, strlen(formatted_tabuleiro), 0);
-                    return;
-                }
-            } else {
-                fgets(buffer, BUFFER_SIZE, f);  // Avança para a próxima linha do tabuleiro
-            }
+    printf("Escolhendo tabuleiro com ID %d\n", num); // Debug
+    while (fgets(buffer, BUFFER_SIZE, f) != NULL) {
+        buffer[strcspn(buffer, "\n")] = 0;
+        int id = atoi(buffer);
+        if (fgets(buffer, BUFFER_SIZE, f) == NULL) {
+            break;
         }
-        fclose(f);
+        buffer[strcspn(buffer, "\n")] = 0;
+        if (num == id) {
+            char formatted_tabuleiro[BUFFER_SIZE];
+            formatar_tabuleiro(buffer, formatted_tabuleiro);
+            printf("Enviando tabuleiro para o cliente\n"); // Debug
+            send(client_socket, formatted_tabuleiro, strlen(formatted_tabuleiro), 0);
+            break;
+        }
     }
-
-    // Se nenhum tabuleiro for encontrado, envia uma mensagem de erro para o cliente
-    const char *msg_erro = "Erro: Tabuleiro não encontrado.\n";
-    send(client_socket, msg_erro, strlen(msg_erro), 0);
+    fclose(f);
 }
 
 // Função para enviar solução para o cliente
@@ -230,86 +157,100 @@ void enviar_id_tabuleiro(int client_socket, int num) {
         exit(EXIT_FAILURE);
     }
 }
-// Função para gerenciar cada cliente
+// Function to manage each client
 void *handle_client(void *client_socket) {
     int sock = *(int *)client_socket;
     free(client_socket);
     char buffer[BUFFER_SIZE];
     int opcao, client_id;
-    int num = (rand() % 4
-    ) + 1;
+    int num = (rand() % 4) + 1;
 
     if (recv(sock, &client_id, sizeof(client_id), 0) <= 0) {
-        perror("Erro ao receber ID do cliente");
+        perror("Error receiving client ID");
         close(sock);
         return NULL;
     }
-    printf("Novo cliente conectado com ID: %d\n", client_id); // Debug
-    escrever_log("Novo cliente conectado");
+    printf("New client connected with ID: %d\n", client_id);
+    escrever_log("New client connected");
     enviar_id_tabuleiro(sock, num);
     escolhe_tabuleiro(sock, num);
     enviar_menu(sock);
-    printf("enviando menu a cliente: %d\n", client_id); // Debug
+    printf("Sending menu to client: %d\n", client_id);
 
     int running = 1;
     while (running) {
-        printf("Esperando opção do cliente: %d\n", client_id); // Debug
-        memset(buffer, 0, BUFFER_SIZE);
+        printf("Waiting for option from client: %d\n", client_id);
 
-        int bytes_received = recv(sock, buffer, BUFFER_SIZE, 0); // ___________________________-ERRO ESTA AQUI  ___________________________
-        printf("recebendo resposta do cliente: %d\n %s", client_id, buffer);
-        if (bytes_received <= 0) {
-            printf("Cliente %d desconectado\n", client_id);
-            escrever_log("Cliente desconectado");
+        // Receive the client's option
+        int bytes_received = recv(sock, buffer, BUFFER_SIZE - 1, 0);
+        if (bytes_received < 0) {
+            perror("Error receiving data from client");
+            printf("Client %d disconnected due to error.\n", client_id);
+            escrever_log("Client disconnected due to receive error");
+            break;
+        } else if (bytes_received == 0) {
+            printf("Client %d disconnected.\n", client_id);
+            escrever_log("Client disconnected");
             break;
         }
-        else{
 
-            buffer[bytes_received] = '\0';
-            opcao = atoi(buffer);
-            printf("Cliente %d selecionou a opção %d\n", client_id, opcao); // Debug
+        buffer[bytes_received] = '\0'; // Null-terminate the received data
+        printf("Received from client %d: '%s' (bytes_received: %d)\n", client_id, buffer, bytes_received); // Debug
 
-            switch (opcao) {
-                case 1:
-                    printf("Cliente %d selecionou inserir um valor no Sudoku\n", client_id);
-                    strcpy(buffer, "Opção 1: Valor inserido.\n");
-                    break;
-                case 2:
-                    printf("Cliente %d pediu para revelar a solução.\n", client_id);
-                    envia_solucao(sock, num);
-                    strcpy(buffer, "Opção 2: Solução revelada.\n");
-                    break;
-                case 3:
-                    printf("Cliente %d resolveu a solução localmente.\n", client_id);
-                    strcpy(buffer, "Opção 3: Solução resolvida pelo cliente.\n");
-                    break;
-                case 4:
-                    printf("Cliente %d desistiu do jogo.\n", client_id);
-                    strcpy(buffer, "Opção 4: Saindo do jogo.\n");
-                    running = 0;
-                    break;
-                default:
-                    printf("Cliente %d selecionou uma opção inválida.\n", client_id);
-                    strcpy(buffer, "Opção inválida! Tente novamente.\n");
-                    break;
-            }
+        // Convert received message to an integer option
+        opcao = atoi(buffer); // Try parsing the received data as an integer
+        printf("Parsed option from client %d: %d\n", client_id, opcao); // Debug
 
-            send(sock, buffer, strlen(buffer), 0);
-            printf("running: %d\n", running);
+        // Handle the selected option
+        switch (opcao) {
+            case 1:
+                printf("Client %d selected to Resolve Full Board\n", client_id);
+                strcpy(buffer, "Option 1: Full solution requested.\n");
+                break;
+            case 2:
+                envia_solucao(sock, num);
+                printf("Client %d requested Partial Solution.\n", client_id);
+                strcpy(buffer, "Option 2: Partial Solution revealed.\n");
+                break;
+            case 3:
+                printf("Client %d requested Full Solution from Server.\n", client_id);
+                strcpy(buffer, "Option 3: Server reveals Full Solution.\n");
+                break;
+            case 4:
+                printf("Client %d requested Partial Solution from Server.\n", client_id);
+                strcpy(buffer, "Option 4: Partial Solution revealed by server.\n");
+                break;
+            case 5:
+                printf("Client %d quit the game.\n", client_id);
+                strcpy(buffer, "Option 5: Exiting the game.\n");
+                running = 0; // Exit loop
+                break;
+            default:
+                printf("Client %d selected an invalid option: %d\n", client_id, opcao);
+                strcpy(buffer, "Invalid option! Please try again.\n");
+                break;
         }
-        
+
+        // Send the response back to the client
+        if (send(sock, buffer, strlen(buffer), 0) < 0) {
+            perror("Error sending response to client");
+            break;
+        }
+        printf("Response sent to client %d.\n", client_id);
     }
 
+    // Close connection and update client count
     close(sock);
     pthread_mutex_lock(&clients_mutex);
     num_clients_sessao--;
     pthread_mutex_unlock(&clients_mutex);
 
-    printf("Clientes atuais: %d\n", num_clients_sessao);
-    printf("Conexão com cliente %d encerrada\n", client_id); // Debug
-    escrever_log("Conexão com cliente encerrada");
+    printf("Current clients: %d\n", num_clients_sessao);
+    printf("Connection with client %d closed\n", client_id);
+    escrever_log("Client connection closed");
     return NULL;
 }
+
 
 int main(int argc, char *argv[]) {
     int server_socket, client_socket, porta;
