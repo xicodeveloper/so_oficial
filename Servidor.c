@@ -241,6 +241,44 @@ void enviar_id_tabuleiro(int client_socket, int num) {
         exit(EXIT_FAILURE);
     }
 }
+void recebe_tentativa(int client_socket, int matriz_of[4][9][9]) {
+    char buffer[BUFFER_SIZE];
+    int num, linha, coluna, tentativa;
+
+    // Recebe a mensagem do cliente
+    int bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+    if (bytes_received < 0) {
+        perror("Erro ao receber dados do cliente");
+        return;
+    }
+    buffer[bytes_received] = '\0';  // Garante que a mensagem recebida seja uma string válida
+
+    // Extrai os valores de `num`, `linha`, `coluna`, e `tentativa` da mensagem
+    if (sscanf(buffer, "%d %d %d %d", &num, &linha, &coluna, &tentativa) != 4) {
+        printf("Formato de mensagem inválido recebido do cliente\n");
+        return;
+    }
+
+    // Mostra os valores recebidos para verificação
+    printf("Recebido do cliente:\n");
+    printf("Tabuleiro ID: %d\n", num);
+    printf("Linha: %d\n", linha);
+    printf("Coluna: %d\n", coluna);
+    printf("Tentativa: %d\n", tentativa);
+
+    // Processa a tentativa (a lógica de processamento pode variar dependendo do seu programa)
+    // Por exemplo: validar a tentativa e enviar uma resposta de sucesso ou falha
+
+    // Exemplo de resposta ao cliente
+    char resposta[BUFFER_SIZE];
+    if(matriz_of[num-1][linha-1][coluna-1]==tentativa){
+        snprintf(resposta, BUFFER_SIZE, "Tentativa %d em posição (%d, %d) certa.", tentativa, linha, coluna);
+    }else{
+        snprintf(resposta, BUFFER_SIZE, "Tentativa %d em posição (%d, %d) errada.", tentativa, linha, coluna);
+    }
+    
+    send(client_socket, resposta, strlen(resposta), 0);
+}
 // Function to manage each client
 void *handle_client(void *client_socket) {
     int sock = *(int *)client_socket;
@@ -290,6 +328,7 @@ void *handle_client(void *client_socket) {
             case 1:
                 printf("Client %d selected to Resolve Full Board\n", client_id);
                 strcpy(buffer, "Option 1: Full solution requested.\n");
+                //recebe_tentativa( sock,  matriz_of);
                 break;
             case 2:
                 envia_solucao(sock, num);

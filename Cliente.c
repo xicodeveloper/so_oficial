@@ -131,13 +131,72 @@ for(int i=0;i<9;i++){
     }
     printf("\n");
 }
+}
+int escolhe_celula_sem_nada_aleatoria(int matriz[9][9], int *linha, int *coluna) {
+    // Lista para armazenar todas as células vazias
+    int celulas_vazias[81][2]; // No máximo 81 células em uma matriz 9x9
+    int total_vazias = 0;
 
+    // Percorrer a matriz e registrar coordenadas de células vazias
+    for (int i = 0; i < 9; i++) {
+        for (int j = 0; j < 9; j++) {
+            if (matriz[i][j] == 0) {
+                celulas_vazias[total_vazias][0] = i; // Linha
+                celulas_vazias[total_vazias][1] = j; // Coluna
+                total_vazias++;
+            }
+        }
+    }
 
+    // Se não houver células vazias, retorna 0 indicando falha
+    if (total_vazias == 0) {
+        return 0;
+    }
+
+    // Passo 2: Escolher uma célula vazia aleatoriamente
+    srand(time(NULL)); // Inicializa o gerador de números aleatórios
+    int indice_aleatorio = rand() % total_vazias;
+
+    // Obter a célula vazia aleatória
+    *linha = celulas_vazias[indice_aleatorio][0];
+    *coluna = celulas_vazias[indice_aleatorio][1];
+
+    return 1; // Retorna 1 para indicar sucesso
+}
+// Função para enviar uma tentativa para o servidor
+void envia_tentativa(int client_socket, int num, int linha, int coluna) {
+    int tentativa = (rand() % 9) + 1;  // Gera um número entre 1 e 9
+    char buffer[BUFFER_SIZE];
+
+    // Formata a mensagem para envio
+    snprintf(buffer, BUFFER_SIZE, "%d %d %d %d", num, linha, coluna, tentativa);
+
+    // Envia a tentativa para o servidor
+    if (send(client_socket, buffer, strlen(buffer), 0) < 0) {
+        perror("Erro ao enviar tentativa para o servidor");
+        return;
+    }
+
+}
+void recebe_feed_back_tentativa(int client_socket){
+ char buffer[BUFFER_SIZE];
+    // Recebe a resposta do servidor
+    int bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+    if (bytes_received < 0) {
+        perror("Erro ao receber resposta do servidor");
+        return;
+    }
+    buffer[bytes_received] = '\0';  // Garante que a mensagem recebida seja uma string válida
+
+    printf("Resposta do servidor: %s\n", buffer);
+    
 }
 void comunicar_servidor(int client_socket) {
     char buffer[BUFFER_SIZE];
     int matriz[SIZE][SIZE] = {0}; // Inicializa a matriz com zeros
     int id_tabuleiro;
+    int linha_branca;
+    int coluna_branca;
     if (recv(client_socket, &id_tabuleiro, sizeof(id_tabuleiro), 0) <= 0) {
         perror("Erro ao receber ID do tabuleiro");
         close(client_socket);
@@ -198,8 +257,17 @@ void comunicar_servidor(int client_socket) {
                 }
                 buffer[bytes_received3] = '\0';
                 printf("Resposta do servidor:\n%s", buffer);
-                break;
+                if (escolhe_celula_sem_nada_aleatoria(matriz, &linha_branca, &coluna_branca)) {
+                    printf("Posição vazia encontrada em: linha %d, coluna %d\n", linha_branca, coluna_branca);
+                    printf("O id do tabuleiro é: %d\n",id_tabuleiro);
+                    //envia_tentativa(client_socket,id_tabuleiro, linha_branca, coluna_branca);
+                    //recebe_feed_back_tentativa(client_socket);
+                } else {
+                    printf("Nenhuma posição vazia encontrada.\n");
+                    printf("Sodoku resolvido.\n");
 
+                }
+                break;
             case 2:
                 // Recebe resposta para a opção 2
                 bytes_received3 = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
