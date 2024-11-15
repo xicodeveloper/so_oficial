@@ -299,13 +299,6 @@ void recebe_tentativa_e_envia_feedback(int client_socket, int matriz_of[4][9][9]
     buffer[bytes_received] = '\0'; // Garante que a mensagem recebida é válida
     printf("[DEBUG] Mensagem recebida: '%s'\n", buffer);
 
-    // Envia confirmação de recebimento ao cliente
-    if (send(client_socket, "Tentativa recebida", strlen("Tentativa recebida"), 0) < 0) {
-        perror("[ERRO] Falha ao enviar confirmação ao cliente");
-        return;
-    }
-    printf("[DEBUG] Confirmação enviada ao cliente.\n");
-
     // Extrai os valores num, linha, coluna, e tentativa
     if (sscanf(buffer, "%d %d %d %d", &num, &linha, &coluna, &tentativa) != 4) {
         printf("[ERRO] Mensagem inválida recebida do cliente: '%s'\n", buffer);
@@ -373,52 +366,82 @@ void *handle_client(void *client_socket) {
         opcao = atoi(buffer); // Try parsing the received data as an integer
         printf("Parsed option from client %d: %d\n", client_id, opcao); // Debug
 
-        // Handle the selected option
-        switch (opcao) {
-                case 1:
+// Handle the selected option
+switch (opcao) {
+    case 1:
         printf("Client %d selected to Resolve Full Board\n", client_id);
 
         // Envia uma resposta inicial ao cliente confirmando a opção
         strcpy(buffer, "Option 1: Full solution requested.\n");
         if (send(sock, buffer, strlen(buffer), 0) < 0) {
             perror("[ERRO] Falha ao enviar resposta inicial ao cliente");
+            
             break;
         }
+        recebe_tentativa_e_envia_feedback(sock, matriz_solucao);
         printf("[DEBUG] Resposta inicial enviada para o cliente %d: '%s'\n", client_id, buffer);
 
-        // Chama a função para receber tentativa e enviar feedback
-        recebe_tentativa_e_envia_feedback(sock, matriz_solucao);
-        break;
-            case 2:
-                printf("Client %d requested Partial Solution.\n", client_id);
-                strcpy(buffer, "Option 2: Partial Solution revealed.\n");
-                envia_solucao(sock, num);
-                break;
-            case 3:
-                printf("Client %d requested Full Solution from Server.\n", client_id);
-                strcpy(buffer, "Option 3: Server reveals Full Solution.\n");
-                break;
-            case 4:
-                printf("Client %d requested Partial Solution from Server.\n", client_id);
-                strcpy(buffer, "Option 4: Partial Solution revealed by server.\n");
-                break;
-            case 5:
-                printf("Client %d quit the game.\n", client_id);
-                strcpy(buffer, "Option 5: Exiting the game.\n");
-                running = 0; // Exit loop
-                break;
-            default:
-                printf("Client %d selected an invalid option: %d\n", client_id, opcao);
-                strcpy(buffer, "Invalid option! Please try again.\n");
-                break;
-        }
 
-        // Send the response back to the client
+        break;
+
+    case 2:
+        printf("Client %d requested Partial Solution.\n", client_id);
+        strcpy(buffer, "Option 2: Partial Solution revealed.\n");
         if (send(sock, buffer, strlen(buffer), 0) < 0) {
-            perror("Error sending response to client");
+            perror("[ERRO] Falha ao enviar resposta parcial ao cliente");
             break;
         }
-        printf("Response sent to client %d.\n", client_id);
+        printf("[DEBUG] Resposta parcial enviada para o cliente %d.\n", client_id);
+        break;
+
+    case 3:
+        printf("Client %d requested Full Solution from Server.\n", client_id);
+        strcpy(buffer, "Option 3: Server reveals Full Solution.\n");
+        if (send(sock, buffer, strlen(buffer), 0) < 0) {
+            perror("[ERRO] Falha ao enviar solução completa ao cliente");
+            break;
+        }
+        printf("[DEBUG] Mensagem de solução completa enviada ao cliente %d.\n", client_id);
+
+        // Envia a solução completa
+        envia_solucao(sock, num);
+        break;
+
+    case 4:
+        printf("Client %d requested Partial Solution from Server.\n", client_id);
+        strcpy(buffer, "Option 4: Partial Solution revealed by server.\n");
+        if (send(sock, buffer, strlen(buffer), 0) < 0) {
+            perror("[ERRO] Falha ao enviar solução parcial ao cliente");
+            break;
+        }
+        printf("[DEBUG] Mensagem de solução parcial enviada ao cliente %d.\n", client_id);
+        break;
+
+    case 5:
+        printf("Client %d quit the game.\n", client_id);
+        strcpy(buffer, "Option 5: Exiting the game.\n");
+        if (send(sock, buffer, strlen(buffer), 0) < 0) {
+            perror("[ERRO] Falha ao enviar mensagem de saída ao cliente");
+            break;
+        }
+        printf("[DEBUG] Mensagem de saída enviada para o cliente %d.\n", client_id);
+        running = 0; // Exit loop
+        break;
+
+    default:
+        printf("Client %d selected an invalid option: %d\n", client_id, opcao);
+        strcpy(buffer, "Invalid option! Please try again.\n");
+        if (send(sock, buffer, strlen(buffer), 0) < 0) {
+            perror("[ERRO] Falha ao enviar mensagem de opção inválida");
+            break;
+        }
+        printf("[DEBUG] Mensagem de opção inválida enviada para o cliente %d.\n", client_id);
+        break;
+}
+
+// Debug opcional para verificar envio final (não necessário)
+printf("[DEBUG] Opção processada para cliente %d.\n", client_id);
+
     }
 
     // Close connection and update client count
