@@ -369,10 +369,10 @@ void *handle_client(void *client_socket) {
 // Handle the selected option
 switch (opcao) {
     case 1:
-        printf("Client %d selected to Resolve Full Board\n", client_id);
+        printf("Client %d selected to solve one cell\n", client_id);
 
         // Envia uma resposta inicial ao cliente confirmando a opção
-        strcpy(buffer, "Option 1: Full solution requested.\n");
+        strcpy(buffer, "Option 1: one cell requested.\n");
         if (send(sock, buffer, strlen(buffer), 0) < 0) {
             perror("[ERRO] Falha ao enviar resposta inicial ao cliente");
             
@@ -396,15 +396,24 @@ switch (opcao) {
 
     case 3:
         printf("Client %d requested Full Solution from Server.\n", client_id);
-        strcpy(buffer, "Option 3: Server reveals Full Solution.\n");
+        strcpy(buffer, "Option 3: Server reveals Solution.\n");
         if (send(sock, buffer, strlen(buffer), 0) < 0) {
             perror("[ERRO] Falha ao enviar solução completa ao cliente");
             break;
         }
         printf("[DEBUG] Mensagem de solução completa enviada ao cliente %d.\n", client_id);
 
+        memset(buffer, 0, BUFFER_SIZE-1);
+        int bytesReceived = recv(sock, buffer, BUFFER_SIZE - 1, 0);
+        if (bytesReceived < 0) {
+            perror("[ERRO] Falho sincronizacao do Socket");
+        }
+        else{
+            envia_solucao(sock, num);
+        }
+
         // Envia a solução completa
-        envia_solucao(sock, num);
+        
         break;
 
     case 4:
@@ -433,9 +442,11 @@ switch (opcao) {
         strcpy(buffer, "Invalid option! Please try again.\n");
         if (send(sock, buffer, strlen(buffer), 0) < 0) {
             perror("[ERRO] Falha ao enviar mensagem de opção inválida");
-            break;
         }
-        printf("[DEBUG] Mensagem de opção inválida enviada para o cliente %d.\n", client_id);
+        else{
+            printf("[DEBUG] Mensagem de opção inválida enviada para o cliente %d.\n", client_id);
+        }
+        printf("[DEBUG] opção escolhida pelo cliente: %d\n", opcao); 
         break;
 }
 

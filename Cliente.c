@@ -193,6 +193,17 @@ void recebe_feedback_tentativa(int client_socket) {
     }
 }
 
+void recebe_Tabuleiro(int client_socket) {
+    char buffer[BUFFER_SIZE];
+    int bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+    if (bytes_received <= 0) {
+        printf("Servidor desconectado.\n");
+        return;
+    }
+    buffer[bytes_received] = '\0'; // Corrigido para usar buffer
+    printf("\nTabuleiro enviado:\n%s\n", buffer);
+}
+
 
 void comunicar_servidor(int client_socket) {
     char buffer[BUFFER_SIZE];
@@ -233,11 +244,15 @@ void comunicar_servidor(int client_socket) {
     printf("Resposta do servidor:\n%s", buffer);
 
     // Inicia o loop para enviar e receber respostas
-    printf("Antes de while do problema");
     while (1) {
-        printf("Insira um número (ou 'sair' para encerrar): ");
+        printf("Insira um número ('5' para encerrar): ");
         memset(buffer, 0, BUFFER_SIZE);
         fgets(buffer, BUFFER_SIZE, stdin);
+
+        if(strlen(buffer) == 1){
+            printf("Por favor, insira um número válido.\n");
+            continue;
+        }
 
         // Remove o newline que `fgets` deixa no buffer
         buffer[strcspn(buffer, "\n")] = 0;
@@ -297,7 +312,9 @@ void comunicar_servidor(int client_socket) {
          bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
         if (bytes_received > 0) {
             buffer[bytes_received] = '\0';
-            printf("Resposta do servidor:\n%s", buffer);
+            printf("Resposta do servidor: %s", buffer);
+            send(client_socket, "Resposta do servidor confirmada", 25, 0);
+            recebe_Tabuleiro(client_socket);
         } else {
             perror("[ERRO] Falha ao receber resposta do servidor");
             return;
@@ -324,12 +341,21 @@ void comunicar_servidor(int client_socket) {
             printf("Resposta do servidor:\n%s", buffer);
         } else {
             perror("[ERRO] Falha ao receber resposta do servidor");
-            return;
         }
+        return;
         break; // Sai do loop principal no cliente
 
     default:
         printf("[ERRO] Opção inválida! Tente novamente.\n");
+        printf("[DEBUG] opção escolhida: %d\n", resposta); 
+        bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+        if (bytes_received > 0) {
+            buffer[bytes_received] = '\0';
+            printf("Resposta do servidor:\n%s", buffer);
+        } else {
+            perror("[ERRO] Falha ao receber resposta do servidor");
+        }
+        printf("[DEBUG] opção escolhida: %d\n", resposta); 
         break;
 }
 
