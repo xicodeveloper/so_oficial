@@ -285,44 +285,49 @@ void enviar_id_tabuleiro(int client_socket, int num) {
         exit(EXIT_FAILURE);
     }
 }
-void recebe_tentativa_e_envia_certo_errado(int client_socket, int matriz_of[4][9][9]) {
+void recebe_tentativa_e_envia_feedback(int client_socket, int matriz_of[4][9][9]) {
     char buffer[BUFFER_SIZE];
     int num, linha, coluna, tentativa;
 
-    // Recebe a mensagem do cliente
+    printf("[DEBUG] Aguardando mensagem do cliente para receber tentativa...\n");
     int bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
     if (bytes_received < 0) {
-        perror("Erro ao receber dados do cliente");
+        perror("[ERRO] Falha no recv");
         return;
     }
-    buffer[bytes_received] = '\0';
 
-    // Envia confirmação ao cliente de que a tentativa foi recebida
-    send(client_socket, "Tentativa recebida", strlen("Tentativa recebida"), 0);
+    buffer[bytes_received] = '\0'; // Garante que a mensagem recebida é válida
+    printf("[DEBUG] Mensagem recebida: '%s'\n", buffer);
 
-    // Extrai os valores de `num`, `linha`, `coluna`, e `tentativa` da mensagem
+    // Envia confirmação de recebimento ao cliente
+    if (send(client_socket, "Tentativa recebida", strlen("Tentativa recebida"), 0) < 0) {
+        perror("[ERRO] Falha ao enviar confirmação ao cliente");
+        return;
+    }
+    printf("[DEBUG] Confirmação enviada ao cliente.\n");
+
+    // Extrai os valores num, linha, coluna, e tentativa
     if (sscanf(buffer, "%d %d %d %d", &num, &linha, &coluna, &tentativa) != 4) {
-        printf("Formato de mensagem inválido recebido do cliente\n");
+        printf("[ERRO] Mensagem inválida recebida do cliente: '%s'\n", buffer);
         return;
     }
+    printf("[DEBUG] Dados extraídos: Tabuleiro ID=%d, Linha=%d, Coluna=%d, Tentativa=%d\n", num, linha, coluna, tentativa);
 
-    // Mostra os valores recebidos para verificação
-    printf("Recebido do cliente:\n");
-    printf("Tabuleiro ID: %d\n", num);
-    printf("Linha: %d\n", linha);
-    printf("Coluna: %d\n", coluna);
-    printf("Tentativa: %d\n", tentativa);
-
-    // Prepara a resposta com feedback correto ou errado
+    // Prepara o feedback (certo ou errado)
     char resposta[BUFFER_SIZE];
     if (matriz_of[num - 1][linha - 1][coluna - 1] == tentativa) {
-        snprintf(resposta, BUFFER_SIZE, "Tentativa %d em posição (%d, %d) certa.", tentativa, linha, coluna);
+        snprintf(resposta, BUFFER_SIZE, "Tentativa %d na posição (%d, %d) está correta.", tentativa, linha, coluna);
     } else {
-        snprintf(resposta, BUFFER_SIZE, "Tentativa %d em posição (%d, %d) errada.", tentativa, linha, coluna);
+        snprintf(resposta, BUFFER_SIZE, "Tentativa %d na posição (%d, %d) está incorreta.", tentativa, linha, coluna);
     }
+    printf("[DEBUG] Feedback gerado: '%s'\n", resposta);
 
-    // Envia a resposta com o feedback ao cliente
-    send(client_socket, resposta, strlen(resposta), 0);
+    // Envia o feedback ao cliente
+    if (send(client_socket, resposta, strlen(resposta), 0) < 0) {
+        perror("[ERRO] Falha ao enviar feedback ao cliente");
+    } else {
+        printf("[DEBUG] Feedback enviado ao cliente com sucesso.\n");
+    }
 }
 // Function to manage each client
 void *handle_client(void *client_socket) {
@@ -370,15 +375,24 @@ void *handle_client(void *client_socket) {
 
         // Handle the selected option
         switch (opcao) {
-            case 1:
-                printf("Client %d selected to Resolve Full Board\n", client_id);
-                strcpy(buffer, "Option 1: Full solution requested.\n");
-                //recebe_tentativa_e_envia_certo_errado(sock,matriz_solucao);
-                break;
+                case 1:
+        printf("Client %d selected to Resolve Full Board\n", client_id);
+
+        // Envia uma resposta inicial ao cliente confirmando a opção
+        strcpy(buffer, "Option 1: Full solution requested.\n");
+        if (send(sock, buffer, strlen(buffer), 0) < 0) {
+            perror("[ERRO] Falha ao enviar resposta inicial ao cliente");
+            break;
+        }
+        printf("[DEBUG] Resposta inicial enviada para o cliente %d: '%s'\n", client_id, buffer);
+
+        // Chama a função para receber tentativa e enviar feedback
+        recebe_tentativa_e_envia_feedback(sock, matriz_solucao);
+        break;
             case 2:
-                envia_solucao(sock, num);
                 printf("Client %d requested Partial Solution.\n", client_id);
                 strcpy(buffer, "Option 2: Partial Solution revealed.\n");
+                envia_solucao(sock, num);
                 break;
             case 3:
                 printf("Client %d requested Full Solution from Server.\n", client_id);
