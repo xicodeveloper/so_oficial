@@ -311,7 +311,7 @@ void recebe_tentativa_e_envia_feedback(int client_socket, int matriz_of[4][9][9]
     if (matriz_of[num - 1][linha - 1][coluna - 1] == tentativa) {
         snprintf(resposta, BUFFER_SIZE, "Tentativa %d na posição (%d, %d) está correta.", tentativa, linha, coluna);
     } else {
-        snprintf(resposta, BUFFER_SIZE, "Tentativa %d na posição (%d, %d) está incorreta.", tentativa, linha, coluna);
+        snprintf(resposta, BUFFER_SIZE, "Tentativa %d na posição (%d, %d) está errada.", tentativa, linha, coluna);
     }
     printf("[DEBUG] Feedback gerado: '%s'\n", resposta);
 

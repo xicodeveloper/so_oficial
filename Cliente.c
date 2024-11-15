@@ -179,6 +179,15 @@ void envia_tentativa(int client_socket, int num, int linha, int coluna) {
 
     printf("[DEBUG] Tentativa enviada com sucesso!\n");
 }
+void processa_feedback(const char *feedback) {
+    if (strstr(feedback, "correta") != NULL) {
+        printf("Resultado: A tentativa está correta.\n");
+    } else if (strstr(feedback, "errada") != NULL) {
+        printf("Resultado: A tentativa está incorreta.\n");
+    } else {
+        printf("[ERRO] Feedback não reconhecido: '%s'\n", feedback);
+    }
+}
 
 void recebe_feedback_tentativa(int client_socket) {
     char buffer[BUFFER_SIZE];
@@ -191,6 +200,8 @@ void recebe_feedback_tentativa(int client_socket) {
     } else {
         perror("[ERRO] Falha ao receber feedback do servidor");
     }
+    printf("Resposta do servidor:\n%s\n", buffer);
+    processa_feedback(buffer);
 }
 
 void recebe_Tabuleiro(int client_socket) {
