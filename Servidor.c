@@ -285,7 +285,7 @@ void enviar_id_tabuleiro(int client_socket, int num) {
         exit(EXIT_FAILURE);
     }
 }
-void recebe_tentativa_e_envia_feedback(int client_socket, int matriz_of[4][9][9]) {
+void recebe_tentativa_e_envia_feedback(int client_socket, int matriz_of[4][9][9], int total_vazias) {
     char buffer[BUFFER_SIZE];
     int num, linha, coluna, tentativa;
 
@@ -309,9 +309,9 @@ void recebe_tentativa_e_envia_feedback(int client_socket, int matriz_of[4][9][9]
     // Prepara o feedback (certo ou errado)
     char resposta[BUFFER_SIZE];
     if (matriz_of[num - 1][linha - 1][coluna - 1] == tentativa) {
-        snprintf(resposta, BUFFER_SIZE, "Tentativa %d na posição (%d, %d) está correta.", tentativa, linha, coluna);
+        snprintf(resposta, BUFFER_SIZE, "Tentativa %d na posição (%d, %d) está correta. Ainda sobra casas vazias: %d", tentativa, linha, coluna, total_vazias);
     } else {
-        snprintf(resposta, BUFFER_SIZE, "Tentativa %d na posição (%d, %d) está errada.", tentativa, linha, coluna);
+        snprintf(resposta, BUFFER_SIZE, "Tentativa %d na posição (%d, %d) está errada. Ainda sobra casas vazias: %d", tentativa, linha, coluna, total_vazias);
     }
     printf("[DEBUG] Feedback gerado: '%s'\n", resposta);
 
@@ -321,6 +321,24 @@ void recebe_tentativa_e_envia_feedback(int client_socket, int matriz_of[4][9][9]
     } else {
         printf("[DEBUG] Feedback enviado ao cliente com sucesso.\n");
     }
+
+}
+int numero_total_vazias(int matriz[4][9][9], int num) {
+    int total_vazias = 0;
+    // Percorrer a matriz e registrar coordenadas de células vazias
+    for (int i = 0; i < 9; i++) {
+        for (int j = 0; j < 9; j++) {
+                if (matriz[num-1][i][j] == 0) {
+                    total_vazias++;
+                }
+        }
+    }
+
+    // Se não houver células vazias, retorna 0 indicando falha
+    if (total_vazias == 0) {
+        return 0;
+    }
+    return total_vazias; // Retorna 1 para indicar sucesso
 }
 // Function to manage each client
 void *handle_client(void *client_socket) {
@@ -329,6 +347,7 @@ void *handle_client(void *client_socket) {
     char buffer[BUFFER_SIZE];
     int opcao, client_id;
     int num = (rand() % 4) + 1;
+    int total_vazias;
 
     if (recv(sock, &client_id, sizeof(client_id), 0) <= 0) {
         perror("Error receiving client ID");
@@ -378,7 +397,8 @@ switch (opcao) {
             
             break;
         }
-        recebe_tentativa_e_envia_feedback(sock, matriz_solucao);
+        total_vazias = numero_total_vazias(matriz_of, num);
+        recebe_tentativa_e_envia_feedback(sock, matriz_solucao, total_vazias);
         printf("[DEBUG] Resposta inicial enviada para o cliente %d: '%s'\n", client_id, buffer);
 
 

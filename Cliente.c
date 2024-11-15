@@ -179,17 +179,36 @@ void envia_tentativa(int client_socket, int num, int linha, int coluna) {
 
     printf("[DEBUG] Tentativa enviada com sucesso!\n");
 }
-void processa_feedback(const char *feedback) {
+void processa_feedback(const char *feedback, int *total_vazias) {
+    // Variável local para armazenar o valor temporário de casas vazias
+    int vazias = -1;
+
+    // Verifica se a tentativa está correta ou errada
     if (strstr(feedback, "correta") != NULL) {
         printf("Resultado: A tentativa está correta.\n");
     } else if (strstr(feedback, "errada") != NULL) {
         printf("Resultado: A tentativa está incorreta.\n");
     } else {
         printf("[ERRO] Feedback não reconhecido: '%s'\n", feedback);
+        return; // Sai da função em caso de erro
+    }
+
+    // Extrai o número de casas vazias do feedback
+    if (sscanf(feedback, "%*[^:]: %d", &vazias) == 1) {
+        printf("Casas vazias restantes: %d\n", vazias);
+        if (total_vazias != NULL) {
+            *total_vazias = vazias; // Atualiza o valor apontado pelo ponteiro
+        }
+    } else {
+        printf("[ERRO] Não foi possível identificar o número de casas vazias.\n");
+        if (total_vazias != NULL) {
+            *total_vazias = 0; // Define um valor padrão em caso de erro
+        }
     }
 }
 
-void recebe_feedback_tentativa(int client_socket) {
+
+void recebe_feedback_tentativa(int client_socket,  int *num_casas_preencher) {
     char buffer[BUFFER_SIZE];
 
     printf("[DEBUG] Aguardando feedback do servidor...\n");
@@ -201,7 +220,7 @@ void recebe_feedback_tentativa(int client_socket) {
         perror("[ERRO] Falha ao receber feedback do servidor");
     }
     printf("Resposta do servidor:\n%s\n", buffer);
-    processa_feedback(buffer);
+    processa_feedback(buffer, num_casas_preencher);
 }
 
 void recebe_Tabuleiro(int client_socket) {
@@ -215,13 +234,18 @@ void recebe_Tabuleiro(int client_socket) {
     printf("\nTabuleiro enviado:\n%s\n", buffer);
 }
 
+void recebe_tabuleiro_atualizado(int client_socket, int *matriz[9][9], int *num_casas_preencher){
 
+
+
+}
 void comunicar_servidor(int client_socket) {
     char buffer[BUFFER_SIZE];
     int matriz[SIZE][SIZE] = {0}; // Inicializa a matriz com zeros
     int id_tabuleiro;
     int linha_branca;
     int coluna_branca;
+    int num_casas_preencher=1;
     if (recv(client_socket, &id_tabuleiro, sizeof(id_tabuleiro), 0) <= 0) {
         perror("Erro ao receber ID do tabuleiro");
         close(client_socket);
@@ -295,7 +319,9 @@ void comunicar_servidor(int client_socket) {
 
                 // Recebe feedback do servidor
                 printf("[DEBUG] Tentativa enviada. Aguardando feedback do servidor...\n");
-                recebe_feedback_tentativa(client_socket);
+                recebe_feedback_tentativa(client_socket, &num_casas_preencher);
+                printf("%d",num_casas_preencher);
+                //recebe_tabuleiro_atualizado(client_socket, &matriz, &num_casas_preencher);
             } else {
                 printf("Nenhuma posição vazia encontrada. Sudoku resolvido!\n");
             }
