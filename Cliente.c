@@ -347,10 +347,24 @@ void comunicar_servidor(int client_socket) {
         if (bytes_received > 0) {
             buffer[bytes_received] = '\0';
             printf("Resposta do servidor:\n%s", buffer);
-                int i=10;
+            printf("Quantas tentativas deseja fazer?\n");
+        memset(buffer, 0, BUFFER_SIZE);
+        fgets(buffer, BUFFER_SIZE, stdin);
+
+        // Remove o newline que `fgets` deixa no buffer
+        buffer[strcspn(buffer, "\n")] = 0;
+
+        int tentativa = atoi(buffer); // Converte a entrada para inteiro
+
+        if (send(client_socket, &tentativa, sizeof(tentativa), 0) < 0) {
+            perror("Erro ao enviar número de tentativas");
+            close(client_socket);
+            exit(EXIT_FAILURE);
+        }
+
             // Enquanto houver casas vazias, envia tentativas e recebe feedback
-            while (i != 0) {
-                if (escolhe_celula_sem_nada_aleatoria(matriz, &linha_branca, &coluna_branca)) {
+            while (tentativa != 0) {
+                            if (escolhe_celula_sem_nada_aleatoria(matriz, &linha_branca, &coluna_branca)) {
                     printf("Posição vazia encontrada em: linha %d, coluna %d\n", linha_branca, coluna_branca);
                     printf("O ID do tabuleiro é: %d\n", id_tabuleiro);
 
@@ -360,12 +374,12 @@ void comunicar_servidor(int client_socket) {
                     // Recebe feedback do servidor
                     printf("[DEBUG] Tentativa enviada. Aguardando feedback do servidor...\n");
                     recebe_feedback_tentativa(client_socket);
+                    
                 } else {
                     printf("Nenhuma posição vazia encontrada. Sudoku resolvido!\n");
                     break;
                 }
-            
-                i--;
+                tentativa--;
             }
         } else {
             perror("[ERRO] Falha ao receber resposta do servidor");

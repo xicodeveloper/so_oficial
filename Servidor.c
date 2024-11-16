@@ -185,7 +185,7 @@ void enviar_menu(int client_socket) {
     const char *menu =
         "---------- Menu de Sudoku ----------\n"
         "1. Resolver Tabuleiro Total.\n"
-        "2. Resolver Tabuleiro Parcial: 10 tentativas.\n"
+        "2. Resolver Tabuleiro Parcial (n tentativas): .\n"
         "3. O Servidor revela a Solução.\n"
         "4. O Servidor revela a Solução Parcial.\n"
         "5. Desistir.\n"
@@ -372,7 +372,7 @@ void *handle_client(void *client_socket) {
     int sock = *(int *)client_socket;
     free(client_socket);
     char buffer[BUFFER_SIZE];
-    int opcao, client_id;
+    int opcao, client_id, tentativa;
     int num = (rand() % 4) + 1;
  //int (*total_vazias_ptr);
 
@@ -464,10 +464,16 @@ switch (opcao) {
             perror("[ERRO] Falha ao enviar resposta parcial ao cliente");
             break;
         }
-        int i=10;
-                        while ( i != 0) {
+        if (recv(sock, &tentativa, sizeof(tentativa), 0) <= 0) {
+            perror("Erro ao receber número de tentativas");
+            close(sock);
+            break;
+        }
+        printf("Número de tentativas recebido: %d\n", tentativa);
+
+                        while ( tentativa != 0) {
                     recebe_tentativa_e_envia_feedback(sock, matriz_solucao, matriz_of);
-                    i--;
+                    tentativa--;
                 }
 
         printf("[DEBUG] Resposta parcial enviada para o cliente %d.\n", client_id);
