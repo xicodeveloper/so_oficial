@@ -6,6 +6,7 @@
 #include <arpa/inet.h>
 #include <signal.h>
 #include <time.h>
+#include "header.h"
 
 #define BUFFER_SIZE 1024
 #define TAMANHO 1024
@@ -131,7 +132,18 @@ void ler_matrizes(int matriz_of[SIZE][LC][LC]) {
         printf("\n");  // Linha em branco entre jogos
     }
 }
+void ler_matrizes_id(int matriz_of[SIZE][LC][LC], int num) {
 
+        printf("Jogo %d:\n", num);
+        for (int j = 0; j < LC; j++) {
+            for (int l = 0; l < LC; l++) {
+                printf("%d ", matriz_of[num-1][j][l]);
+            }
+            printf("\n");  // Nova linha após cada linha da matriz
+        }
+        printf("\n");  // Linha em branco entre jogos
+
+}
 
 void handle_sigint(int sig) {
     printf("\nSIGINT received. Closing server socket...\n");
@@ -285,10 +297,10 @@ void enviar_id_tabuleiro(int client_socket, int num) {
         exit(EXIT_FAILURE);
     }
 }
-void recebe_tentativa_e_envia_feedback(int client_socket, int matriz_of[4][9][9], int total_vazias) {
+void recebe_tentativa_e_envia_feedback(int client_socket,  int matriz_sol[4][9][9], int matriz_of[4][9][9]) {
     char buffer[BUFFER_SIZE];
     int num, linha, coluna, tentativa;
-
+    int *total_vazias_ptr ;
     printf("[DEBUG] Aguardando mensagem do cliente para receber tentativa...\n");
     int bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
     if (bytes_received < 0) {
@@ -305,13 +317,27 @@ void recebe_tentativa_e_envia_feedback(int client_socket, int matriz_of[4][9][9]
         return;
     }
     printf("[DEBUG] Dados extraídos: Tabuleiro ID=%d, Linha=%d, Coluna=%d, Tentativa=%d\n", num, linha, coluna, tentativa);
-
+// Determina qual variável será usada
+if (num == 1) {
+    total_vazias_ptr = &zero_1;
+} else if (num == 2) {
+    total_vazias_ptr = &zero_2;
+} else if (num == 3) {
+    total_vazias_ptr = &zero_3;
+} else if (num == 4) {
+    total_vazias_ptr = &zero_4;
+}
     // Prepara o feedback (certo ou errado)
     char resposta[BUFFER_SIZE];
-    if (matriz_of[num - 1][linha - 1][coluna - 1] == tentativa) {
-        snprintf(resposta, BUFFER_SIZE, "Tentativa %d na posição (%d, %d) está correta. Ainda sobra casas vazias: %d", tentativa, linha, coluna, total_vazias);
+    if (matriz_sol[num - 1][linha - 1][coluna - 1] == tentativa) {
+        matriz_of[num-1][linha - 1][coluna - 1]=tentativa;
+        (*total_vazias_ptr)--;
+        snprintf(resposta, BUFFER_SIZE, "Tentativa %d na posição (%d, %d) está correta. ", tentativa, linha, coluna);
+        ler_matrizes_id(matriz_of, num);
+        printf("%d\n", *total_vazias_ptr);
+
     } else {
-        snprintf(resposta, BUFFER_SIZE, "Tentativa %d na posição (%d, %d) está errada. Ainda sobra casas vazias: %d", tentativa, linha, coluna, total_vazias);
+        snprintf(resposta, BUFFER_SIZE, "Tentativa %d na posição (%d, %d) está errada.", tentativa, linha, coluna);
     }
     printf("[DEBUG] Feedback gerado: '%s'\n", resposta);
 
@@ -347,7 +373,7 @@ void *handle_client(void *client_socket) {
     char buffer[BUFFER_SIZE];
     int opcao, client_id;
     int num = (rand() % 4) + 1;
-    int total_vazias;
+
 
     if (recv(sock, &client_id, sizeof(client_id), 0) <= 0) {
         perror("Error receiving client ID");
@@ -410,8 +436,7 @@ switch (opcao) {
             
             break;
         }
-        total_vazias = numero_total_vazias(matriz_of, num);
-        recebe_tentativa_e_envia_feedback(sock, matriz_solucao, total_vazias);
+        recebe_tentativa_e_envia_feedback(sock, matriz_solucao, matriz_of);
         printf("[DEBUG] Resposta inicial enviada para o cliente %d: '%s'\n", client_id, buffer);
 
 

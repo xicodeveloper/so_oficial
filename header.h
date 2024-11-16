@@ -11,8 +11,6 @@
 #include <sys/un.h>
 #include <unistd.h>
 
-#define TAMANHO 9
-
 // Sockets --------------------------------------------------------------------------------
 #define SOCKET_NAME "/tmp/DemoSocket"
 //-----------------------------------------------------------------------------------------
@@ -24,10 +22,11 @@ typedef struct {
 } cliente_inf;
 // Funções relacionadas ao jogo de Sudoku
 
+int zero_1=32;
+int zero_2=41;
+int zero_3=32;
+int zero_4=41;
 
-bool resolver(int tabuleiro[TAMANHO][TAMANHO]);
-void imprimir_tabuleiro_cliente(int tabuleiro[TAMANHO][TAMANHO]);
-void escrever_log_cliente(const char *mensagem);
-int get_new_user_id(); // Declaração da função para obter um novo ID de utilizador
+
 
 #endif // HEADER_H
