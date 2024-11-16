@@ -357,16 +357,29 @@ void *handle_client(void *client_socket) {
     printf("New client connected with ID: %d\n", client_id);
     escrever_log("New client connected");
     enviar_id_tabuleiro(sock, num);
-    escolhe_tabuleiro(sock, num, matriz_of);
-    enviar_menu(sock);
-    printf("Sending menu to client: %d\n", client_id);
+    ;
 
     int running = 1;
     while (running) {
+
+        int bytes_received = recv(sock, buffer, BUFFER_SIZE - 1, 0);
+        if (bytes_received < 0) {
+            perror("Error ao receber pedido de tabuleiro");
+            printf("Client %d disconnected due to error.\n", client_id);
+            escrever_log("Client disconnected due to receive error");
+            break;
+        }
+        printf("Cliente %d: %s \n", client_id, buffer);
+        escolhe_tabuleiro(sock, num, matriz_of);
+
+        //_____________________________________________________________
+        enviar_menu(sock);
+        printf("Sending menu to client: %d\n", client_id);
+
         printf("Waiting for option from client: %d\n", client_id);
 
         // Receive the client's option
-        int bytes_received = recv(sock, buffer, BUFFER_SIZE - 1, 0);
+        bytes_received = recv(sock, buffer, BUFFER_SIZE - 1, 0);
         if (bytes_received < 0) {
             perror("Error receiving data from client");
             printf("Client %d disconnected due to error.\n", client_id);

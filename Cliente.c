@@ -252,34 +252,42 @@ void comunicar_servidor(int client_socket) {
         return;
     }
     printf("Id recebido %d", id_tabuleiro);
-    // Recebe o tabuleiro do servidor
-    int bytes_received2 = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
-    if (bytes_received2 <= 0) {
-        printf("Servidor desconectado.\n");
-        return;
-    }
-    buffer[bytes_received2] = '\0'; // Corrigido para usar buffer
-    printf("\nTabuleiro enviado:\n%s\n", buffer);
-    send(client_socket, "Tabuleiro recebido\0", 19, 0);
-
-    // Converte a string para a matriz
-    string_para_matriz(buffer, matriz);
-    printf("Matriz transformada:\n");
-    imprima_matriz(matriz);
-    // Recebe o menu inicial do servidor
-    printf("Recebe menu inicial\n");
-    int bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
-    printf("Depois de receber menu inicial\n");
-    if (bytes_received <= 0) {
-        printf("Servidor desconectado.\n");
-        return;
-    }
-    printf("bytes_received: %d\n", bytes_received);
-    buffer[bytes_received] = '\0';
-    printf("Resposta do servidor:\n%s", buffer);
+    
 
     // Inicia o loop para enviar e receber respostas
     while (1) {
+        //solicita Tabuleiro
+        //____________________________________
+        strcpy(buffer, "Solicita Tabuleiro");
+        send(client_socket,buffer, strlen(buffer),0);
+        // Recebe o tabuleiro do servidor
+        int bytes_received2 = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+        if (bytes_received2 <= 0) {
+            printf("Servidor desconectado.\n");
+            return;
+        }
+        buffer[bytes_received2] = '\0'; // Corrigido para usar buffer
+        printf("\nTabuleiro enviado:\n%s\n", buffer);
+        send(client_socket, "Tabuleiro recebido\0", 19, 0);
+
+        // Converte a string para a matriz
+        string_para_matriz(buffer, matriz);
+        printf("Matriz transformada:\n");
+        imprima_matriz(matriz);
+
+        //_______________________________________________
+        // Recebe o menu inicial do servidor
+        printf("Recebe menu inicial\n");
+        int bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+        printf("Depois de receber menu inicial\n");
+        if (bytes_received <= 0) {
+            printf("Servidor desconectado.\n");
+            return;
+        }
+        printf("bytes_received: %d\n", bytes_received);
+        buffer[bytes_received] = '\0';
+        printf("Resposta do servidor:\n%s", buffer);
+        
         printf("Insira um número ('5' para encerrar): ");
         memset(buffer, 0, BUFFER_SIZE);
         fgets(buffer, BUFFER_SIZE, stdin);
@@ -371,7 +379,7 @@ void comunicar_servidor(int client_socket) {
         break;
 
     case 5:
-        printf("[DEBUG] Opção 5: Solicitar solução parcial selecionada.\n");
+        printf("[DEBUG] Opção 5: Desistir do Jogo.\n");
          bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
         if (bytes_received > 0) {
             buffer[bytes_received] = '\0';
