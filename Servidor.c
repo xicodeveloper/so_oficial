@@ -329,8 +329,8 @@ if (num == 1) {
 }
     // Prepara o feedback (certo ou errado)
     char resposta[BUFFER_SIZE];
-    if (matriz_sol[num - 1][linha - 1][coluna - 1] == tentativa) {
-        matriz_of[num-1][linha - 1][coluna - 1]=tentativa;
+    if (matriz_sol[num-1][linha][coluna] == tentativa) {
+        matriz_of[num-1][linha][coluna]=tentativa;
         (*total_vazias_ptr)--;
         snprintf(resposta, BUFFER_SIZE, "Tentativa %d na posição (%d, %d) está correta. ", tentativa, linha, coluna);
         ler_matrizes_id(matriz_of, num);
