@@ -133,37 +133,29 @@ for(int i=0;i<9;i++){
 }
 }
 int escolhe_celula_sem_nada_aleatoria(int matriz[9][9], int *linha, int *coluna) {
-    // Lista para armazenar todas as células vazias
-    int celulas_vazias[81][2]; // No máximo 81 células em uma matriz 9x9
-    int total_vazias = 0;
+    int vazias[81][2];
+    int count = 0;
 
-    // Percorrer a matriz e registrar coordenadas de células vazias
+    // Lista todas as posições vazias
     for (int i = 0; i < 9; i++) {
         for (int j = 0; j < 9; j++) {
-            if (matriz[i][j] == 0) {
-                celulas_vazias[total_vazias][0] = i; // Linha
-                celulas_vazias[total_vazias][1] = j; // Coluna
-                total_vazias++;
+            if (matriz[i][j] == 0) { // Considera 0 como vazio
+                vazias[count][0] = i;
+                vazias[count][1] = j;
+                count++;
             }
         }
     }
 
-    // Se não houver células vazias, retorna 0 indicando falha
-    if (total_vazias == 0) {
-        return 0;
-    }
+    if (count == 0) return 0; // Não há posições vazias
 
-    // Passo 2: Escolher uma célula vazia aleatoriamente
-    srand(time(NULL)); // Inicializa o gerador de números aleatórios
-    int indice_aleatorio = rand() % total_vazias;
-    printf("[DEBUG] Índice aleatório escolhido: %d\n", indice_aleatorio);
-
-    // Obter a célula vazia aleatória
-    *linha = celulas_vazias[indice_aleatorio][0];
-    *coluna = celulas_vazias[indice_aleatorio][1];
-
-    return 1; // Retorna 1 para indicar sucesso
+    // Escolhe uma posição aleatória dentre as vazias
+    int indice = rand() % count;
+    *linha = vazias[indice][0];
+    *coluna = vazias[indice][1];
+    return 1;
 }
+
 void envia_tentativa(int client_socket, int num, int linha, int coluna) {
     int tentativa = (rand() % 9) + 1;
     char buffer[BUFFER_SIZE];
