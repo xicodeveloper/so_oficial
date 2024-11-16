@@ -185,7 +185,7 @@ void enviar_menu(int client_socket) {
     const char *menu =
         "---------- Menu de Sudoku ----------\n"
         "1. Resolver Tabuleiro Total.\n"
-        "2. Resolver Tabuleiro Parcial.\n"
+        "2. Resolver Tabuleiro Parcial: 10 tentativas.\n"
         "3. O Servidor revela a Solução.\n"
         "4. O Servidor revela a Solução Parcial.\n"
         "5. Desistir.\n"
@@ -301,6 +301,7 @@ void recebe_tentativa_e_envia_feedback(int client_socket,  int matriz_sol[4][9][
     char buffer[BUFFER_SIZE];
     int num, linha, coluna, tentativa;
     int *total_vazias_ptr ;
+
     printf("[DEBUG] Aguardando mensagem do cliente para receber tentativa...\n");
     int bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
     if (bytes_received < 0) {
@@ -373,7 +374,7 @@ void *handle_client(void *client_socket) {
     char buffer[BUFFER_SIZE];
     int opcao, client_id;
     int num = (rand() % 4) + 1;
-
+ //int (*total_vazias_ptr);
 
     if (recv(sock, &client_id, sizeof(client_id), 0) <= 0) {
         perror("Error receiving client ID");
@@ -427,20 +428,34 @@ void *handle_client(void *client_socket) {
 // Handle the selected option
 switch (opcao) {
     case 1:
-        printf("Client %d selected to solve one cell\n", client_id);
+                // Determina o ponteiro para a variável global de casas vazias
+               /**  if (num == 1) {
+                    total_vazias_ptr = &zero_1;
+                } else if (num == 2) {
+                    total_vazias_ptr = &zero_2;
+                } else if (num == 3) {
+                    total_vazias_ptr = &zero_3;
+                } else if (num == 4) {
+                    total_vazias_ptr = &zero_4;
+                }
+**/
+                printf("Client %d selected to solve one cell\n", client_id);
 
-        // Envia uma resposta inicial ao cliente confirmando a opção
-        strcpy(buffer, "Option 1: one cell requested.\n");
-        if (send(sock, buffer, strlen(buffer), 0) < 0) {
-            perror("[ERRO] Falha ao enviar resposta inicial ao cliente");
-            
-            break;
-        }
-        recebe_tentativa_e_envia_feedback(sock, matriz_solucao, matriz_of);
-        printf("[DEBUG] Resposta inicial enviada para o cliente %d: '%s'\n", client_id, buffer);
+                // Envia uma resposta inicial ao cliente confirmando a opção
+                strcpy(buffer, "Option 1: one cell requested.\n");
+                if (send(sock, buffer, strlen(buffer), 0) < 0) {
+                    perror("[ERRO] Falha ao enviar resposta inicial ao cliente");
+                    break;
+                }
+
+                printf("[DEBUG] Resposta inicial enviada para o cliente %d: '%s'\n", client_id, buffer);
+
+                // Enquanto houver casas vazias, processa as tentativas recebidas
+                    recebe_tentativa_e_envia_feedback(sock, matriz_solucao, matriz_of);
 
 
-        break;
+                printf("[INFO] Tabuleiro %d resolvido pelo cliente %d\n", num, client_id);
+                break;
 
     case 2:
         printf("Client %d requested Partial Solution.\n", client_id);
@@ -449,6 +464,12 @@ switch (opcao) {
             perror("[ERRO] Falha ao enviar resposta parcial ao cliente");
             break;
         }
+        int i=10;
+                        while ( i != 0) {
+                    recebe_tentativa_e_envia_feedback(sock, matriz_solucao, matriz_of);
+                    i--;
+                }
+
         printf("[DEBUG] Resposta parcial enviada para o cliente %d.\n", client_id);
         break;
 

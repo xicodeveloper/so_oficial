@@ -232,6 +232,7 @@ void comunicar_servidor(int client_socket) {
     int id_tabuleiro;
     int linha_branca;
     int coluna_branca;
+     //int (*total_vazias_ptr);
 
     if (recv(client_socket, &id_tabuleiro, sizeof(id_tabuleiro), 0) <= 0) {
         perror("Erro ao receber ID do tabuleiro");
@@ -297,36 +298,48 @@ void comunicar_servidor(int client_socket) {
 
         switch (resposta) {
     case 1:
-        // Enviar tentativa e receber feedback
-        printf("[DEBUG] Opção 1: Resolver o tabuleiro completo selecionada.\n");
-         bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
-        if (bytes_received > 0) {
-            buffer[bytes_received] = '\0';
-            printf("Resposta do servidor:\n%s", buffer);
+            // Determina o ponteiro para a variável global de casas vazias
+                // Determina o ponteiro para a variável global de casas vazias
+               /**  if (num == 1) {
+                    total_vazias_ptr = &zero_1;
+                } else if (num == 2) {
+                    total_vazias_ptr = &zero_2;
+                } else if (num == 3) {
+                    total_vazias_ptr = &zero_3;
+                } else if (num == 4) {
+                    total_vazias_ptr = &zero_4;
+                }
+**/
+            printf("[DEBUG] Opção 1: Resolver o tabuleiro completo selecionada.\n");
 
-
-            if (escolhe_celula_sem_nada_aleatoria(matriz, &linha_branca, &coluna_branca)) {
-                printf("Posição vazia encontrada em: linha %d, coluna %d\n", linha_branca, coluna_branca);
-                printf("O ID do tabuleiro é: %d\n", id_tabuleiro);
-
-                // Envia tentativa ao servidor
-                envia_tentativa(client_socket, id_tabuleiro, linha_branca, coluna_branca);
-
-                // Recebe feedback do servidor
-                printf("[DEBUG] Tentativa enviada. Aguardando feedback do servidor...\n");
-                recebe_feedback_tentativa(client_socket);
-
-                //recebe_tabuleiro_atualizado(client_socket, &matriz, &num_casas_preencher);
+            // Recebe confirmação do servidor
+            bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+            if (bytes_received > 0) {
+                buffer[bytes_received] = '\0';
+                printf("Resposta do servidor:\n%s", buffer);
             } else {
-                printf("Nenhuma posição vazia encontrada. Sudoku resolvido!\n");
+                perror("[ERRO] Falha ao receber resposta do servidor");
+                return;
             }
 
-        } else {
-            perror("[ERRO] Falha ao receber resposta do servidor");
-            return;
-        }
-        
-        break;
+                if (escolhe_celula_sem_nada_aleatoria(matriz, &linha_branca, &coluna_branca)) {
+                    printf("Posição vazia encontrada em: linha %d, coluna %d\n", linha_branca, coluna_branca);
+                    printf("O ID do tabuleiro é: %d\n", id_tabuleiro);
+
+                    // Envia tentativa ao servidor
+                    envia_tentativa(client_socket, id_tabuleiro, linha_branca, coluna_branca);
+
+                    // Recebe feedback do servidor
+                    printf("[DEBUG] Tentativa enviada. Aguardando feedback do servidor...\n");
+                    recebe_feedback_tentativa(client_socket);
+                } else {
+                    printf("Nenhuma posição vazia encontrada. Sudoku resolvido!\n");
+                    break;
+                }
+            
+
+            printf("[INFO] Tabuleiro %d resolvido!\n", id_tabuleiro);
+            break;
 
     case 2:
         printf("[DEBUG] Opção 2: Solicitar solução parcial selecionada.\n");
@@ -334,6 +347,26 @@ void comunicar_servidor(int client_socket) {
         if (bytes_received > 0) {
             buffer[bytes_received] = '\0';
             printf("Resposta do servidor:\n%s", buffer);
+                int i=10;
+            // Enquanto houver casas vazias, envia tentativas e recebe feedback
+            while (i != 0) {
+                if (escolhe_celula_sem_nada_aleatoria(matriz, &linha_branca, &coluna_branca)) {
+                    printf("Posição vazia encontrada em: linha %d, coluna %d\n", linha_branca, coluna_branca);
+                    printf("O ID do tabuleiro é: %d\n", id_tabuleiro);
+
+                    // Envia tentativa ao servidor
+                    envia_tentativa(client_socket, id_tabuleiro, linha_branca, coluna_branca);
+
+                    // Recebe feedback do servidor
+                    printf("[DEBUG] Tentativa enviada. Aguardando feedback do servidor...\n");
+                    recebe_feedback_tentativa(client_socket);
+                } else {
+                    printf("Nenhuma posição vazia encontrada. Sudoku resolvido!\n");
+                    break;
+                }
+            
+                i--;
+            }
         } else {
             perror("[ERRO] Falha ao receber resposta do servidor");
             return;
