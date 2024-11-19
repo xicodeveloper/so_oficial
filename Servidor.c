@@ -43,7 +43,9 @@ void escrever_log(const char *mensagem) {
 }
 void transforma_matriz_solucao(char *ficheiro_solucoes, int matriz_of[SIZE][LC][LC]) {
     char buffer[BUFFER_SIZE];
-    FILE *f = fopen("./jogos_solucoes/solucoes.txt", "r");
+    ficheiro_solucoes[strcspn(ficheiro_solucoes, "\r")] = 0;
+
+    FILE *f = fopen(ficheiro_solucoes, "r");
     escrever_log("Inicio da transformação da matriz solução, leitura soluções.txt");
     printf("Inicio da transformação da matriz solução, leitura %s\n", ficheiro_solucoes);    
     if (f == NULL) {
@@ -82,7 +84,8 @@ void transforma_matriz_solucao(char *ficheiro_solucoes, int matriz_of[SIZE][LC][
 
 void transforma_matriz(char *ficheiro_jogos,int matriz_of[SIZE][LC][LC]) {
     char buffer[BUFFER_SIZE];
-    FILE *f = fopen("./jogos_solucoes/jogos.txt", "r");
+    ficheiro_jogos[strcspn(ficheiro_jogos, "\r")] = 0;
+    FILE *f = fopen(ficheiro_jogos, "r");
     escrever_log("Inicio da transformação da matriz, leitura jogos.txt");
     if (f == NULL) {
         escrever_log("Erro ao abrir o ficheiro dos jogos para leitura");
@@ -841,8 +844,6 @@ void *handle_client_escritor(void *client_socket) {
 
 int main(int argc, char *argv[]) {
     int resolvedor;
-    
-
 
     struct sockaddr_in server_addr, client_addr;
     socklen_t addr_len = sizeof(client_addr);
@@ -855,12 +856,11 @@ int main(int argc, char *argv[]) {
 
     char ficheiro_jogos[100], ficheiro_solucoes[100];
     ler_configuracao(argv[1], ficheiro_jogos, ficheiro_solucoes, &porta);
-    transforma_matriz(ficheiro_jogos ,matriz_of);
-    transforma_matriz_solucao(ficheiro_solucoes,matriz_solucao);
+    transforma_matriz(ficheiro_jogos, matriz_of);
+    transforma_matriz_solucao(ficheiro_solucoes, matriz_solucao);
     ler_matrizes(matriz_of);
     printf("----------");
     ler_matrizes(matriz_solucao);
-  
 
     struct sigaction sa;
     sa.sa_handler = handle_sigint;
@@ -886,14 +886,14 @@ int main(int argc, char *argv[]) {
         close(server_socket);
         return 1;
     }
-escrever_log("Bind feito com sucesso");
+    escrever_log("Bind feito com sucesso");
     if (listen(server_socket, 10) < 0) {
         escrever_log("Erro ao ouvir no socket");
         perror("Erro ao ouvir no socket");
         close(server_socket);
         return 1;
     }
-escrever_log("Servidor pronto para ouvir conexões");
+    escrever_log("Servidor pronto para ouvir conexões");
     printf("Servidor iniciado na porta %d\n", porta); // Debug
     srand(time(NULL));
 
@@ -904,7 +904,7 @@ escrever_log("Servidor pronto para ouvir conexões");
             perror("Erro ao aceitar conexão");
             continue;
         }
-escrever_log("Conexão aceita com sucesso");
+        escrever_log("Conexão aceita com sucesso");
         pthread_mutex_lock(&clients_mutex);
         if (num_clients_sessao >= 10) {
             escrever_log("Número máximo de clientes atingido");
@@ -924,51 +924,50 @@ escrever_log("Conexão aceita com sucesso");
             continue;
         }
         *new_sock = client_socket;
-escrever_log("Memória alocada para new_sock com sucesso");
-   if (recv(client_socket, &resolvedor, sizeof(resolvedor), 0) <= 0) {
-    escrever_log("Erro ao receber resolvedor do cliente");
-    perror("Erro ao receber resolvedor");
-    close(client_socket);
-    continue;
-}
-pthread_t tid;
-    pthread_mutex_lock(&clients_mutex_board_2); // Bloqueia o primeiro mutex
-
-    if (resolvedor == 0) {
-        // Tenta criar uma thread para "leitor"
-        if (pthread_create(&tid, NULL, handle_client_leitor, (void *)new_sock) != 0) {
-            escrever_log("Erro ao criar thread para o cliente leitor");
-            perror("Erro ao criar thread para o cliente leitor");
-            free(new_sock);
+        escrever_log("Memória alocada para new_sock com sucesso");
+        if (recv(client_socket, &resolvedor, sizeof(resolvedor), 0) <= 0) {
+            escrever_log("Erro ao receber resolvedor do cliente");
+            perror("Erro ao receber resolvedor");
             close(client_socket);
-            pthread_mutex_unlock(&clients_mutex_board_2); // Libera mutex no caso de erro
             continue;
         }
-    } else {
-        pthread_mutex_unlock(&clients_mutex_board_2); // Libera o mutex antes de usar outro
+        pthread_t tid;
+        pthread_mutex_lock(&clients_mutex_board_2); // Bloqueia o primeiro mutex
 
-        pthread_mutex_lock(&clients_mutex_board); // Bloqueia o segundo mutex
+        if (resolvedor == 0) {
+            // Tenta criar uma thread para "leitor"
+            if (pthread_create(&tid, NULL, handle_client_leitor, (void *)new_sock) != 0) {
+                escrever_log("Erro ao criar thread para o cliente leitor");
+                perror("Erro ao criar thread para o cliente leitor");
+                free(new_sock);
+                close(client_socket);
+                pthread_mutex_unlock(&clients_mutex_board_2); // Libera mutex no caso de erro
+                continue;
+            }
+        } else {
+            pthread_mutex_unlock(&clients_mutex_board_2); // Libera o mutex antes de usar outro
 
-        // Tenta criar uma thread para "escritor"
-        if (pthread_create(&tid, NULL, handle_client_escritor, (void *)new_sock) != 0) {
-            escrever_log("Erro ao criar thread para o cliente escritor");
-            perror("Erro ao criar thread para o cliente escritor");
-            free(new_sock);
-            close(client_socket);
-            pthread_mutex_unlock(&clients_mutex_board); // Libera mutex no caso de erro
-            continue;
+            pthread_mutex_lock(&clients_mutex_board); // Bloqueia o segundo mutex
+
+            // Tenta criar uma thread para "escritor"
+            if (pthread_create(&tid, NULL, handle_client_escritor, (void *)new_sock) != 0) {
+                escrever_log("Erro ao criar thread para o cliente escritor");
+                perror("Erro ao criar thread para o cliente escritor");
+                free(new_sock);
+                close(client_socket);
+                pthread_mutex_unlock(&clients_mutex_board); // Libera mutex no caso de erro
+                continue;
+            }
+
+            pthread_mutex_unlock(&clients_mutex_board); // Libera o segundo mutex após uso
         }
 
-        pthread_mutex_unlock(&clients_mutex_board); // Libera o segundo mutex após uso
+        escrever_log("Thread criada com sucesso");
+        pthread_detach(tid); // Desanexa a thread
+        escrever_log("Thread desanexada com sucesso");
     }
-
-    escrever_log("Thread criada com sucesso");
-    pthread_detach(tid); // Desanexa a thread
-    escrever_log("Thread desanexada com sucesso");
-
-    }
-// Após sair do loop principal
-escrever_log("Servidor encerrado");
-close(server_socket);
-return 0;
+    // Após sair do loop principal
+    escrever_log("Servidor encerrado");
+    close(server_socket);
+    return 0;
 }
