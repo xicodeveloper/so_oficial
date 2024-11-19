@@ -41,10 +41,11 @@ void escrever_log(const char *mensagem) {
     fclose(f);
     pthread_mutex_unlock(&log_mutex);
 }
-void transforma_matriz_solucao(int matriz_of[SIZE][LC][LC]) {
+void transforma_matriz_solucao(char *ficheiro_solucoes, int matriz_of[SIZE][LC][LC]) {
     char buffer[BUFFER_SIZE];
     FILE *f = fopen("./jogos_solucoes/solucoes.txt", "r");
     escrever_log("Inicio da transformação da matriz solução, leitura soluções.txt");
+    printf("Inicio da transformação da matriz solução, leitura %s\n", ficheiro_solucoes);    
     if (f == NULL) {
         printf("Erro ao abrir o ficheiro das soluçoes jogos para leitura.\n");
         escrever_log("Erro ao abrir o ficheiro dos jogos para leitura");
@@ -52,33 +53,25 @@ void transforma_matriz_solucao(int matriz_of[SIZE][LC][LC]) {
     }
 
     int jogo_index = 0;
-    while (jogo_index < SIZE) {
-        // Ignora a linha do índice do jogo (1, 2, 3, etc.)
+    while (fgets(buffer, BUFFER_SIZE, f) != NULL && jogo_index < SIZE) {
+        buffer[strcspn(buffer, "\n")] = 0; // Remover o '\n'        
         if (fgets(buffer, BUFFER_SIZE, f) == NULL) {
-            break; // Encerra o loop se não houver mais linhas
+            break; // Se não houver outra linha, encerra o loop
         }
+        buffer[strcspn(buffer, "\n")] = 0; // Remover o '\n'
 
-        // Lê a linha contendo a solução do jogo (81 caracteres)
-        if (fgets(buffer, BUFFER_SIZE, f) == NULL) {
-            break; // Encerra o loop se não houver linha de solução
-        }
-        buffer[strcspn(buffer, "\n")] = 0; // Remove o '\n' no final da linha, se houver
-
-        // Verifica se a linha de solução tem o tamanho correto (81 caracteres)
-        if (strlen(buffer) != 81) {
-            printf("Linha de solução do jogo %d tem tamanho incorreto.\n", jogo_index + 1);
-            continue; // Passa para o próximo jogo se o tamanho for incorreto
-        }
-
-        // Preenche a matriz 9x9 com os valores do buffer
+        // Preencher a matriz 9x9 com os valores do buffer
         int k = 0; // Índice do caractere no buffer
         for (int i = 0; i < LC; i++) {
             for (int j = 0; j < LC; j++) {
-                matriz_of[jogo_index][i][j] = buffer[k] - '0'; // Converte caractere para inteiro
-                k++; // Avança para o próximo caractere do buffer
+                if (buffer[k] == '_') {
+                    matriz_solucao[jogo_index][i][j] = 0; // Usar 0 para posições desconhecidas
+                } else {
+                    matriz_solucao[jogo_index][i][j] = buffer[k] - '0'; // Converter caractere para inteiro
+                }
+                k++; // Avançar para o próximo caractere do buffer
             }
         }
-
         jogo_index++; // Próximo jogo
     }
     
@@ -87,7 +80,7 @@ void transforma_matriz_solucao(int matriz_of[SIZE][LC][LC]) {
 }
 
 
-void transforma_matriz(int matriz_of[SIZE][LC][LC]) {
+void transforma_matriz(char *ficheiro_jogos,int matriz_of[SIZE][LC][LC]) {
     char buffer[BUFFER_SIZE];
     FILE *f = fopen("./jogos_solucoes/jogos.txt", "r");
     escrever_log("Inicio da transformação da matriz, leitura jogos.txt");
@@ -407,10 +400,9 @@ void apagador(int client_socket, int matriz_of[4][9][9]) {
 }
 
 
-void recebe_tentativa_e_envia_feedback(int client_socket,  int matriz_sol[4][9][9], int matriz_of[4][9][9]) {
+void recebe_tentativa_e_envia_feedback(int client_socket, int matriz_sol[4][9][9], int matriz_of[4][9][9]) {
     char buffer[BUFFER_SIZE];
     int num, linha, coluna, tentativa;
-    int *total_vazias_ptr ;
 
     printf("[DEBUG] Aguardando mensagem do cliente para receber tentativa...\n");
     escrever_log("Recebendo tentativa do cliente");
@@ -420,7 +412,7 @@ void recebe_tentativa_e_envia_feedback(int client_socket,  int matriz_sol[4][9][
         perror("[ERRO] Falha no recv");
         return;
     }
-escrever_log("Tentativa recebida com sucesso");
+    escrever_log("Tentativa recebida com sucesso");
     buffer[bytes_received] = '\0'; // Garante que a mensagem recebida é válida
     printf("[DEBUG] Mensagem recebida: '%s'\n", buffer);
 
@@ -433,26 +425,15 @@ escrever_log("Tentativa recebida com sucesso");
     escrever_log("Mensagem válida recebida do cliente");
     printf("[DEBUG] Dados extraídos: Tabuleiro ID=%d, Linha=%d, Coluna=%d, Tentativa=%d\n", num, linha, coluna, tentativa);
     escrever_log("Dados extraídos com sucesso");
-// Determina qual variável será usada
-if (num == 1) {
-    total_vazias_ptr = &zero_1;
-} else if (num == 2) {
-    total_vazias_ptr = &zero_2;
-} else if (num == 3) {
-    total_vazias_ptr = &zero_3;
-} else if (num == 4) {
-    total_vazias_ptr = &zero_4;
-}
+
+
     // Prepara o feedback (certo ou errado)
     char resposta[BUFFER_SIZE];
     if (matriz_sol[num-1][linha][coluna] == tentativa) {
-        matriz_of[num-1][linha][coluna]=tentativa;
-        (*total_vazias_ptr)--;
-        snprintf(resposta, BUFFER_SIZE, "Tentativa %d na posição (%d, %d) está correta. ", tentativa, linha, coluna);
+        matriz_of[num-1][linha][coluna] = tentativa;
+        snprintf(resposta, BUFFER_SIZE, "Tentativa %d na posição (%d, %d) está correta.", tentativa, linha+1, coluna+1);
         escrever_log("Tentativa correta recebida do cliente");
         ler_matrizes_id(matriz_of, num);
-        printf("%d\n", *total_vazias_ptr);
-
     } else {
         snprintf(resposta, BUFFER_SIZE, "Tentativa %d na posição (%d, %d) está errada.", tentativa, linha, coluna);
         escrever_log("Tentativa errada recebida do cliente");
@@ -467,7 +448,6 @@ if (num == 1) {
         printf("[DEBUG] Feedback enviado ao cliente com sucesso.\n");
         escrever_log("Feedback enviado ao cliente com sucesso");
     }
-
 }
 int numero_total_vazias(int matriz[4][9][9], int num) {
     int total_vazias = 0;
@@ -480,12 +460,9 @@ int numero_total_vazias(int matriz[4][9][9], int num) {
         }
     }
 
-    // Se não houver células vazias, retorna 0 indicando falha
-    if (total_vazias == 0) {
-        return 0;
-    }
-    escrever_log("Número total de casas vazias calculado com sucesso");
-    return total_vazias; // Retorna 1 para indicar sucesso
+  
+    
+    return total_vazias; 
 }
 
 void *handle_client_leitor(void *client_socket){
@@ -660,7 +637,6 @@ void *handle_client_escritor(void *client_socket) {
     char buffer[BUFFER_SIZE];
     int opcao, client_id, tentativa;
     int num = (rand() % 4) + 1;
-    int (*total_vazias_ptr);
 
     if (recv(sock, &client_id, sizeof(client_id), 0) <= 0) {
         escrever_log("Erro ao receber ID do cliente");
@@ -708,7 +684,7 @@ void *handle_client_escritor(void *client_socket) {
             escrever_log("Client disconnected");
             break;
         }
-    escrever_log("Opção do cliente recebida com sucesso");
+        escrever_log("Opção do cliente recebida com sucesso");
         buffer[bytes_received] = '\0'; // Null-terminate the received data
         printf("Received from client %d: '%s' (bytes_received: %d)\n", client_id, buffer, bytes_received); // Debug
 
@@ -717,20 +693,9 @@ void *handle_client_escritor(void *client_socket) {
         printf("Parsed option from client %d: %d\n", client_id, opcao); // Debug
         escrever_log("Opção do cliente convertida com sucesso");
 
-// Handle the selected option
-switch (opcao) {
-    case 1:
-                // Determina o ponteiro para a variável global de casas vazias
-            if (num == 1) {
-                    total_vazias_ptr = &zero_1;
-                } else if (num == 2) {
-                    total_vazias_ptr = &zero_2;
-                } else if (num == 3) {
-                    total_vazias_ptr = &zero_3;
-                } else if (num == 4) {
-                    total_vazias_ptr = &zero_4;
-                }
-
+        // Handle the selected option
+        switch (opcao) {
+            case 1:
                 printf("Client %d selected to solve one cell\n", client_id);
                 escrever_log("Cliente selecionou resolver uma célula");
                 // Envia uma resposta inicial ao cliente confirmando a opção
@@ -741,122 +706,123 @@ switch (opcao) {
                     break;
                 }
                 printf("[DEBUG] Resposta inicial enviada para o cliente %d: '%s'\n", client_id, buffer);
-while ((*total_vazias_ptr) != 0)
-{
-    /* code */
 
-                printf("Número total de casas vazias: %d\n", *total_vazias_ptr);
-                // Enquanto houver casas vazias, processa as tentativas recebidas
-                escrever_log("Número total de casas vazias recebido com sucesso");
+                int total_vazias = numero_total_vazias(matriz_of, num);
+                while (total_vazias > 0) {
+                    printf("Número total de casas vazias: %d\n", total_vazias);
+                    // Enquanto houver casas vazias, processa as tentativas recebidas
                     recebe_tentativa_e_envia_feedback(sock, matriz_solucao, matriz_of);
+                    bytes_received = recv(sock, buffer, BUFFER_SIZE - 1, 0);
+                    if (bytes_received < 0) {
+                        perror("Erro ao receber a confirmaçao de recebimento de feedback do cliente");
+                        escrever_log("Erro ao receber tentativa do cliente");
+                        break;
+                    }
 
-}
+                    escolhe_tabuleiro(sock, num, matriz_of);
+                    send(sock, "espera", strlen("espera"), 0);
+                }
                 printf("[INFO] Tabuleiro %d resolvido pelo cliente %d\n", num, client_id);
                 break;
 
-    case 2:
-        printf("Client %d requested Partial Solution.\n", client_id);
-        strcpy(buffer, "Option 2: Partial Solution revealed.\n");
-        escrever_log("Cliente selecionou solução parcial");
+            case 2:
+                printf("Client %d requested Partial Solution.\n", client_id);
+                strcpy(buffer, "Option 2: Partial Solution revealed.\n");
+                escrever_log("Cliente selecionou solução parcial");
 
-        if (send(sock, buffer, strlen(buffer), 0) < 0) {
-            perror("[ERRO] Falha ao enviar resposta parcial ao cliente");
-            escrever_log("Erro ao enviar resposta parcial ao cliente");
-            break;
+                if (send(sock, buffer, strlen(buffer), 0) < 0) {
+                    perror("[ERRO] Falha ao enviar resposta parcial ao cliente");
+                    escrever_log("Erro ao enviar resposta parcial ao cliente");
+                    break;
+                }
+                escrever_log("Mensagem de solução parcial enviada ao cliente");
+                if (recv(sock, &tentativa, sizeof(tentativa), 0) <= 0) {
+                    perror("Erro ao receber número de tentativas");
+                    escrever_log("Erro ao receber número de tentativas");
+                    close(sock);
+                    break;
+                }
+                escrever_log("Número de tentativas recebido com sucesso");
+                printf("Número de tentativas recebido: %d\n", tentativa);
+
+                while (tentativa != 0) {
+                    recebe_tentativa_e_envia_feedback(sock, matriz_solucao, matriz_of);
+                    tentativa--;
+                }
+
+                printf("[DEBUG] Resposta parcial enviada para o cliente %d.\n", client_id);
+                break;
+
+            case 3:
+                printf("Client %d requested Full Solution from Server.\n", client_id);
+                strcpy(buffer, "Option 3: Server reveals Solution.\n");
+                escrever_log("Cliente selecionou solução completa");
+                if (send(sock, buffer, strlen(buffer), 0) < 0) {
+                    perror("[ERRO] Falha ao enviar solução completa ao cliente");
+                    escrever_log("Erro ao enviar solução completa ao cliente");
+                    break;
+                }
+                printf("[DEBUG] Mensagem de solução completa enviada ao cliente %d.\n", client_id);
+                escrever_log("Mensagem de solução completa enviada ao cliente");
+                memset(buffer, 0, BUFFER_SIZE - 1);
+                int bytesReceived = recv(sock, buffer, BUFFER_SIZE - 1, 0);
+                if (bytesReceived < 0) {
+                    perror("[ERRO] Falho sincronizacao do Socket");
+                    escrever_log("Erro na sincronização do socket");
+                } else {
+                    envia_solucao(sock, num);
+                    escrever_log("Solução enviada com sucesso");
+                }
+
+                // Envia a solução completa
+                break;
+
+            case 4:
+                printf("Client %d requested Partial Solution from Server.\n", client_id);
+                strcpy(buffer, "Option 4: Partial Solution revealed by server.\n");
+                escrever_log("Cliente selecionou solução parcial");
+                if (send(sock, buffer, strlen(buffer), 0) < 0) {
+                    perror("[ERRO] Falha ao enviar solução parcial ao cliente");
+                    escrever_log("Erro ao enviar solução parcial ao cliente");
+                    break;
+                }
+                escrever_log("Mensagem de solução parcial enviada ao cliente");
+                printf("[DEBUG] Mensagem de solução parcial enviada ao cliente %d.\n", client_id);
+                break;
+
+            case 5:
+                printf("Client %d quit the game.\n", client_id);
+                strcpy(buffer, "Option 5: Exiting the game.\n");
+                escrever_log("Cliente desistiu do jogo");
+                if (send(sock, buffer, strlen(buffer), 0) < 0) {
+                    perror("[ERRO] Falha ao enviar mensagem de saída ao cliente");
+                    escrever_log("Erro ao enviar mensagem de saída ao cliente");
+                    break;
+                }
+                printf("[DEBUG] Mensagem de saída enviada para o cliente %d.\n", client_id);
+                escrever_log("Mensagem de saída enviada ao cliente");
+                running = 0; // Exit loop
+                break;
+
+            default:
+                printf("Client %d selected an invalid option: %d\n", client_id, opcao);
+                strcpy(buffer, "Invalid option! Please try again.\n");
+                escrever_log("Cliente selecionou uma opção inválida");
+
+                if (send(sock, buffer, strlen(buffer), 0) < 0) {
+                    perror("[ERRO] Falha ao enviar mensagem de opção inválida");
+                    escrever_log("Erro ao enviar mensagem de opção inválida");
+                } else {
+                    escrever_log("Mensagem de opção inválida enviada ao cliente");
+                    printf("[DEBUG] Mensagem de opção inválida enviada para o cliente %d.\n", client_id);
+                }
+                escrever_log("Mensagem de opção inválida enviada ao cliente");
+                printf("[DEBUG] opção escolhida pelo cliente: %d\n", opcao);
+                break;
         }
-        escrever_log("Mensagem de solução parcial enviada ao cliente");
-        if (recv(sock, &tentativa, sizeof(tentativa), 0) <= 0) {
-            perror("Erro ao receber número de tentativas");
-            escrever_log("Erro ao receber número de tentativas");
-            close(sock);
-            break;
-        }
-        escrever_log("Número de tentativas recebido com sucesso");
-        printf("Número de tentativas recebido: %d\n", tentativa);
 
-                        while ( tentativa != 0 ){
-                                recebe_tentativa_e_envia_feedback(sock, matriz_solucao, matriz_of);
-                                tentativa--;
-
-                        }   
-
-        printf("[DEBUG] Resposta parcial enviada para o cliente %d.\n", client_id);
-        break;
-
-    case 3:
-        printf("Client %d requested Full Solution from Server.\n", client_id);
-        strcpy(buffer, "Option 3: Server reveals Solution.\n");
-        escrever_log("Cliente selecionou solução completa");
-        if (send(sock, buffer, strlen(buffer), 0) < 0) {
-            perror("[ERRO] Falha ao enviar solução completa ao cliente");
-            escrever_log("Erro ao enviar solução completa ao cliente");
-            break;
-        }
-        printf("[DEBUG] Mensagem de solução completa enviada ao cliente %d.\n", client_id);
-escrever_log("Mensagem de solução completa enviada ao cliente");
-        memset(buffer, 0, BUFFER_SIZE-1);
-        int bytesReceived = recv(sock, buffer, BUFFER_SIZE - 1, 0);
-        if (bytesReceived < 0) {
-            perror("[ERRO] Falho sincronizacao do Socket");
-            escrever_log("Erro na sincronização do socket");
-        }
-        else{
-            envia_solucao(sock, num);
-            escrever_log("Solução enviada com sucesso");
-        }
-
-        // Envia a solução completa
-        
-        break;
-
-    case 4:
-        printf("Client %d requested Partial Solution from Server.\n", client_id);
-        strcpy(buffer, "Option 4: Partial Solution revealed by server.\n");
-        escrever_log("Cliente selecionou solução parcial");
-        if (send(sock, buffer, strlen(buffer), 0) < 0) {
-            perror("[ERRO] Falha ao enviar solução parcial ao cliente");
-            escrever_log("Erro ao enviar solução parcial ao cliente");
-            break;
-        }
-        escrever_log("Mensagem de solução parcial enviada ao cliente");
-        printf("[DEBUG] Mensagem de solução parcial enviada ao cliente %d.\n", client_id);
-        break;
-
-    case 5:
-        printf("Client %d quit the game.\n", client_id);
-        strcpy(buffer, "Option 5: Exiting the game.\n");
-        escrever_log("Cliente desistiu do jogo");
-        if (send(sock, buffer, strlen(buffer), 0) < 0) {
-            perror("[ERRO] Falha ao enviar mensagem de saída ao cliente");
-            escrever_log("Erro ao enviar mensagem de saída ao cliente");
-            break;
-        }
-        printf("[DEBUG] Mensagem de saída enviada para o cliente %d.\n", client_id);
-        escrever_log("Mensagem de saída enviada ao cliente");
-        running = 0; // Exit loop
-        break;
-
-    default:
-        printf("Client %d selected an invalid option: %d\n", client_id, opcao);
-        strcpy(buffer, "Invalid option! Please try again.\n");
-        escrever_log("Cliente selecionou uma opção inválida");
-
-        if (send(sock, buffer, strlen(buffer), 0) < 0) {
-            perror("[ERRO] Falha ao enviar mensagem de opção inválida");
-            escrever_log("Erro ao enviar mensagem de opção inválida");
-        }
-        else{
-            escrever_log("Mensagem de opção inválida enviada ao cliente");
-            printf("[DEBUG] Mensagem de opção inválida enviada para o cliente %d.\n", client_id);
-        }
-        escrever_log("Mensagem de opção inválida enviada ao cliente");
-        printf("[DEBUG] opção escolhida pelo cliente: %d\n", opcao); 
-        break;
-}
-
-// Debug opcional para verificar envio final (não necessário)
-printf("[DEBUG] Opção processada para cliente %d.\n", client_id);
-
+        // Debug opcional para verificar envio final (não necessário)
+        printf("[DEBUG] Opção processada para cliente %d.\n", client_id);
     }
 
     // Close connection and update client count
@@ -872,15 +838,9 @@ printf("[DEBUG] Opção processada para cliente %d.\n", client_id);
     return NULL;
 }
 
-
 int main(int argc, char *argv[]) {
     int resolvedor;
-    transforma_matriz(matriz_of);
-    transforma_matriz_solucao(matriz_solucao);
-    ler_matrizes(matriz_of);
-    printf("----------");
-    ler_matrizes(matriz_solucao);
-  
+    
 
 
     struct sockaddr_in server_addr, client_addr;
@@ -894,6 +854,12 @@ int main(int argc, char *argv[]) {
 
     char ficheiro_jogos[100], ficheiro_solucoes[100];
     ler_configuracao(argv[1], ficheiro_jogos, ficheiro_solucoes, &porta);
+    transforma_matriz(ficheiro_jogos ,matriz_of);
+    transforma_matriz_solucao(ficheiro_solucoes,matriz_solucao);
+    ler_matrizes(matriz_of);
+    printf("----------");
+    ler_matrizes(matriz_solucao);
+  
 
     struct sigaction sa;
     sa.sa_handler = handle_sigint;
