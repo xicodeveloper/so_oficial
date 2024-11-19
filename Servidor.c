@@ -721,6 +721,7 @@ void *handle_client_escritor(void *client_socket) {
 
                     escolhe_tabuleiro(sock, num, matriz_of);
                     send(sock, "espera", strlen("espera"), 0);
+                    total_vazias = numero_total_vazias(matriz_of, num);
                 }
                 printf("[INFO] Tabuleiro %d resolvido pelo cliente %d\n", num, client_id);
                 break;
