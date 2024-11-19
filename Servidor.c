@@ -23,7 +23,11 @@ pthread_mutex_t clients_mutex_board = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t log_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t clients_mutex_board_2 = PTHREAD_MUTEX_INITIALIZER;
 
-// Função para registrar logs do servidor
+/**
+ *  Função para registrar logs do servidor incluindo a data e hora do evento
+ * @param mensagem Mensagem a ser registrada no log
+ * @return void
+*/  
 void escrever_log(const char *mensagem) {
     pthread_mutex_lock(&log_mutex);
     FILE *f = fopen("./logs/log.txt", "a");
@@ -41,6 +45,55 @@ void escrever_log(const char *mensagem) {
     fclose(f);
     pthread_mutex_unlock(&log_mutex);
 }
+
+/**
+ * Função para ler o ficheiro de configuração e carregar as configurações
+ * @param config_path Caminho para o ficheiro de configuração
+ * @param ficheiro_jogos Ponteiro para armazenar o caminho do ficheiro de jogos
+ * @param ficheiro_solucoes Ponteiro para armazenar o caminho do ficheiro de soluções
+ * @param porta Ponteiro para armazenar a porta do servidor
+ * @return void
+ */
+void ler_configuracao(char *config_path, char *ficheiro_jogos, char *ficheiro_solucoes, int *porta) {
+    FILE *config = fopen(config_path, "r");
+    escrever_log("Inicio do servidor: Leitura do ficheiro de configuração");
+    if (config == NULL) {
+        escrever_log("Erro ao abrir o ficheiro de configuração");
+        printf("Erro ao abrir o ficheiro de configuração.\n");
+        exit(1);
+    }
+
+    char linha[256];
+    while (fgets(linha, sizeof(linha), config)) {
+        char *token = strtok(linha, "=");
+
+        if (strcmp(token, "ficheiro_jogos") == 0) {
+            token = strtok(NULL, "\n");
+            strcpy(ficheiro_jogos, token);
+            escrever_log("Ficheiro de jogos lido com sucesso");
+        } else if (strcmp(token, "ficheiro_solucoes") == 0) {
+            token = strtok(NULL, "\n");
+            strcpy(ficheiro_solucoes, token);
+            escrever_log("Ficheiro de soluções lido com sucesso");
+        } else if (strcmp(token, "porta") == 0) {
+            token = strtok(NULL, "\n");
+            *porta = atoi(token);
+            escrever_log("Porta lida com sucesso");
+        }
+    }
+    fclose(config);
+    escrever_log("Inicio do servidor: Configuração lida com sucesso");
+    printf("Configuração carregada com sucesso\n"); // Debug
+}
+
+
+
+/**
+ * Função para transformar o ficheiro de solucoes.txt numa matriz 3D
+ * @param ficheiro_jogos Caminho para o ficheiro de jogos
+ * @param matriz_of Matriz 3D para armazenar os jogos
+ * @return void
+ */
 void transforma_matriz_solucao(char *ficheiro_solucoes, int matriz_of[SIZE][LC][LC]) {
     char buffer[BUFFER_SIZE];
     ficheiro_solucoes[strcspn(ficheiro_solucoes, "\r")] = 0;
@@ -81,7 +134,12 @@ void transforma_matriz_solucao(char *ficheiro_solucoes, int matriz_of[SIZE][LC][
     escrever_log("Matriz solução transformada com sucesso de soluçoes.txt para array");
 }
 
-
+/**
+ * Função para transformar o ficheiro de jogos.txt numa matriz 3D
+ * @param ficheiro_jogos Caminho para o ficheiro de jogos
+ * @param matriz_of Matriz 3D para armazenar os jogos
+ * @return void
+ */
 void transforma_matriz(char *ficheiro_jogos,int matriz_of[SIZE][LC][LC]) {
     char buffer[BUFFER_SIZE];
     ficheiro_jogos[strcspn(ficheiro_jogos, "\r")] = 0;
@@ -121,6 +179,12 @@ void transforma_matriz(char *ficheiro_jogos,int matriz_of[SIZE][LC][LC]) {
     return; // Retornar a quantidade de jogos lidos
 }
 
+
+/**
+ * Função para escrever no terminal as matrizes de jogos atuais
+ * @param matriz_of Matriz 3D com os jogos
+ * @return void
+ */
 void ler_matrizes(int matriz_of[SIZE][LC][LC]) {
     for (int i = 0; i < SIZE; i++) {
         printf("Jogo %d:\n", i + 1);
@@ -134,6 +198,14 @@ void ler_matrizes(int matriz_of[SIZE][LC][LC]) {
     }
     escrever_log("Matrizes lidas com sucesso");
 }
+
+
+/**
+ * Função para escrever no terminal uma matriz de jogos específica mediante o ID
+ * @param matriz_of Matriz 3D com os jogos
+ * @param num ID do jogo
+ * @return void
+ */
 void ler_matrizes_id(int matriz_of[SIZE][LC][LC], int num) {
 
         printf("Jogo %d:\n", num);
@@ -144,93 +216,16 @@ void ler_matrizes_id(int matriz_of[SIZE][LC][LC], int num) {
             printf("\n");  // Nova linha após cada linha da matriz
         }
         printf("\n");  // Linha em branco entre jogos
-escrever_log("Matrizes lidas com sucesso");
-}
-
-void handle_sigint(int sig) {
-    printf("\nSIGINT received. Closing server socket...\n");
-    close(server_socket);
-    exit(0);
-}
-
-// Função para ler configurações do arquivo config.txt
-void ler_configuracao(char *config_path, char *ficheiro_jogos, char *ficheiro_solucoes, int *porta) {
-    FILE *config = fopen(config_path, "r");
-    escrever_log("Inicio do servidor: Leitura do ficheiro de configuração");
-    if (config == NULL) {
-        escrever_log("Erro ao abrir o ficheiro de configuração");
-        printf("Erro ao abrir o ficheiro de configuração.\n");
-        exit(1);
-    }
-
-    char linha[256];
-    while (fgets(linha, sizeof(linha), config)) {
-        char *token = strtok(linha, "=");
-
-        if (strcmp(token, "ficheiro_jogos") == 0) {
-            token = strtok(NULL, "\n");
-            strcpy(ficheiro_jogos, token);
-            escrever_log("Ficheiro de jogos lido com sucesso");
-        } else if (strcmp(token, "ficheiro_solucoes") == 0) {
-            token = strtok(NULL, "\n");
-            strcpy(ficheiro_solucoes, token);
-            escrever_log("Ficheiro de soluções lido com sucesso");
-        } else if (strcmp(token, "porta") == 0) {
-            token = strtok(NULL, "\n");
-            *porta = atoi(token);
-            escrever_log("Porta lida com sucesso");
-        }
-    }
-    fclose(config);
-    escrever_log("Inicio do servidor: Configuração lida com sucesso");
-    printf("Configuração carregada com sucesso\n"); // Debug
+        escrever_log("Matrizes lidas com sucesso");
 }
 
 
-// Função para enviar o menu para o cliente
-void enviar_menu_resolvedor(int client_socket) {
-    const char *menu =
-        "---------- Menu de Sudoku ----------\n"
-        "1. Resolver Tabuleiro Total.\n"
-        "2. Resolver Tabuleiro Parcial (n tentativas): .\n"
-        "3. O Servidor revela a Solução.\n"
-        "4. O Servidor revela a Solução Parcial.\n"
-        "5. Desistir.\n"
-        "------------------------------------\n";
-    printf("Enviando menu para o cliente\n"); // Debug
-    send(client_socket, menu, strlen(menu), 0);
-    escrever_log("Menu enviado com sucesso");
-}
-// Função para enviar o menu para o cliente
-void enviar_menu_apagador(int client_socket) {
-    const char *menu =
-        "---------- Menu de Sudoku ----------\n"
-        "1. Apagar Tabuleiro Total.\n"
-        "2. Apagar Tabuleiro Parcial (n tentativas): .\n"
-        "5. Desistir.\n"
-        "------------------------------------\n";
-    printf("Enviando menu para o cliente\n"); // Debug
-    send(client_socket, menu, strlen(menu), 0);
-    escrever_log("Menu enviado com sucesso");
-}
-
-// Função auxiliar para converter o tabuleiro 2D em uma string unidimensional
-void converter_tabuleiro_para_string(int tabuleiro[LC][LC], char *tabuleiro_str) {
-    int index = 0;
-    for (int i = 0; i < LC; i++) {
-        for (int j = 0; j < LC; j++) {
-            if (tabuleiro[i][j] == 0) {
-                tabuleiro_str[index++] = '_'; // Representação para valores desconhecidos
-            } else {
-                tabuleiro_str[index++] = tabuleiro[i][j] + '0'; // Converte para caractere
-            }
-        }
-    }
-    tabuleiro_str[index] = '\0'; // Termina a string
-    escrever_log("Tabuleiro convertido para string com sucesso");
-}
-
-// Formata a string do tabuleiro com as linhas e colunas do jogo
+/**
+ * Função para formatar o tabuleiro de 81 caracteres em um tabuleiro 9x9 com os devidos espaços es barras
+ * @param tabuleiro Tabuleiro de 81 caracteres
+ * @param formatted_board Tabuleiro formatado resultante
+ * @return void   
+ */
 void formatar_tabuleiro(char *tabuleiro, char *formatted_board) {
     int index = 0;
     for (int i = 0; i < 9; i++) {
@@ -254,8 +249,115 @@ void formatar_tabuleiro(char *tabuleiro, char *formatted_board) {
     escrever_log("Tabuleiro formatado com sucesso");
 }
 
-// Função para escolher e enviar o tabuleiro para o cliente
-void escolhe_tabuleiro(int client_socket, int num, int matriz[SIZE][LC][LC]) {
+
+/**
+ * Função auxiliar para converter o tabuleiro 2D em uma string unidimensional
+ * @param tabuleiro Tabuleiro 2D
+ * @param tabuleiro_str String unidimensional para armazenar o tabuleiro
+ */
+void converter_tabuleiro_para_string(int tabuleiro[LC][LC], char *tabuleiro_str) {
+    int index = 0;
+    for (int i = 0; i < LC; i++) {
+        for (int j = 0; j < LC; j++) {
+            if (tabuleiro[i][j] == 0) {
+                tabuleiro_str[index++] = '_'; // Representação para valores desconhecidos
+            } else {
+                tabuleiro_str[index++] = tabuleiro[i][j] + '0'; // Converte para caractere
+            }
+        }
+    }
+    tabuleiro_str[index] = '\0'; // Termina a string
+    escrever_log("Tabuleiro convertido para string com sucesso");
+}
+
+
+/** 
+ * Função para calcular o número total de células vazias num tabuleiro específico
+ * @param matriz Matriz 3D com os jogos
+ * @param num ID do jogo
+ * @return int Número total de células vazias
+ */
+int numero_total_vazias(int matriz[4][9][9], int num) {
+    int total_vazias = 0;
+    // Percorrer a matriz e registrar coordenadas de células vazias
+    for (int i = 0; i < 9; i++) {
+        for (int j = 0; j < 9; j++) {
+                if (matriz[num-1][i][j] == 0) {
+                    total_vazias++;
+                }
+        }
+    }
+
+    return total_vazias; 
+}
+
+/**
+ * Função para lidar com o sinal SIGINT (Ctrl + C)
+ * @param sig Sinal recebido
+ * @return void
+ */
+void handle_sigint(int sig) {
+    printf("\nSIGINT received. Closing server socket...\n");
+    close(server_socket);
+    exit(0);
+}
+
+
+
+/**
+ * Função para enviar o menu para o cliente Resolvedor
+ * 
+ * socket: send
+ * 
+ * @param client_socket Socket do cliente
+ * @return void
+ * 
+ */
+void enviar_menu_resolvedor(int client_socket) {
+    const char *menu =
+        "---------- Menu de Sudoku ----------\n"
+        "1. Resolver Tabuleiro Total.\n"
+        "2. Resolver Tabuleiro Parcial (n tentativas): .\n"
+        "3. O Servidor revela a Solução.\n"
+        "4. O Servidor revela a Solução Parcial.\n"
+        "5. Desistir.\n"
+        "------------------------------------\n";
+    printf("Enviando menu para o cliente\n"); // Debug
+    send(client_socket, menu, strlen(menu), 0);
+    escrever_log("Menu enviado com sucesso");
+}
+
+/**
+ * Função para enviar o menu para o cliente Apagador
+ * 
+ * socket: send
+ * 
+ * @param client_socket Socket do cliente
+ * @return void
+ */
+void enviar_menu_apagador(int client_socket) {
+    const char *menu =
+        "---------- Menu de Sudoku ----------\n"
+        "1. Apagar uma Celula do Tabuleiro.\n"
+        "2. Apagar Tabuleiro Parcial (n tentativas): .\n"
+        "5. Desistir.\n"
+        "------------------------------------\n";
+    printf("Enviando menu para o cliente\n"); // Debug
+    send(client_socket, menu, strlen(menu), 0);
+    escrever_log("Menu enviado com sucesso");
+}
+
+/**
+ * Função para escolher e enviar o tabuleiro para o cliente
+ * 
+ * socket: send - recv
+ * 
+ * @param client_socket Socket do cliente
+ * @param num ID do tabuleiro
+ * @param matriz Matriz 3D com os jogos
+ * @return void
+ */
+void envia_tabuleiro(int client_socket, int num, int matriz[SIZE][LC][LC]) {
     char tabuleiro_str[LC * LC + 1];  // String temporária para armazenar o tabuleiro unidimensional
     char formatted_tabuleiro[BUFFER_SIZE];
     char received_message[BUFFER_SIZE];
@@ -288,37 +390,41 @@ void escolhe_tabuleiro(int client_socket, int num, int matriz[SIZE][LC][LC]) {
     }
 }
 
-// Função para enviar solução para o cliente
+/**
+ *  Função para enviar solução para o cliente
+ * 
+ * Socket: send
+ * 
+ * @param client_socket Socket do cliente
+ * @param num ID do tabuleiro
+ * 
+ */
 void envia_solucao(int client_socket, int num) {
     char buffer[BUFFER_SIZE];
-    FILE *f = fopen("./jogos_solucoes/solucoes.txt", "r");
-    escrever_log("Inicio da leitura do ficheiro de soluções");
-    if (f == NULL) {
-        printf("Erro ao abrir o ficheiro das soluções para leitura.\n");
-        escrever_log("Erro ao abrir o ficheiro das soluções para leitura");
-        return;
-    }
+    char formatted_tabuleiro[BUFFER_SIZE];
 
-    printf("Enviando solução com ID %d para o cliente\n", num); // Debug
-    while (fgets(buffer, BUFFER_SIZE, f) != NULL) {
-        buffer[strcspn(buffer, "\n")] = 0;
-        int id = atoi(buffer);
-        if (fgets(buffer, BUFFER_SIZE, f) == NULL) {
-            break;
-        }
-        buffer[strcspn(buffer, "\n")] = 0;
-        if (num == id) {
-            char formatted_tabuleiro[BUFFER_SIZE];
-            formatar_tabuleiro(buffer, formatted_tabuleiro);
-            send(client_socket, formatted_tabuleiro, strlen(formatted_tabuleiro), 0);
-            break;
-        }
-    }
-    fclose(f);
+    converter_tabuleiro_para_string(matriz[num - 1], buffer); // Converte para string unidimensional
+    formatar_tabuleiro(buffer, formatted_tabuleiro);
+    send(client_socket, formatted_tabuleiro, strlen(formatted_tabuleiro), 0);
+    
     escrever_log("Solução enviada com sucesso");
 }
+
+
+
+/**
+ * Função para enviar o id do tabuleiro para o cliente
+ * 
+ * Socket: send
+ * 
+ * @param client_socket Socket do cliente
+ * @param num ID do tabuleiro
+ * @return void
+ */
 void enviar_id_tabuleiro(int client_socket, int num) {
+
     if (send(client_socket, &num, sizeof(num), 0) < 0) {
+
         perror("Erro ao enviar ID do tabuleiro");
         escrever_log("Erro ao enviar ID do tabuleiro");
         close(client_socket);
@@ -327,10 +433,19 @@ void enviar_id_tabuleiro(int client_socket, int num) {
     escrever_log("Enviar ID do tabuleiro ao cliente");
 
 }
+
+/**
+ * Função para apagar a informação da célula que o cliente escolheu
+ * 
+ * Socket: recv - send
+ * 
+ * @param client_socket Socket do cliente
+ * @param matriz_of Matriz 3D com os jogos
+ * @return void
+ */
 void apagador(int client_socket, int matriz_of[4][9][9]) {
     char buffer[BUFFER_SIZE];
     int num, linha, coluna;
-    int *total_vazias_ptr;
 
     printf("[DEBUG] Aguardando solicitação do cliente...\n");
     escrever_log("Recebendo solicitação do cliente");
@@ -371,23 +486,17 @@ void apagador(int client_socket, int matriz_of[4][9][9]) {
 
     printf("[DEBUG] Dados extraídos: Tabuleiro ID=%d, Linha=%d, Coluna=%d\n", num, linha, coluna);
 
-    // Determina qual variável será usada para total_vazias
-    if (num == 1) total_vazias_ptr = &zero_1;
-    else if (num == 2) total_vazias_ptr = &zero_2;
-    else if (num == 3) total_vazias_ptr = &zero_3;
-    else total_vazias_ptr = &zero_4;
 
     // Processa solicitação
     char resposta[BUFFER_SIZE];
     if (matriz_of[num - 1][linha][coluna] != 0) {
         matriz_of[num - 1][linha][coluna] = 0;
-        (*total_vazias_ptr)++;
 
-        snprintf(resposta, BUFFER_SIZE, "OK: Posição (%d, %d) apagada com sucesso.", linha, coluna);
+        snprintf(resposta, BUFFER_SIZE, "OK: Posição (%d, %d) apagada com sucesso.", linha+1, coluna+1);
         escrever_log("Valor apagado com sucesso");
         ler_matrizes_id(matriz_of, num);
     } else {
-        snprintf(resposta, BUFFER_SIZE, "ERRO: Posição (%d, %d) já está vazia.", linha, coluna);
+        snprintf(resposta, BUFFER_SIZE, "ERRO: Posição (%d, %d) já está vazia.", linha+1, coluna+1);
         escrever_log("Tentativa de apagar posição já vazia");
     }
 
@@ -402,7 +511,16 @@ void apagador(int client_socket, int matriz_of[4][9][9]) {
     }
 }
 
-
+/**
+ * Função para receber a tentativa do cliente e enviar o feedback
+ * 
+ * Socket: recv - send
+ * 
+ * @param client_socket Socket do cliente
+ * @param matriz_sol Matriz 3D com as soluções
+ * @param matriz_of Matriz 3D com os jogos
+ * @return void
+ */
 void recebe_tentativa_e_envia_feedback(int client_socket, int matriz_sol[4][9][9], int matriz_of[4][9][9]) {
     char buffer[BUFFER_SIZE];
     int num, linha, coluna, tentativa;
@@ -452,23 +570,15 @@ void recebe_tentativa_e_envia_feedback(int client_socket, int matriz_sol[4][9][9
         escrever_log("Feedback enviado ao cliente com sucesso");
     }
 }
-int numero_total_vazias(int matriz[4][9][9], int num) {
-    int total_vazias = 0;
-    // Percorrer a matriz e registrar coordenadas de células vazias
-    for (int i = 0; i < 9; i++) {
-        for (int j = 0; j < 9; j++) {
-                if (matriz[num-1][i][j] == 0) {
-                    total_vazias++;
-                }
-        }
-    }
 
-  
-    
-    return total_vazias; 
-}
 
-void *handle_client_leitor(void *client_socket){
+/**
+ * Função para lidar com o cliente Apagador
+ * 
+ * @param client_socket Socket do cliente
+ * @return void
+ */
+void *handle_client_Apagador(void *client_socket){
  int sock = *(int *)client_socket;
     free(client_socket);
     char buffer[BUFFER_SIZE];
@@ -500,7 +610,7 @@ void *handle_client_leitor(void *client_socket){
         }
         escrever_log("Pedido de tabuleiro recebido com sucesso");
         printf("Cliente %d: %s \n", client_id, buffer);
-        escolhe_tabuleiro(sock, num, matriz_of);
+        envia_tabuleiro(sock, num, matriz_of);
 
         //_____________________________________________________________
         enviar_menu_apagador(sock);
@@ -633,7 +743,13 @@ printf("[DEBUG] Opção processada para cliente %d.\n", client_id);
 
 
 }
-// Function to manage each client
+
+/**
+ * Função para lidar com o cliente Resolvedor
+ * 
+ * @param client_socket Socket do cliente
+ * @return void
+ */
 void *handle_client_escritor(void *client_socket) {
     int sock = *(int *)client_socket;
     free(client_socket);
@@ -665,7 +781,7 @@ void *handle_client_escritor(void *client_socket) {
         }
         escrever_log("Pedido de tabuleiro recebido com sucesso");
         printf("Cliente %d: %s \n", client_id, buffer);
-        escolhe_tabuleiro(sock, num, matriz_of);
+        envia_tabuleiro(sock, num, matriz_of);
 
         //_____________________________________________________________
         enviar_menu_resolvedor(sock);
@@ -722,7 +838,7 @@ void *handle_client_escritor(void *client_socket) {
                         break;
                     }
 
-                    escolhe_tabuleiro(sock, num, matriz_of);
+                    envia_tabuleiro(sock, num, matriz_of);
                     send(sock, "espera", strlen("espera"), 0);
                     total_vazias = numero_total_vazias(matriz_of, num);
                 }
@@ -856,6 +972,7 @@ int main(int argc, char *argv[]) {
 
     char ficheiro_jogos[100], ficheiro_solucoes[100];
     ler_configuracao(argv[1], ficheiro_jogos, ficheiro_solucoes, &porta);
+
     transforma_matriz(ficheiro_jogos, matriz_of);
     transforma_matriz_solucao(ficheiro_solucoes, matriz_solucao);
     ler_matrizes(matriz_of);
@@ -936,7 +1053,7 @@ int main(int argc, char *argv[]) {
 
         if (resolvedor == 0) {
             // Tenta criar uma thread para "leitor"
-            if (pthread_create(&tid, NULL, handle_client_leitor, (void *)new_sock) != 0) {
+            if (pthread_create(&tid, NULL, handle_client_Apagador, (void *)new_sock) != 0) {
                 escrever_log("Erro ao criar thread para o cliente leitor");
                 perror("Erro ao criar thread para o cliente leitor");
                 free(new_sock);

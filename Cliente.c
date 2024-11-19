@@ -5,8 +5,16 @@
 #include <arpa/inet.h>
 #include <time.h>
 #include "header.h"
+
 #define BUFFER_SIZE 1024
 #define SIZE 9
+
+/**
+ *  Escreve nos Logs do utilizador a mensagem pretendida com a data e hora do evento
+ * 
+ * @param mensagem Mensagem a ser registada no log : const char *
+ * @return void
+ */
 void escrever_log_cliente(const char *mensagem) {
     FILE *f = fopen("./logs/cliente_log.txt", "a");
     if (f == NULL) {
@@ -21,6 +29,13 @@ void escrever_log_cliente(const char *mensagem) {
     fprintf(f, "%s | %s.\n", timestamp, mensagem);
     fclose(f);
 }
+
+/**
+ * Função para transformar a string do tabuleiro em uma matriz 9x9
+ * 
+ * @param tabuleiro_str String do tabuleiro : char *
+ * @param matriz Matriz 9x9 para armazenar o tabuleiro : int [SIZE][SIZE]
+ */
 void string_para_matriz(char *tabuleiro_str, int matriz[SIZE][SIZE]) {
     int i = 0, j = 0;
     for (int k = 0; k < strlen(tabuleiro_str); k++) {
@@ -46,7 +61,15 @@ void string_para_matriz(char *tabuleiro_str, int matriz[SIZE][SIZE]) {
 }
 
 
-
+/**
+ * Função para ler o ficheiro de configuração do cliente e carregar as configurações
+ * 
+ * @param config_path Caminho para o ficheiro de configuração : const char *
+ * @param porta Ponteiro para armazenar a porta do servidor : int *
+ * @param ip_server Ponteiro para armazenar o IP do servidor : char *
+ * @param resolvedor Ponteiro para armazenar o resolvedor : int *
+ * @return void
+ */
 void ler_configuracao_cliente(const char *config_path, int *porta, char *ip_server, int *resolvedor) {
     FILE *config = fopen(config_path, "r");
     if (config == NULL) {
@@ -77,6 +100,12 @@ void ler_configuracao_cliente(const char *config_path, int *porta, char *ip_serv
     escrever_log_cliente("Configuração lida com sucesso");
 }
 
+
+/**
+ * Função para obter o ID do utilizador
+ * 
+ * @return ID do utilizador : int
+ */
 int get_new_user_id() {
     FILE *file = fopen("users.txt", "r+");
     if (file == NULL) {
@@ -100,6 +129,11 @@ int get_new_user_id() {
     return id;
 }
 
+/**
+ * Função para criar o socket do cliente
+ * 
+ * @return Socket do cliente : int
+ */
 int criar_socket_cliente() {
     int client_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (client_socket == -1) {
@@ -112,6 +146,14 @@ int criar_socket_cliente() {
     return client_socket;
 }
 
+/**
+ * Função para configurar o endereço do servidor
+ * 
+ * @param server_addr  Ponteiro para a estrutura do endereço do servidor : struct sockaddr_in
+ * @param porta Porta do servidor : int
+ * @param ip_server IP do servidor : char * 
+ * @return void
+ */
 void configurar_endereco_servidor(struct sockaddr_in *server_addr, int porta, const char *ip_server) {
     server_addr->sin_family = AF_INET;
     server_addr->sin_port = htons(porta);
@@ -119,6 +161,15 @@ void configurar_endereco_servidor(struct sockaddr_in *server_addr, int porta, co
     escrever_log_cliente("Endereço do servidor configurado com sucesso");
 }
 
+/**
+ * Função para conectar ao servidor
+ * 
+ * Socket : connect
+ * 
+ * @param client_socket Socket do cliente : int
+ * @param server_addr Ponteiro para a estrutura do endereço do servidor : struct sockaddr_in *
+ * @return void
+ */
 void conectar_servidor(int client_socket, struct sockaddr_in *server_addr) {
     if (connect(client_socket, (struct sockaddr *)server_addr, sizeof(*server_addr)) < 0) {
         perror("Erro ao conectar ao servidor");
@@ -129,6 +180,16 @@ void conectar_servidor(int client_socket, struct sockaddr_in *server_addr) {
     escrever_log_cliente("Cliente conectado ao servidor");
 }
 
+
+/**
+ * Função para enviar o ID do utilizador ao servidor
+ * 
+ * Socket : send
+ * 
+ * @param client_socket Socket do cliente : int
+ * @param client_id ID do utilizador : int
+ * @return void
+ */
 void enviar_id_cliente(int client_socket, int client_id) {
     if (send(client_socket, &client_id, sizeof(client_id), 0) < 0) {
         perror("Erro ao enviar ID do cliente");
@@ -139,6 +200,13 @@ void enviar_id_cliente(int client_socket, int client_id) {
     escrever_log_cliente("ID do cliente enviado com sucesso");
 }
 
+
+/**
+ * Função para imprimir a matriz do tabuleiro no terminal
+ * 
+ * @param matriz Matriz do tabuleiro : int [SIZE][SIZE]
+ * @return void
+ */
 void imprima_matriz(int matriz[9][9]){
 for(int i=0;i<9;i++){
     if(i%3==0 && i!=0){
@@ -155,6 +223,16 @@ for(int i=0;i<9;i++){
 }
 escrever_log_cliente("Matriz impressa com sucesso");
 }
+
+
+/**
+ * Função para escolher uma célula vazia aleatória
+ * 
+ * @param matriz Matriz do tabuleiro : int [SIZE][SIZE]
+ * @param linha Ponteiro para armazenar a linha da célula vazia : int *
+ * @param coluna Ponteiro para armazenar a coluna da célula vazia : int *
+ * @return 1 se a célula vazia foi escolhida, 0 caso contrário : int
+ */
 int escolhe_celula_sem_nada_aleatoria(int matriz[9][9], int *linha, int *coluna) {
     int vazias[81][2];
     int count = 0;
@@ -179,6 +257,16 @@ int escolhe_celula_sem_nada_aleatoria(int matriz[9][9], int *linha, int *coluna)
     escrever_log_cliente("Célula sem nada escolhida com sucesso");
     return 1;
 }
+
+
+/**
+ * Função para escolher uma célula preenchida aleatória
+ * 
+ * @param matriz Matriz do tabuleiro : int [SIZE][SIZE]
+ * @param linha Ponteiro para armazenar a linha da célula preenchida : int *
+ * @param coluna Ponteiro para armazenar a coluna da célula preenchida : int *
+ * @return 1 se a célula com algo foi escolhida, 0 caso contrário : int
+ */
 int escolhe_celula_com_algo(int matriz[9][9], int *linha, int *coluna) {
     int vazias[81][2];
     int count = 0;
@@ -204,6 +292,12 @@ int escolhe_celula_com_algo(int matriz[9][9], int *linha, int *coluna) {
     return 1;
 }
 
+/**
+ * Função para contar o número de células vazias num tabuleiro
+ * 
+ * @param matriz Matriz do tabuleiro : int [SIZE][SIZE]
+ * @return Número de células vazias : int
+ */
 int numCelulasVazias(int matriz[9][9]){
     int count = 0;
     for (int i = 0; i < 9; i++) {
@@ -216,6 +310,18 @@ int numCelulasVazias(int matriz[9][9]){
     return count;
 }
 
+
+/**
+ * Função para enviar a tentativa ao servidor
+ * 
+ * Socket : send
+ * 
+ * @param client_socket Socket do cliente : int
+ * @param num ID do tabuleiro : int
+ * @param linha Linha da célula : int
+ * @param coluna Coluna da célula : int
+ * @return void
+ */
 void envia_tentativa(int client_socket, int num, int linha, int coluna) {
     int tentativa = (rand() % 9) + 1;
     char buffer[BUFFER_SIZE];
@@ -233,6 +339,18 @@ void envia_tentativa(int client_socket, int num, int linha, int coluna) {
     printf("[DEBUG] Tentativa enviada com sucesso!\n");
 }
 
+
+/**
+ * Função para enviar a tentativa do Apagador ao servidor
+ * 
+ * Socket : send
+ * 
+ * @param client_socket Socket do cliente : int
+ * @param num ID do tabuleiro : int
+ * @param linha Linha da célula : int
+ * @param coluna Coluna da célula : int
+ * @return void
+ */
 void envia_tentativa_apaga(int client_socket, int num, int linha, int coluna) {
     char buffer[BUFFER_SIZE];
 
@@ -252,6 +370,12 @@ void envia_tentativa_apaga(int client_socket, int num, int linha, int coluna) {
     printf("[DEBUG] Solicitação de apagar enviada com sucesso!\n");
 }
 
+/**
+ * Função para processar o feedback do servidor
+ * 
+ * @param feedback Feedback do servidor : const char *
+ * @return void
+ */
 void processa_feedback(const char *feedback) {
     // Variável local para armazenar o valor temporário de casas vazias
 
@@ -267,6 +391,13 @@ void processa_feedback(const char *feedback) {
     }
 
 }
+
+/**
+ * Função para processar o feedback do Apagador do servidor
+ * 
+ * @param feedback Feedback do servidor : const char *
+ * @return void
+ */
 void processa_feedback_apaga(const char *feedback) {
     // Variável local para armazenar o valor temporário de casas vazias
 
@@ -283,7 +414,16 @@ void processa_feedback_apaga(const char *feedback) {
 
 }
 
-void feedback_Apaga(int client_socket) {
+
+/**
+ * Função para receber o feedback do servidor
+ * 
+ * Socket : recv
+ * 
+ * @param client_socket Socket do cliente : int
+ * @return void
+ */
+void recebe_feedback_Apaga(int client_socket) {
     char buffer[BUFFER_SIZE];
 
     escrever_log_cliente("Aguardando feedback do servidor");
@@ -300,6 +440,18 @@ void feedback_Apaga(int client_socket) {
     processa_feedback_apaga(buffer);
 }
 
+
+
+
+
+/**
+ * Função para receber o feedback do servidor
+ * 
+ * Socket : recv - send
+ * 
+ * @param client_socket Socket do cliente : int
+ * @return void
+ */
 void recebe_feedback_tentativa(int client_socket) {
     char buffer[BUFFER_SIZE];
 
@@ -318,6 +470,16 @@ void recebe_feedback_tentativa(int client_socket) {
     send(client_socket, "Feedback recebido", 17, 0);
 }
 
+
+/**
+ * Função para receber o tabuleiro do servidor
+ * 
+ * Socket : recv - send
+ * 
+ * @param client_socket Socket do cliente : int
+ * @param matriz Matriz para armazenar o tabuleiro : int [SIZE][SIZE]
+ * @return void
+ */
 void recebe_Tabuleiro(int client_socket, int matriz[9][9]) {
     char buffer[BUFFER_SIZE];
     int bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
@@ -335,40 +497,39 @@ void recebe_Tabuleiro(int client_socket, int matriz[9][9]) {
 
 }
 
-void comunicar_servidor(int client_socket, int resolvedor) {
+
+void comunicacao_Resolvedor(int client_socket){
     char buffer[BUFFER_SIZE];
     int matriz[SIZE][SIZE] = {0}; // Inicializa a matriz com zeros
     int id_tabuleiro;
     int linha_branca;
     int coluna_branca;
-    int (*total_vazias_ptr);
-    if (resolvedor == 1) {
-        if (recv(client_socket, &id_tabuleiro, sizeof(id_tabuleiro), 0) <= 0) {
+    if (recv(client_socket, &id_tabuleiro, sizeof(id_tabuleiro), 0) <= 0) {
             escrever_log_cliente("Erro ao receber ID do tabuleiro");
             perror("Erro ao receber ID do tabuleiro");
             close(client_socket);
             return;
         }
-        escrever_log_cliente("ID do tabuleiro recebido com sucesso");
-        printf("Id recebido %d \n", id_tabuleiro);
+    escrever_log_cliente("ID do tabuleiro recebido com sucesso");
+    printf("Id recebido %d \n", id_tabuleiro);
 
-        // Inicia o loop para enviar e receber respostas
-        while (1) {
-            // solicita Tabuleiro
-            // ____________________________________
-            strcpy(buffer, "Solicita Tabuleiro");
-            send(client_socket, buffer, strlen(buffer), 0);
-            escrever_log_cliente("Solicitação de tabuleiro enviada");
+    // Inicia o loop para enviar e receber respostas
+    while (1) {
+        // solicita Tabuleiro
+        // ____________________________________
+        strcpy(buffer, "Solicita Tabuleiro");
+        send(client_socket, buffer, strlen(buffer), 0);
+        escrever_log_cliente("Solicitação de tabuleiro enviada");
             
-            recebe_Tabuleiro(client_socket, matriz);
-            imprima_matriz(matriz);
+        recebe_Tabuleiro(client_socket, matriz);
+        imprima_matriz(matriz);
 
-            // _______________________________________________
-            // Recebe o menu inicial do servidor
-            printf("Recebe menu inicial\n");
-            int bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
-            escrever_log_cliente("Menu inicial recebido");
-            printf("Depois de receber menu inicial\n");
+        // _______________________________________________
+        // Recebe o menu inicial do servidor
+        printf("Recebe menu inicial\n");
+        int bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+        escrever_log_cliente("Menu inicial recebido");
+        printf("Depois de receber menu inicial\n");
             if (bytes_received <= 0) {
                 escrever_log_cliente("Erro ao receber menu inicial");
                 printf("Servidor desconectado.\n");
@@ -569,7 +730,29 @@ void comunicar_servidor(int client_socket, int resolvedor) {
                     printf("[DEBUG] opção escolhida: %d\n", resposta);
                     break;
             }
-        }
+    }        
+}
+
+/**
+void comunicacao_Apagador(int client_socket){
+    char buffer[BUFFER_SIZE];
+    int matriz[SIZE][SIZE] = {0}; // Inicializa a matriz com zeros
+    int id_tabuleiro;
+    int linha_branca;
+    int coluna_branca;
+    
+        
+}*/
+
+
+void comunicar_servidor(int client_socket, int resolvedor) {
+    
+
+    if (resolvedor == 1) {
+        comunicacao_Resolvedor(client_socket);
+
+    }    
+    /*
     }else{//apagador
         int linha_ocupada, coluna_ocupada;
     
@@ -678,7 +861,7 @@ void comunicar_servidor(int client_socket, int resolvedor) {
     
                                 // Recebe feedback do servidor
                                 printf("[DEBUG] Tentativa enviada. Aguardando feedback do servidor...\n");
-                                feedback_Apaga(client_socket);
+                                recebe_feedback_Apaga(client_socket);
     
                             } else {
                                 escrever_log_cliente("Nenhuma posição ocupada encontrada. Sudoku Apagado!");
@@ -731,7 +914,7 @@ void comunicar_servidor(int client_socket, int resolvedor) {
     
                                 // Recebe feedback do servidor
                                 printf("[DEBUG] Tentativa enviada. Aguardando feedback do servidor...\n");
-                                feedback_Apaga(client_socket);
+                                recebe_feedback_Apaga(client_socket);
     
                             } else {
                                 escrever_log_cliente("Nenhuma posição ocupada encontrada. Sudoku Apagado!");
@@ -763,7 +946,7 @@ void comunicar_servidor(int client_socket, int resolvedor) {
                     break;
             }
         }
-    }
+    }*/
 }    
 
 int main(int argc, char *argv[]) {
