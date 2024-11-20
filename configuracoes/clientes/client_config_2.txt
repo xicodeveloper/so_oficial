@@ -1,4 +1,3 @@
 porta=4001
 ip_servidor=10.2.15.230
 cliente_id=2
-resolvedor=1

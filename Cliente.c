@@ -67,10 +67,9 @@ void string_para_matriz(char *tabuleiro_str, int matriz[SIZE][SIZE]) {
  * @param config_path Caminho para o ficheiro de configuração : const char *
  * @param porta Ponteiro para armazenar a porta do servidor : int *
  * @param ip_server Ponteiro para armazenar o IP do servidor : char *
- * @param resolvedor Ponteiro para armazenar o resolvedor : int *
  * @return void
  */
-void ler_configuracao_cliente(const char *config_path, int *porta, char *ip_server, int *resolvedor) {
+void ler_configuracao_cliente(const char *config_path, int *porta, char *ip_server) {
     FILE *config = fopen(config_path, "r");
     if (config == NULL) {
         printf("Erro ao abrir o ficheiro de configuração.\n");
@@ -90,10 +89,6 @@ void ler_configuracao_cliente(const char *config_path, int *porta, char *ip_serv
             token = strtok(NULL, "\n");
             strcpy(ip_server, token);
             escrever_log_cliente("IP do servidor lido com sucesso");
-        }else if(strcmp(token, "resolvedor") == 0){
-            token = strtok(NULL, "\n");
-            *resolvedor = atoi(token);
-            escrever_log_cliente("Resolvedor lida com sucesso");
         }
     }
     fclose(config);
@@ -497,19 +492,18 @@ void recebe_Tabuleiro(int client_socket, int matriz[9][9]) {
 
 }
 
-
-void comunicacao_Resolvedor(int client_socket){
+void comunicacao_Resolvedor(int client_socket) {
     char buffer[BUFFER_SIZE];
     int matriz[SIZE][SIZE] = {0}; // Inicializa a matriz com zeros
     int id_tabuleiro;
     int linha_branca;
     int coluna_branca;
     if (recv(client_socket, &id_tabuleiro, sizeof(id_tabuleiro), 0) <= 0) {
-            escrever_log_cliente("Erro ao receber ID do tabuleiro");
-            perror("Erro ao receber ID do tabuleiro");
-            close(client_socket);
-            return;
-        }
+        escrever_log_cliente("Erro ao receber ID do tabuleiro");
+        perror("Erro ao receber ID do tabuleiro");
+        close(client_socket);
+        return;
+    }
     escrever_log_cliente("ID do tabuleiro recebido com sucesso");
     printf("Id recebido %d \n", id_tabuleiro);
 
@@ -520,7 +514,7 @@ void comunicacao_Resolvedor(int client_socket){
         strcpy(buffer, "Solicita Tabuleiro");
         send(client_socket, buffer, strlen(buffer), 0);
         escrever_log_cliente("Solicitação de tabuleiro enviada");
-            
+
         recebe_Tabuleiro(client_socket, matriz);
         imprima_matriz(matriz);
 
@@ -530,430 +524,505 @@ void comunicacao_Resolvedor(int client_socket){
         int bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
         escrever_log_cliente("Menu inicial recebido");
         printf("Depois de receber menu inicial\n");
-            if (bytes_received <= 0) {
-                escrever_log_cliente("Erro ao receber menu inicial");
-                printf("Servidor desconectado.\n");
-                return;
-            }
-            printf("bytes_received: %d\n", bytes_received);
-            buffer[bytes_received] = '\0';
-            printf("Resposta do servidor:\n%s", buffer);
+        if (bytes_received <= 0) {
+            escrever_log_cliente("Erro ao receber menu inicial");
+            printf("Servidor desconectado.\n");
+            return;
+        }
+        printf("bytes_received: %d\n", bytes_received);
+        buffer[bytes_received] = '\0';
+        printf("Resposta do servidor:\n%s", buffer);
 
-            printf("Insira um número ('5' para encerrar): ");
-            escrever_log_cliente("Esperando opcao do cliente");
-            memset(buffer, 0, BUFFER_SIZE);
-            fgets(buffer, BUFFER_SIZE, stdin);
+        printf("Insira um número ('5' para encerrar): ");
+        escrever_log_cliente("Esperando opcao do cliente");
+        memset(buffer, 0, BUFFER_SIZE);
+        fgets(buffer, BUFFER_SIZE, stdin);
 
-            if (strlen(buffer) == 1) {
-                printf("Por favor, insira um número válido.\n");
-                continue;
-            }
+        if (strlen(buffer) == 1) {
+            printf("Por favor, insira um número válido.\n");
+            continue;
+        }
 
-            // Remove o newline que `fgets` deixa no buffer
-            buffer[strcspn(buffer, "\n")] = 0;
+        // Remove o newline que `fgets` deixa no buffer
+        buffer[strcspn(buffer, "\n")] = 0;
 
-            int resposta = atoi(buffer); // Converte a entrada para inteiro
+        int resposta = atoi(buffer); // Converte a entrada para inteiro
 
-            // Envia a opção para o servidor
-            if (send(client_socket, buffer, strlen(buffer), 0) < 0) {
-                escrever_log_cliente("Erro ao enviar opção para o servidor");
-                perror("Erro ao enviar dados");
-                return;
-            }
-            escrever_log_cliente("Opção enviada com sucesso");
-            switch (resposta) {
-                case 1:
-                    // Determina o ponteiro para a variável global de casas vazias
-                    // Determina o ponteiro para a variável global de casas vazias
+        // Envia a opção para o servidor
+        if (send(client_socket, buffer, strlen(buffer), 0) < 0) {
+            escrever_log_cliente("Erro ao enviar opção para o servidor");
+            perror("Erro ao enviar dados");
+            return;
+        }
+        escrever_log_cliente("Opção enviada com sucesso");
+        switch (resposta) {
+            case 1:
+                // Determina o ponteiro para a variável global de casas vazias
+                // Determina o ponteiro para a variável global de casas vazias
 
-                    printf("[DEBUG] Opção 1: Resolver o tabuleiro completo selecionada.\n");
+                printf("[DEBUG] Opção 1: Resolver o tabuleiro completo selecionada.\n");
 
-                    escrever_log_cliente("Opção 1: Resolver o tabuleiro completo selecionada");
-                    // Recebe confirmação do servidor
-                    bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
-                    if (bytes_received > 0) {
-                        buffer[bytes_received] = '\0';
-                        printf("Resposta do servidor:\n%s", buffer);
+                escrever_log_cliente("Opção 1: Resolver o tabuleiro completo selecionada");
+                // Recebe confirmação do servidor
+                bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+                if (bytes_received > 0) {
+                    buffer[bytes_received] = '\0';
+                    printf("Resposta do servidor:\n%s", buffer);
+                } else {
+                    escrever_log_cliente("Erro ao receber resposta do servidor");
+                    perror("[ERRO] Falha ao receber resposta do servidor");
+                    return;
+                }
+                escrever_log_cliente("Confirmação de opção recebida");
+                int total_vazias = numCelulasVazias(matriz);
+
+                while (total_vazias > 0) {
+
+                    printf("Número total de casas vazias: %d\n", total_vazias);
+                    escrever_log_cliente("Número total de casas vazias recebido com sucesso");
+                    if (escolhe_celula_sem_nada_aleatoria(matriz, &linha_branca, &coluna_branca)) {
+                        printf("Posição vazia encontrada em: linha %d, coluna %d\n", linha_branca, coluna_branca);
+                        printf("O ID do tabuleiro é: %d\n", id_tabuleiro);
+
+                        // Envia tentativa ao servidor
+                        envia_tentativa(client_socket, id_tabuleiro, linha_branca, coluna_branca);  //send
+                        // Recebe feedback do servidor
+                        printf("[DEBUG] Tentativa enviada. Aguardando feedback do servidor...\n");
+
+                        recebe_feedback_tentativa(client_socket);  //recv - send
+                    } else {
+                        escrever_log_cliente("Nenhuma posição vazia encontrada. Sudoku resolvido!");
+                        printf("Nenhuma posição vazia encontrada. Sudoku resolvido!\n");
+                        break;
                     }
-                    else {
-                            escrever_log_cliente("Erro ao receber resposta do servidor");
-                            perror("[ERRO] Falha ao receber resposta do servidor");
-                            return;
-                    }    
-                    escrever_log_cliente("Confirmação de opção recebida");
-                    int total_vazias = numCelulasVazias(matriz);
 
-                    while (total_vazias > 0) {
+                    recebe_Tabuleiro(client_socket, matriz); //recv - send
+                    imprima_matriz(matriz);
+                    bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0); // recv
 
-                        printf("Número total de casas vazias: %d\n", total_vazias);
-                        escrever_log_cliente("Número total de casas vazias recebido com sucesso");
+                    total_vazias = numCelulasVazias(matriz);
+
+                }
+                printf("[INFO] Tabuleiro %d resolvido!\n", id_tabuleiro);
+                escrever_log_cliente("Tabuleiro resolvido com sucesso");
+                break;
+
+            case 2:
+                printf("[DEBUG] Opção 2: Solicitar solução parcial selecionada.\n");
+                escrever_log_cliente("Opção 2: Solicitar solução parcial selecionada");
+                bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+                if (bytes_received > 0) {
+                    buffer[bytes_received] = '\0';
+                    escrever_log_cliente("Resposta do servidor recebida da opcao 2");
+                    printf("Resposta do servidor:\n%s", buffer);
+                    printf("Quantas tentativas deseja fazer?\n");
+                    escrever_log_cliente("Pedir tentativas ao cliente.");
+                    memset(buffer, 0, BUFFER_SIZE);
+                    fgets(buffer, BUFFER_SIZE, stdin);
+
+                    // Remove o newline que `fgets` deixa no buffer
+                    buffer[strcspn(buffer, "\n")] = 0;
+
+                    int tentativa = atoi(buffer); // Converte a entrada para inteiro
+
+                    if (send(client_socket, &tentativa, sizeof(tentativa), 0) < 0) {
+                        escrever_log_cliente("Erro ao enviar número de tentativas");
+                        perror("Erro ao enviar número de tentativas");
+                        close(client_socket);
+                        exit(EXIT_FAILURE);
+                    }
+                    escrever_log_cliente("Número de tentativas enviadas com sucesso");
+                    // Enquanto houver casas vazias, envia tentativas e recebe feedback
+                    while (tentativa != 0) {
                         if (escolhe_celula_sem_nada_aleatoria(matriz, &linha_branca, &coluna_branca)) {
                             printf("Posição vazia encontrada em: linha %d, coluna %d\n", linha_branca, coluna_branca);
                             printf("O ID do tabuleiro é: %d\n", id_tabuleiro);
 
                             // Envia tentativa ao servidor
-                            envia_tentativa(client_socket, id_tabuleiro, linha_branca, coluna_branca);  //send
+                            envia_tentativa(client_socket, id_tabuleiro, linha_branca, coluna_branca); // send 
+
                             // Recebe feedback do servidor
                             printf("[DEBUG] Tentativa enviada. Aguardando feedback do servidor...\n");
+                            recebe_feedback_tentativa(client_socket);
 
-                            recebe_feedback_tentativa(client_socket);  //recv - send
                         } else {
                             escrever_log_cliente("Nenhuma posição vazia encontrada. Sudoku resolvido!");
                             printf("Nenhuma posição vazia encontrada. Sudoku resolvido!\n");
                             break;
                         }
-                        
-                        recebe_Tabuleiro(client_socket, matriz); //recv - send
-                        imprima_matriz(matriz);
-                        bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0); // recv
-
-                        total_vazias = numCelulasVazias(matriz);
-
+                        tentativa--;
                     }
-                    printf("[INFO] Tabuleiro %d resolvido!\n", id_tabuleiro);
-                    escrever_log_cliente("Tabuleiro resolvido com sucesso");
-                    break;
-
-                case 2:
-                    printf("[DEBUG] Opção 2: Solicitar solução parcial selecionada.\n");
-                    escrever_log_cliente("Opção 2: Solicitar solução parcial selecionada");
-                    bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
-                    if (bytes_received > 0) {
-                        buffer[bytes_received] = '\0';
-                        escrever_log_cliente("Resposta do servidor recebida da opcao 2");
-                        printf("Resposta do servidor:\n%s", buffer);
-                        printf("Quantas tentativas deseja fazer?\n");
-                        escrever_log_cliente("Pedir tentativas ao cliente.");
-                        memset(buffer, 0, BUFFER_SIZE);
-                        fgets(buffer, BUFFER_SIZE, stdin);
-
-                        // Remove o newline que `fgets` deixa no buffer
-                        buffer[strcspn(buffer, "\n")] = 0;
-
-                        int tentativa = atoi(buffer); // Converte a entrada para inteiro
-
-                        if (send(client_socket, &tentativa, sizeof(tentativa), 0) < 0) {
-                            escrever_log_cliente("Erro ao enviar número de tentativas");
-                            perror("Erro ao enviar número de tentativas");
-                            close(client_socket);
-                            exit(EXIT_FAILURE);
-                        }
-                        escrever_log_cliente("Número de tentativas enviadas com sucesso");
-                        // Enquanto houver casas vazias, envia tentativas e recebe feedback
-                        while (tentativa != 0) {
-                            if (escolhe_celula_sem_nada_aleatoria(matriz, &linha_branca, &coluna_branca)) {
-                                printf("Posição vazia encontrada em: linha %d, coluna %d\n", linha_branca, coluna_branca);
-                                printf("O ID do tabuleiro é: %d\n", id_tabuleiro);
-
-                                // Envia tentativa ao servidor
-                                envia_tentativa(client_socket, id_tabuleiro, linha_branca, coluna_branca); // send 
-
-                                // Recebe feedback do servidor
-                                printf("[DEBUG] Tentativa enviada. Aguardando feedback do servidor...\n");
-                                recebe_feedback_tentativa(client_socket);
-                                
-
-                            } else {
-                                escrever_log_cliente("Nenhuma posição vazia encontrada. Sudoku resolvido!");
-                                printf("Nenhuma posição vazia encontrada. Sudoku resolvido!\n");
-                                break;
-                            }
-                            tentativa--;
-                        }
-                    } else {
-                        escrever_log_cliente("Erro ao receber resposta do servidor da opcocao 2");
-                        perror("[ERRO] Falha ao receber resposta do servidor");
-                        return;
-                    }
-                    break;
-                case 3:
-                    printf("[DEBUG] Opção 3: Solicitar solução parcial selecionada.\n");
-                    escrever_log_cliente("Opção 3: Solicitar solução parcial selecionada");
-                    bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
-                    if (bytes_received > 0) {
-                        escrever_log_cliente("Resposta do servidor recebida da opcao 3");
-                        buffer[bytes_received] = '\0';
-                        printf("Resposta do servidor: %s", buffer);
-                        send(client_socket, "Resposta do servidor confirmada", 25, 0);
-                        recebe_Tabuleiro(client_socket, matriz);
-                        imprima_matriz(matriz);
-                    } else {
-                        perror("[ERRO] Falha ao receber resposta do servidor");
-                        escrever_log_cliente("Erro ao receber resposta do servidor da opcao 3");
-                        return;
-                    }
-                    break;
-
-                case 4:
-                    printf("[DEBUG] Opção 4: Solicitar solução parcial selecionada.\n");
-                    escrever_log_cliente("Opção 4: Solicitar solução parcial selecionada");
-                    bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
-                    if (bytes_received > 0) {
-                        escrever_log_cliente("Resposta do servidor recebida da opcao 4");
-                        buffer[bytes_received] = '\0';
-                        printf("Resposta do servidor:\n%s", buffer);
-                    } else {
-                        escrever_log_cliente("Erro ao receber resposta do servidor da opcao 4");
-                        perror("[ERRO] Falha ao receber resposta do servidor");
-                        return;
-                    }
-                    break;
-
-                case 5:
-                    printf("[DEBUG] Opção 5: Desistir do Jogo.\n");
-                    escrever_log_cliente("Opção 5: Desistir do Jogo");
-                    bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
-                    if (bytes_received > 0) {
-                        escrever_log_cliente("Resposta do servidor recebida da opcao 5");
-                        buffer[bytes_received] = '\0';
-                        printf("Resposta do servidor:\n%s", buffer);
-                    } else {
-                        escrever_log_cliente("Erro ao receber resposta do servidor da opcao 5");
-                        perror("[ERRO] Falha ao receber resposta do servidor");
-                    }
+                } else {
+                    escrever_log_cliente("Erro ao receber resposta do servidor da opcocao 2");
+                    perror("[ERRO] Falha ao receber resposta do servidor");
                     return;
-                    break; // Sai do loop principal no cliente
+                }
+                break;
+            case 3:
+                printf("[DEBUG] Opção 3: Solicitar solução parcial selecionada.\n");
+                escrever_log_cliente("Opção 3: Solicitar solução parcial selecionada");
+                bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+                if (bytes_received > 0) {
+                    escrever_log_cliente("Resposta do servidor recebida da opcao 3");
+                    buffer[bytes_received] = '\0';
+                    printf("Resposta do servidor: %s", buffer);
+                    send(client_socket, "Resposta do servidor confirmada", 25, 0);
+                    recebe_Tabuleiro(client_socket, matriz);
+                    imprima_matriz(matriz);
+                } else {
+                    perror("[ERRO] Falha ao receber resposta do servidor");
+                    escrever_log_cliente("Erro ao receber resposta do servidor da opcao 3");
+                    return;
+                }
+                break;
 
-                default:
-                    printf("[ERRO] Opção inválida! Tente novamente.\n");
-                    escrever_log_cliente("Opção inválida! Tente novamente");
-                    printf("[DEBUG] opção escolhida: %d\n", resposta);
-                    bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
-                    if (bytes_received > 0) {
-                        escrever_log_cliente("Resposta do servidor recebida da opcao invalida");
-                        buffer[bytes_received] = '\0';
-                        printf("Resposta do servidor:\n%s", buffer);
-                    } else {
-                        escrever_log_cliente("Erro ao receber resposta do servidor da opcao invalida");
-                        perror("[ERRO] Falha ao receber resposta do servidor");
-                    }
-                    printf("[DEBUG] opção escolhida: %d\n", resposta);
-                    break;
-            }
-    }        
+            case 4:
+                printf("[DEBUG] Opção 4: Solicitar solução parcial selecionada.\n");
+                escrever_log_cliente("Opção 4: Solicitar solução parcial selecionada");
+                bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+                if (bytes_received > 0) {
+                    escrever_log_cliente("Resposta do servidor recebida da opcao 4");
+                    buffer[bytes_received] = '\0';
+                    printf("Resposta do servidor:\n%s", buffer);
+                } else {
+                    escrever_log_cliente("Erro ao receber resposta do servidor da opcao 4");
+                    perror("[ERRO] Falha ao receber resposta do servidor");
+                    return;
+                }
+                break;
+
+            case 5:
+                printf("[DEBUG] Opção 5: Desistir do Jogo.\n");
+                escrever_log_cliente("Opção 5: Desistir do Jogo");
+                bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+                if (bytes_received > 0) {
+                    escrever_log_cliente("Resposta do servidor recebida da opcao 5");
+                    buffer[bytes_received] = '\0';
+                    printf("Resposta do servidor:\n%s", buffer);
+                } else {
+                    escrever_log_cliente("Erro ao receber resposta do servidor da opcao 5");
+                    perror("[ERRO] Falha ao receber resposta do servidor");
+                }
+                return;
+                break; // Sai do loop principal no cliente
+
+            default:
+                printf("[ERRO] Opção inválida! Tente novamente.\n");
+                escrever_log_cliente("Opção inválida! Tente novamente");
+                printf("[DEBUG] opção escolhida: %d\n", resposta);
+                bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+                if (bytes_received > 0) {
+                    escrever_log_cliente("Resposta do servidor recebida da opcao invalida");
+                    buffer[bytes_received] = '\0';
+                    printf("Resposta do servidor:\n%s", buffer);
+                } else {
+                    escrever_log_cliente("Erro ao receber resposta do servidor da opcao invalida");
+                    perror("[ERRO] Falha ao receber resposta do servidor");
+                }
+                printf("[DEBUG] opção escolhida: %d\n", resposta);
+                break;
+        }
+    }
 }
 
-/**
-void comunicacao_Apagador(int client_socket){
+void comunicacao_Apagador(int client_socket) {
     char buffer[BUFFER_SIZE];
     int matriz[SIZE][SIZE] = {0}; // Inicializa a matriz com zeros
     int id_tabuleiro;
-    int linha_branca;
-    int coluna_branca;
-    
-        
-}*/
+    //int linha_branca;
+    //int coluna_branca;
 
+    int linha_ocupada, coluna_ocupada;
 
-void comunicar_servidor(int client_socket, int resolvedor) {
-    
+    if (recv(client_socket, &id_tabuleiro, sizeof(id_tabuleiro), 0) <= 0) {
+        escrever_log_cliente("Erro ao receber ID do tabuleiro");
+        perror("Erro ao receber ID do tabuleiro");
+        close(client_socket);
+        return;
+    }
+    escrever_log_cliente("ID do tabuleiro recebido com sucesso");
+    printf("Id recebido %d", id_tabuleiro);
 
-    if (resolvedor == 1) {
-        comunicacao_Resolvedor(client_socket);
-
-    }    
-    /*
-    }else{//apagador
-        int linha_ocupada, coluna_ocupada;
-    
-        if (recv(client_socket, &id_tabuleiro, sizeof(id_tabuleiro), 0) <= 0) {
-            escrever_log_cliente("Erro ao receber ID do tabuleiro");
-            perror("Erro ao receber ID do tabuleiro");
-            close(client_socket);
+    // Inicia o loop para enviar e receber respostas
+    while (1) {
+        // solicita Tabuleiro
+        // ____________________________________
+        strcpy(buffer, "Solicita Tabuleiro");
+        send(client_socket, buffer, strlen(buffer), 0);
+        escrever_log_cliente("Solicitação de tabuleiro enviada");
+        // Recebe o tabuleiro do servidor
+        int bytes_received2 = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+        if (bytes_received2 <= 0) {
+            escrever_log_cliente("Erro ao receber tabuleiro");
+            printf("Servidor desconectado.\n");
             return;
         }
-        escrever_log_cliente("ID do tabuleiro recebido com sucesso");
-        printf("Id recebido %d", id_tabuleiro);
-    
-        // Inicia o loop para enviar e receber respostas
-        while (1) {
-            //solicita Tabuleiro
-            //____________________________________
-            strcpy(buffer, "Solicita Tabuleiro");
-            send(client_socket, buffer, strlen(buffer), 0);
-            escrever_log_cliente("Solicitação de tabuleiro enviada");
-            // Recebe o tabuleiro do servidor
-            int bytes_received2 = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
-            if (bytes_received2 <= 0) {
-                escrever_log_cliente("Erro ao receber tabuleiro");
-                printf("Servidor desconectado.\n");
-                return;
+        escrever_log_cliente("Tabuleiro recebido com sucesso");
+        buffer[bytes_received2] = '\0'; // Corrigido para usar buffer
+        printf("\nTabuleiro enviado:\n%s\n", buffer);
+        send(client_socket, "Tabuleiro recebido\0", 19, 0);
+        escrever_log_cliente("Confirmação de tabuleiro enviada");
+        // Converte a string para a matriz
+        string_para_matriz(buffer, matriz);
+        printf("Matriz transformada:\n");
+        imprima_matriz(matriz);
+
+        // _______________________________________________
+        // Recebe o menu inicial do servidor
+        printf("Recebe menu inicial\n");
+        int bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+        escrever_log_cliente("Menu inicial recebido");
+        printf("Depois de receber menu inicial\n");
+        if (bytes_received <= 0) {
+            escrever_log_cliente("Erro ao receber menu inicial");
+            printf("Servidor desconectado.\n");
+            return;
+        }
+        printf("bytes_received: %d\n", bytes_received);
+        buffer[bytes_received] = '\0';
+        printf("Resposta do servidor:\n%s", buffer);
+
+        printf("Insira um número ('5' para encerrar): ");
+        escrever_log_cliente("Esperando opcao do cliente");
+        memset(buffer, 0, BUFFER_SIZE);
+        fgets(buffer, BUFFER_SIZE, stdin);
+
+        if (strlen(buffer) == 1) {
+            printf("Por favor, insira um número válido.\n");
+            continue;
+        }
+
+        // Remove o newline que `fgets` deixa no buffer
+        buffer[strcspn(buffer, "\n")] = 0;
+
+        int resposta = atoi(buffer); // Converte a entrada para inteiro
+
+        // Envia a opção para o servidor
+        if (send(client_socket, buffer, strlen(buffer), 0) < 0) {
+            escrever_log_cliente("Erro ao enviar opção para o servidor");
+            perror("Erro ao enviar dados");
+            return;
+        }
+        escrever_log_cliente("Opção enviada com sucesso");
+        switch (resposta) {
+            case 1:
+                
+
+                printf("[DEBUG] Opção 1: Apagar o tabuleiro completo selecionada.\n");
+                escrever_log_cliente("Opção 1: Apagar o tabuleiro completo selecionada");
+                // Recebe confirmação do servidor
+                bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+                escrever_log_cliente("Confirmação de tabuleiro recebida");
+                
+                if (bytes_received > 0) {
+                    escrever_log_cliente("Tabuleiro recebido com sucesso");
+                    buffer[bytes_received] = '\0';
+                    printf("Resposta do servidor:\n%s", buffer);
+                    int num_vazias = numCelulasVazias(matriz);
+                    while (num_vazias < 81) {
+                        printf("Número total de casas vazias: %d\n", num_vazias);
+                        escrever_log_cliente("Número total de casas vazias recebido com sucesso");
+                        if (escolhe_celula_com_algo(matriz, &linha_ocupada, &coluna_ocupada)) {
+                            printf("Posição ocupada encontrada em: linha %d, coluna %d\n", linha_ocupada, coluna_ocupada);
+                            printf("O ID do tabuleiro é: %d\n", id_tabuleiro);
+
+                            // Envia tentativa ao servidor
+                            envia_tentativa_apaga(client_socket, id_tabuleiro, linha_ocupada, coluna_ocupada);
+
+                            // Recebe feedback do servidor
+                            printf("[DEBUG] Tentativa enviada. Aguardando feedback do servidor...\n");
+                            recebe_feedback_Apaga(client_socket);
+
+                        } else {
+                            escrever_log_cliente("Nenhuma posição ocupada encontrada. Sudoku Apagado!");
+                            printf("Nenhuma posição ocupada encontrada. Sudoku Apagado!\n");
+                            break;
+                        }
+                        num_vazias = numCelulasVazias(matriz);
+                    }
+                } else {
+                    escrever_log_cliente("Erro ao receber resposta do servidor");
+                    perror("[ERRO] Falha ao receber resposta do servidor");
+                    return;
+                }
+                printf("[INFO] Tabuleiro %d Apagado!\n", id_tabuleiro);
+                escrever_log_cliente("Tabuleiro apagado com sucesso");
+                break;
+
+            case 2:
+                printf("[DEBUG] Opção 2: Solicitar solução parcial selecionada.\n");
+                escrever_log_cliente("Opção 2: Solicitar solução parcial selecionada");
+                bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+                if (bytes_received > 0) {
+                    buffer[bytes_received] = '\0';
+                    escrever_log_cliente("Resposta do servidor recebida da opcao 2");
+                    printf("Resposta do servidor:\n%s", buffer);
+                    printf("Quantas tentativas deseja fazer?\n");
+                    escrever_log_cliente("Pedir tentativas ao cliente.");
+                    memset(buffer, 0, BUFFER_SIZE);
+                    fgets(buffer, BUFFER_SIZE, stdin);
+
+                    // Remove o newline que `fgets` deixa no buffer
+                    buffer[strcspn(buffer, "\n")] = 0;
+
+                    int tentativa = atoi(buffer); // Converte a entrada para inteiro
+
+                    if (send(client_socket, &tentativa, sizeof(tentativa), 0) < 0) {
+                        escrever_log_cliente("Erro ao enviar número de tentativas");
+                        perror("Erro ao enviar número de tentativas");
+                        close(client_socket);
+                        exit(EXIT_FAILURE);
+                    }
+                    escrever_log_cliente("Número de tentativas enviadas com sucesso");
+                    // Enquanto houver casas vazias, envia tentativas e recebe feedback
+                    while (tentativa != 0) {
+                        if (escolhe_celula_com_algo(matriz, &linha_ocupada, &coluna_ocupada)) {
+                            printf("Posição vazia encontrada em: linha %d, coluna %d\n", linha_ocupada, coluna_ocupada);
+                            printf("O ID do tabuleiro é: %d\n", id_tabuleiro);
+
+                            // Envia tentativa ao servidor
+                            envia_tentativa_apaga(client_socket, id_tabuleiro, linha_ocupada, coluna_ocupada);
+
+                            // Recebe feedback do servidor
+                            printf("[DEBUG] Tentativa enviada. Aguardando feedback do servidor...\n");
+                            recebe_feedback_Apaga(client_socket);
+
+                        } else {
+                            escrever_log_cliente("Nenhuma posição ocupada encontrada. Sudoku Apagado!");
+                            printf("Nenhuma posição ocupada encontrada. Sudoku Apagado!\n");
+                            break;
+                        }
+                        tentativa--;
+                    }
+                } else {
+                    escrever_log_cliente("Erro ao receber resposta do servidor da opcocao 2");
+                    perror("[ERRO] Falha ao receber resposta do servidor");
+                    return;
+                }
+                break;
+            default:
+                printf("[ERRO] Opção inválida! Tente novamente.\n");
+                escrever_log_cliente("Opção inválida! Tente novamente");
+                printf("[DEBUG] opção escolhida: %d\n", resposta);
+                bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+                if (bytes_received > 0) {
+                    escrever_log_cliente("Resposta do servidor recebida da opcao invalida");
+                    buffer[bytes_received] = '\0';
+                    printf("Resposta do servidor:\n%s", buffer);
+                } else {
+                    escrever_log_cliente("Erro ao receber resposta do servidor da opcao invalida");
+                    perror("[ERRO] Falha ao receber resposta do servidor");
+                }
+                printf("[DEBUG] opção escolhida: %d\n", resposta);
+                break;
+        }
+    }
+}
+
+void comunicar_servidor(int client_socket, int modoJogo, int jogadorModo) {
+    switch (modoJogo) {
+        case 1:
+            // Aquí puedes agregar el código para el modo de jogo 1
+            break;
+        case 2:
+            if (jogadorModo == 1) {
+                printf("Resolvedor\n");
+                comunicacao_Resolvedor(client_socket);
+            } else if (jogadorModo == 2) {
+                printf("Apagador\n");
+                comunicacao_Apagador(client_socket);
             }
-            escrever_log_cliente("Tabuleiro recebido com sucesso");
-            buffer[bytes_received2] = '\0'; // Corrigido para usar buffer
-            printf("\nTabuleiro enviado:\n%s\n", buffer);
-            send(client_socket, "Tabuleiro recebido\0", 19, 0);
-            escrever_log_cliente("Confirmação de tabuleiro enviada");
-            // Converte a string para a matriz
-            string_para_matriz(buffer, matriz);
-            printf("Matriz transformada:\n");
-            imprima_matriz(matriz);
+            break;
+        default:
+            printf("[ERRO] Modo de jogo inválido! Tente novamente.\n");
+            printf("[DEBUG] Modo de jogo escolhido: %d\n", modoJogo);
+            return;
+    }
+}
+
+
+
+/**
+ * Função para escolher o modo de jogo
+ * 
+ * @param modoJogo Modo de jogo escolhido : int *
+ * @param jogadorModo Modo de jogador escolhido : int *
+ * @return void
+ */
+void escolhe_modo_de_Jogo(int *modoJogo, int *jogadorModo) {
+    printf("Escolha o modo de jogo:\n");
+    printf("1 - Modo Clásico cooperativo\n");
+    printf("2 - Modo Apagadores e Resolvedores\n");
     
-            //_______________________________________________
-            // Recebe o menu inicial do servidor
-            printf("Recebe menu inicial\n");
-            int bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
-            escrever_log_cliente("Menu inicial recebido");
-            printf("Depois de receber menu inicial\n");
-            if (bytes_received <= 0) {
-                escrever_log_cliente("Erro ao receber menu inicial");
-                printf("Servidor desconectado.\n");
-                return;
-            }
-            printf("bytes_received: %d\n", bytes_received);
-            buffer[bytes_received] = '\0';
-            printf("Resposta do servidor:\n%s", buffer);
-    
-            printf("Insira um número ('5' para encerrar): ");
-            escrever_log_cliente("Esperando opcao do cliente");
+    printf("Insira um número ('0' para encerrar): ");
+    char buffer[BUFFER_SIZE];
+    memset(buffer, 0, BUFFER_SIZE);
+    fgets(buffer, BUFFER_SIZE, stdin);
+
+    if (strlen(buffer) == 1) {
+        printf("Por favor, insira um número válido.\n");
+        return;
+    }
+
+    // Remove o newline que `fgets` deixa no buffer
+    buffer[strcspn(buffer, "\n")] = 0;
+
+    *modoJogo = atoi(buffer); // Converte a entrada para inteiro
+
+    switch (*modoJogo) {
+        case 1:
+            printf("[DEBUG] Modo de jogo 1: Modo Clásico cooperativo selecionado.\n");
+            escrever_log_cliente("Modo de jogo 1: Modo Clásico cooperativo selecionado");
+            break;
+        case 2:
+            printf("[DEBUG] Modo de jogo 2: Modo Apagadores e Resolvedores selecionado.\n");
+            escrever_log_cliente("Modo de jogo 2: Modo Apagadores e Resolvedores selecionado");
+
+            printf("Escolha o Jogador:\n");
+            printf("1 - Resolvedor\n");
+            printf("2 - Apagador\n");
+
+            printf("Insira um número ('0' para encerrar): ");
+
             memset(buffer, 0, BUFFER_SIZE);
             fgets(buffer, BUFFER_SIZE, stdin);
-    
+
             if (strlen(buffer) == 1) {
                 printf("Por favor, insira um número válido.\n");
-                continue;
-            }
-    
-            // Remove o newline que `fgets` deixa no buffer
-            buffer[strcspn(buffer, "\n")] = 0;
-    
-            int resposta = atoi(buffer); // Converte a entrada para inteiro
-    
-            // Envia a opção para o servidor
-            if (send(client_socket, buffer, strlen(buffer), 0) < 0) {
-                escrever_log_cliente("Erro ao enviar opção para o servidor");
-                perror("Erro ao enviar dados");
                 return;
             }
-            escrever_log_cliente("Opção enviada com sucesso");
-            switch (resposta) {
-                case 1:
-                    // Determina o ponteiro para a variável global de casas vazias
-                    if (id_tabuleiro == 1) {
-                        total_vazias_ptr = &zero_1;
-                    } else if (id_tabuleiro == 2) {
-                        total_vazias_ptr = &zero_2;
-                    } else if (id_tabuleiro == 3) {
-                        total_vazias_ptr = &zero_3;
-                    } else if (id_tabuleiro == 4) {
-                        total_vazias_ptr = &zero_4;
-                    }
-    
-                    printf("[DEBUG] Opção 1: Apagar o tabuleiro completo selecionada.\n");
-                    escrever_log_cliente("Opção 1: Apagar o tabuleiro completo selecionada");
-                    // Recebe confirmação do servidor
-                    bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
-                    escrever_log_cliente("Confirmação de tabuleiro recebida");
-                    if (bytes_received > 0) {
-                        escrever_log_cliente("Tabuleiro recebido com sucesso");
-                        buffer[bytes_received] = '\0';
-                        printf("Resposta do servidor:\n%s", buffer);
-    
-                        while ((*total_vazias_ptr) != 0) {
-                            printf("Número total de casas vazias: %d\n", *total_vazias_ptr);
-                            escrever_log_cliente("Número total de casas vazias recebido com sucesso");
-                            if (escolhe_celula_com_algo(matriz, &linha_ocupada, &coluna_ocupada)) {
-                                printf("Posição ocupada encontrada em: linha %d, coluna %d\n", linha_ocupada, coluna_ocupada);
-                                printf("O ID do tabuleiro é: %d\n", id_tabuleiro);
-    
-                                // Envia tentativa ao servidor
-                                envia_tentativa_apaga(client_socket, id_tabuleiro, linha_ocupada, coluna_ocupada);
-    
-                                // Recebe feedback do servidor
-                                printf("[DEBUG] Tentativa enviada. Aguardando feedback do servidor...\n");
-                                recebe_feedback_Apaga(client_socket);
-    
-                            } else {
-                                escrever_log_cliente("Nenhuma posição ocupada encontrada. Sudoku Apagado!");
-                                printf("Nenhuma posição ocupada encontrada. Sudoku Apagado!\n");
-                                break;
-                            }
-                        }
-                    } else {
-                        escrever_log_cliente("Erro ao receber resposta do servidor");
-                        perror("[ERRO] Falha ao receber resposta do servidor");
-                        return;
-                    }
-                    printf("[INFO] Tabuleiro %d Apagado!\n", id_tabuleiro);
-                    escrever_log_cliente("Tabuleiro apagado com sucesso");
-                    break;
-    
-                case 2:
-                    printf("[DEBUG] Opção 2: Solicitar solução parcial selecionada.\n");
-                    escrever_log_cliente("Opção 2: Solicitar solução parcial selecionada");
-                    bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
-                    if (bytes_received > 0) {
-                        buffer[bytes_received] = '\0';
-                        escrever_log_cliente("Resposta do servidor recebida da opcao 2");
-                        printf("Resposta do servidor:\n%s", buffer);
-                        printf("Quantas tentativas deseja fazer?\n");
-                        escrever_log_cliente("Pedir tentativas ao cliente.");
-                        memset(buffer, 0, BUFFER_SIZE);
-                        fgets(buffer, BUFFER_SIZE, stdin);
-    
-                        // Remove o newline que `fgets` deixa no buffer
-                        buffer[strcspn(buffer, "\n")] = 0;
-    
-                        int tentativa = atoi(buffer); // Converte a entrada para inteiro
-    
-                        if (send(client_socket, &tentativa, sizeof(tentativa), 0) < 0) {
-                            escrever_log_cliente("Erro ao enviar número de tentativas");
-                            perror("Erro ao enviar número de tentativas");
-                            close(client_socket);
-                            exit(EXIT_FAILURE);
-                        }
-                        escrever_log_cliente("Número de tentativas enviadas com sucesso");
-                        // Enquanto houver casas vazias, envia tentativas e recebe feedback
-                        while (tentativa != 0) {
-                            if (escolhe_celula_com_algo(matriz, &linha_ocupada, &coluna_ocupada)) {
-                                printf("Posição vazia encontrada em: linha %d, coluna %d\n", linha_ocupada, coluna_ocupada);
-                                printf("O ID do tabuleiro é: %d\n", id_tabuleiro);
-    
-                                // Envia tentativa ao servidor
-                                envia_tentativa_apaga(client_socket, id_tabuleiro, linha_ocupada, coluna_ocupada);
-    
-                                // Recebe feedback do servidor
-                                printf("[DEBUG] Tentativa enviada. Aguardando feedback do servidor...\n");
-                                recebe_feedback_Apaga(client_socket);
-    
-                            } else {
-                                escrever_log_cliente("Nenhuma posição ocupada encontrada. Sudoku Apagado!");
-                                printf("Nenhuma posição ocupada encontrada. Sudoku Apagado!\n");
-                                break;
-                            }
-                            tentativa--;
-                        }
-                    } else {
-                        escrever_log_cliente("Erro ao receber resposta do servidor da opcocao 2");
-                        perror("[ERRO] Falha ao receber resposta do servidor");
-                        return;
-                    }
-                    break;
-                default:
-                    printf("[ERRO] Opção inválida! Tente novamente.\n");
-                    escrever_log_cliente("Opção inválida! Tente novamente");
-                    printf("[DEBUG] opção escolhida: %d\n", resposta);
-                    bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
-                    if (bytes_received > 0) {
-                        escrever_log_cliente("Resposta do servidor recebida da opcao invalida");
-                        buffer[bytes_received] = '\0';
-                        printf("Resposta do servidor:\n%s", buffer);
-                    } else {
-                        escrever_log_cliente("Erro ao receber resposta do servidor da opcao invalida");
-                        perror("[ERRO] Falha ao receber resposta do servidor");
-                    }
-                    printf("[DEBUG] opção escolhida: %d\n", resposta);
-                    break;
+
+            // Remove o newline que `fgets` deixa no buffer
+            buffer[strcspn(buffer, "\n")] = 0;
+
+            *jogadorModo = atoi(buffer); // Converte a entrada para inteiro
+
+            if (*jogadorModo != 1 && *jogadorModo != 2) {
+                printf("[ERRO] Modo de jogador inválido! Tente novamente.\n");
+                printf("[DEBUG] Modo de jogador escolhido: %d\n", *jogadorModo);
+
             }
-        }
-    }*/
-}    
+
+            break;
+
+        case 0:
+            printf("[DEBUG] Modo de jogo 0: Encerrar.\n");
+            escrever_log_cliente("Jogador Saiu");
+            break;
+
+
+    }
+
+    return;
+}
 
 int main(int argc, char *argv[]) {
     int client_socket;
     int porta;
     char ip[256];
-    int resolvedor;
+    int modoJogo = 0;
+    int jogadorModo = 1;
+    char buffer[BUFFER_SIZE];
     if (argc < 2) {
         printf("Uso: %s <ficheiro de configuração>\n", argv[0]);
         return 1;
@@ -961,10 +1030,18 @@ int main(int argc, char *argv[]) {
 
     int client_id = get_new_user_id();
 
-    ler_configuracao_cliente(argv[1], &porta, ip, &resolvedor);
-    if(resolvedor==1){
+    ler_configuracao_cliente(argv[1], &porta, ip);
+    escolhe_modo_de_Jogo(&modoJogo, &jogadorModo);
+
+    if (modoJogo == 0 || jogadorModo == 0) {
+        printf("Cliente desconectado\n");
+        return 0;
+    }
+
+
+    if(jogadorModo==1 && modoJogo==2){
         printf("Resolvedor\n");
-    }else{
+    }else if(jogadorModo==2 && modoJogo==2){
 
         printf("Apagador\n");
     }
@@ -976,14 +1053,21 @@ int main(int argc, char *argv[]) {
 
     conectar_servidor(client_socket, &server_addr);
 
+
+    snprintf(buffer, BUFFER_SIZE, "%d,%d", modoJogo, jogadorModo);
+    printf("modojogo,jogadorModo: %s\n", buffer);
     printf("Cliente %d conectado ao servidor\n", client_id);
-   if (send(client_socket, &resolvedor, sizeof(resolvedor), 0) < 0) {
+   if (send(client_socket, buffer, strlen(buffer), 0) < 0) {
         perror("Erro ao enviar resolvedor");
         close(client_socket);
         exit(EXIT_FAILURE);
     }
+    recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+    
     enviar_id_cliente(client_socket, client_id);
-    comunicar_servidor(client_socket, resolvedor);
+
+    comunicar_servidor(client_socket, modoJogo, jogadorModo);
+
     close(client_socket);
     escrever_log_cliente("Cliente desconectado");
     return 0;

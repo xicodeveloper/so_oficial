@@ -403,14 +403,12 @@ void envia_solucao(int client_socket, int num) {
     char buffer[BUFFER_SIZE];
     char formatted_tabuleiro[BUFFER_SIZE];
 
-    converter_tabuleiro_para_string(matriz[num - 1], buffer); // Converte para string unidimensional
+    converter_tabuleiro_para_string(matriz_solucao[num - 1], buffer); // Converte para string unidimensional
     formatar_tabuleiro(buffer, formatted_tabuleiro);
     send(client_socket, formatted_tabuleiro, strlen(formatted_tabuleiro), 0);
     
     escrever_log("Solução enviada com sucesso");
 }
-
-
 
 /**
  * Função para enviar o id do tabuleiro para o cliente
@@ -578,13 +576,12 @@ void recebe_tentativa_e_envia_feedback(int client_socket, int matriz_sol[4][9][9
  * @param client_socket Socket do cliente
  * @return void
  */
-void *handle_client_Apagador(void *client_socket){
- int sock = *(int *)client_socket;
+void *handle_client_Apagador(void *client_socket) {
+    int sock = *(int *)client_socket;
     free(client_socket);
     char buffer[BUFFER_SIZE];
     int opcao, client_id, tentativa;
-    int num = (rand() % 4) + 1;
-    int (*total_vazias_ptr);
+    int num = 2;
 
     if (recv(sock, &client_id, sizeof(client_id), 0) <= 0) {
         escrever_log("Erro ao receber ID do cliente");
@@ -599,7 +596,6 @@ void *handle_client_Apagador(void *client_socket){
 
     int running2 = 1;
     while (running2) {
-
         int bytes_received = recv(sock, buffer, BUFFER_SIZE - 1, 0);
         if (bytes_received < 0) {
             escrever_log("Erro ao receber pedido de tabuleiro");
@@ -632,7 +628,7 @@ void *handle_client_Apagador(void *client_socket){
             escrever_log("Client disconnected");
             break;
         }
-    escrever_log("Opção do cliente recebida com sucesso");
+        escrever_log("Opção do cliente recebida com sucesso");
         buffer[bytes_received] = '\0'; // Null-terminate the received data
         printf("Received from client %d: '%s' (bytes_received: %d)\n", client_id, buffer, bytes_received); // Debug
 
@@ -641,20 +637,10 @@ void *handle_client_Apagador(void *client_socket){
         printf("Parsed option from client %d: %d\n", client_id, opcao); // Debug
         escrever_log("Opção do cliente convertida com sucesso");
 
-// Handle the selected option
-switch (opcao) {
-    case 1:
+        // Handle the selected option
+        switch (opcao) {
+            case 1:
                 // Determina o ponteiro para a variável global de casas vazias
-            if (num == 1) {
-                    total_vazias_ptr = &zero_1;
-                } else if (num == 2) {
-                    total_vazias_ptr = &zero_2;
-                } else if (num == 3) {
-                    total_vazias_ptr = &zero_3;
-                } else if (num == 4) {
-                    total_vazias_ptr = &zero_4;
-                }
-
                 printf("Client %d selected to solve one cell\n", client_id);
                 escrever_log("Cliente selecionou resolver uma célula");
                 // Envia uma resposta inicial ao cliente confirmando a opção
@@ -664,68 +650,65 @@ switch (opcao) {
                     escrever_log("Erro ao enviar resposta inicial ao cliente");
                     break;
                 }
+                int num_vazias = numero_total_vazias(matriz_of, num);
+
                 printf("[DEBUG] Resposta inicial enviada para o cliente %d: '%s'\n", client_id, buffer);
-while ((*total_vazias_ptr) != 0)
-{
-
-                printf("Número total de casas vazias: %d\n", *total_vazias_ptr);
-                // Enquanto houver casas vazias, processa as tentativas recebidas
-                escrever_log("Número total de casas vazias recebido com sucesso");
-                apagador(sock, matriz_of);
-
-}
+                while (num_vazias < 81) {
+                    printf("Número total de casas vazias: %d\n", num_vazias);
+                    // Enquanto houver casas vazias, processa as tentativas recebidas
+                    escrever_log("Número total de casas vazias recebido com sucesso");
+                    apagador(sock, matriz_of);
+                    num_vazias = numero_total_vazias(matriz_of, num);
+                }
                 printf("[INFO] Tabuleiro %d resolvido pelo cliente %d\n", num, client_id);
                 break;
 
-    case 2:
-        printf("Client %d requested Partial Solution.\n", client_id);
-        strcpy(buffer, "Option 2: Partial Solution revealed.\n");
-        escrever_log("Cliente selecionou solução parcial");
+            case 2:
+                printf("Client %d requested Partial Solution.\n", client_id);
+                strcpy(buffer, "Option 2: Partial Solution revealed.\n");
+                escrever_log("Cliente selecionou solução parcial");
 
-        if (send(sock, buffer, strlen(buffer), 0) < 0) {
-            perror("[ERRO] Falha ao enviar resposta parcial ao cliente");
-            escrever_log("Erro ao enviar resposta parcial ao cliente");
-            break;
+                if (send(sock, buffer, strlen(buffer), 0) < 0) {
+                    perror("[ERRO] Falha ao enviar resposta parcial ao cliente");
+                    escrever_log("Erro ao enviar resposta parcial ao cliente");
+                    break;
+                }
+                escrever_log("Mensagem de solução parcial enviada ao cliente");
+                if (recv(sock, &tentativa, sizeof(tentativa), 0) <= 0) {
+                    perror("Erro ao receber número de tentativas");
+                    escrever_log("Erro ao receber número de tentativas");
+                    close(sock);
+                    break;
+                }
+                escrever_log("Número de tentativas recebido com sucesso");
+                printf("Número de tentativas recebido: %d\n", tentativa);
+
+                while (tentativa != 0) {
+                    apagador(sock, matriz_of);
+                    tentativa--;
+                }
+
+                printf("[DEBUG] Resposta parcial enviada para o cliente %d.\n", client_id);
+                break;
+            default:
+                printf("Client %d selected an invalid option: %d\n", client_id, opcao);
+                strcpy(buffer, "Invalid option! Please try again.\n");
+                escrever_log("Cliente selecionou uma opção inválida");
+
+                if (send(sock, buffer, strlen(buffer), 0) < 0) {
+                    perror("[ERRO] Falha ao enviar mensagem de opção inválida");
+                    escrever_log("Erro ao enviar mensagem de opção inválida");
+                } else {
+                    escrever_log("Mensagem de opção inválida enviada ao cliente");
+                    printf("[DEBUG] Mensagem de opção inválida enviada para o cliente %d.\n", client_id);
+                }
+                escrever_log("Mensagem de opção inválida enviada ao cliente");
+                printf("[DEBUG] opção escolhida pelo cliente: %d\n", opcao);
+                break;
         }
-        escrever_log("Mensagem de solução parcial enviada ao cliente");
-        if (recv(sock, &tentativa, sizeof(tentativa), 0) <= 0) {
-            perror("Erro ao receber número de tentativas");
-            escrever_log("Erro ao receber número de tentativas");
-            close(sock);
-            break;
-        }
-        escrever_log("Número de tentativas recebido com sucesso");
-        printf("Número de tentativas recebido: %d\n", tentativa);
 
-                        while ( tentativa != 0 ){
-                                apagador(sock, matriz_of);
-                                tentativa--;
-
-                        }   
-
-        printf("[DEBUG] Resposta parcial enviada para o cliente %d.\n", client_id);
-        break;
-    default:
-        printf("Client %d selected an invalid option: %d\n", client_id, opcao);
-        strcpy(buffer, "Invalid option! Please try again.\n");
-        escrever_log("Cliente selecionou uma opção inválida");
-
-        if (send(sock, buffer, strlen(buffer), 0) < 0) {
-            perror("[ERRO] Falha ao enviar mensagem de opção inválida");
-            escrever_log("Erro ao enviar mensagem de opção inválida");
-        }
-        else{
-            escrever_log("Mensagem de opção inválida enviada ao cliente");
-            printf("[DEBUG] Mensagem de opção inválida enviada para o cliente %d.\n", client_id);
-        }
-        escrever_log("Mensagem de opção inválida enviada ao cliente");
-        printf("[DEBUG] opção escolhida pelo cliente: %d\n", opcao); 
-        break;
-}
-
-// Debug opcional para verificar envio final (não necessário)
-printf("[DEBUG] Opção processada para cliente %d.\n", client_id);
-
+        // Debug opcional para verificar envio final (não necessário)
+        printf("[DEBUG] Opção processada para cliente %d.\n", client_id);
     }
 
     // Close connection and update client count
@@ -739,9 +722,6 @@ printf("[DEBUG] Opção processada para cliente %d.\n", client_id);
     printf("Connection with client %d closed\n", client_id);
     escrever_log("Client connection closed");
     return NULL;
-
-
-
 }
 
 /**
@@ -750,16 +730,16 @@ printf("[DEBUG] Opção processada para cliente %d.\n", client_id);
  * @param client_socket Socket do cliente
  * @return void
  */
-void *handle_client_escritor(void *client_socket) {
+void *handle_client_Resolvedor(void *client_socket) {
     int sock = *(int *)client_socket;
     free(client_socket);
     char buffer[BUFFER_SIZE];
     int opcao, client_id, tentativa;
-    int num = (rand() % 4) + 1;
-
-    if (recv(sock, &client_id, sizeof(client_id), 0) <= 0) {
+    int num = 2;
+ 
+    if (recv(sock, &client_id, sizeof(client_id), 0) <= 0) {                     //erro aqui
         escrever_log("Erro ao receber ID do cliente");
-        perror("Error receiving client ID");
+        printf("Error receiving client ID: %d\n", client_id);
         close(sock);
         return NULL;
     }
@@ -958,9 +938,8 @@ void *handle_client_escritor(void *client_socket) {
     return NULL;
 }
 
-int main(int argc, char *argv[]) {
-    int resolvedor;
 
+int main(int argc, char *argv[]) {
     struct sockaddr_in server_addr, client_addr;
     socklen_t addr_len = sizeof(client_addr);
 
@@ -1015,6 +994,10 @@ int main(int argc, char *argv[]) {
     srand(time(NULL));
 
     while (1) {
+        int modoJogo;
+        int jogadorModo;
+        char buffer[BUFFER_SIZE];
+
         client_socket = accept(server_socket, (struct sockaddr *)&client_addr, &addr_len);
         if (client_socket < 0) {
             escrever_log("Erro ao aceitar conexão");
@@ -1023,7 +1006,7 @@ int main(int argc, char *argv[]) {
         }
         escrever_log("Conexão aceita com sucesso");
         pthread_mutex_lock(&clients_mutex);
-        if (num_clients_sessao >= 10) {
+        if (num_clients_sessao >= 10) {                                   
             escrever_log("Número máximo de clientes atingido");
             close(client_socket);
             pthread_mutex_unlock(&clients_mutex);
@@ -1042,46 +1025,79 @@ int main(int argc, char *argv[]) {
         }
         *new_sock = client_socket;
         escrever_log("Memória alocada para new_sock com sucesso");
-        if (recv(client_socket, &resolvedor, sizeof(resolvedor), 0) <= 0) {
+
+        int bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+        if (bytes_received <= 0) {
             escrever_log("Erro ao receber resolvedor do cliente");
             perror("Erro ao receber resolvedor");
+            free(new_sock);
             close(client_socket);
             continue;
         }
+
+        buffer[bytes_received] = '\0'; // Assegura-se de que a mensagem recebida seja terminada com '\0'
+        // Extraer os inteiros do buffer
+        if (sscanf(buffer, "%d,%d", &modoJogo, &jogadorModo) != 2) {
+            printf("modoJogo: %d, jogadorModo: %d\n", modoJogo, jogadorModo);
+            printf("Erro ao analisar os dados recebidos: '%s'\n", buffer);
+            free(new_sock);
+            close(client_socket);
+            continue;
+        }
+        printf("modoJogo: %d, jogadorModo: %d\n", modoJogo, jogadorModo);
+        printf("Received from client: '%s' (bytes_received: %d)\n", buffer, bytes_received); // Debug
+        send(client_socket, "Conexão estabelecida com sucesso", 30, 0);
+
+
         pthread_t tid;
         pthread_mutex_lock(&clients_mutex_board_2); // Bloqueia o primeiro mutex
 
-        if (resolvedor == 0) {
-            // Tenta criar uma thread para "leitor"
-            if (pthread_create(&tid, NULL, handle_client_Apagador, (void *)new_sock) != 0) {
-                escrever_log("Erro ao criar thread para o cliente leitor");
-                perror("Erro ao criar thread para o cliente leitor");
-                free(new_sock);
-                close(client_socket);
-                pthread_mutex_unlock(&clients_mutex_board_2); // Libera mutex no caso de erro
-                continue;
-            }
-        } else {
-            pthread_mutex_unlock(&clients_mutex_board_2); // Libera o mutex antes de usar outro
+        switch (modoJogo) {
+            case 1:
+                /* modo trinco */
+                break;
 
-            pthread_mutex_lock(&clients_mutex_board); // Bloqueia o segundo mutex
+            case 2:
+                /* modo Resolvedores-Apagadores (leitores-escritores) */
+                
 
-            // Tenta criar uma thread para "escritor"
-            if (pthread_create(&tid, NULL, handle_client_escritor, (void *)new_sock) != 0) {
-                escrever_log("Erro ao criar thread para o cliente escritor");
-                perror("Erro ao criar thread para o cliente escritor");
-                free(new_sock);
-                close(client_socket);
-                pthread_mutex_unlock(&clients_mutex_board); // Libera mutex no caso de erro
-                continue;
-            }
+                if (jogadorModo == 1) {
+                    // Tenta criar uma thread para "leitor"
+                    if (pthread_create(&tid, NULL, handle_client_Resolvedor, (void *)new_sock) != 0) {
+                        escrever_log("Erro ao criar thread para o cliente leitor");
+                        perror("Erro ao criar thread para o cliente leitor");
+                        free(new_sock);
+                        close(client_socket);
+                        pthread_mutex_unlock(&clients_mutex_board_2); // Libera mutex no caso de erro
+                        continue;
+                    }
+                } else if (jogadorModo == 2) {
+                    pthread_mutex_unlock(&clients_mutex_board_2); // Libera o mutex antes de usar outro
 
-            pthread_mutex_unlock(&clients_mutex_board); // Libera o segundo mutex após uso
+                    pthread_mutex_lock(&clients_mutex_board); // Bloqueia o segundo mutex
+
+                    // Tenta criar uma thread para "Resolvedor"
+                    if (pthread_create(&tid, NULL, handle_client_Apagador, (void *)new_sock) != 0) {
+                        escrever_log("Erro ao criar thread para o cliente escritor");
+                        perror("Erro ao criar thread para o cliente escritor");
+                        free(new_sock);
+                        close(client_socket);
+                        pthread_mutex_unlock(&clients_mutex_board); // Libera mutex no caso de erro
+                        continue;
+                    }
+
+                    pthread_mutex_unlock(&clients_mutex_board); // Libera o segundo mutex após uso
+                }
+
+                escrever_log("Thread criada com sucesso");
+                pthread_detach(tid); // Desanexa a thread
+                escrever_log("Thread desanexada com sucesso");
+                break;
+
+            default:
+                break;
         }
-
-        escrever_log("Thread criada com sucesso");
-        pthread_detach(tid); // Desanexa a thread
-        escrever_log("Thread desanexada com sucesso");
+        pthread_mutex_unlock(&clients_mutex_board_2); // Libera mutex no caso de erro
     }
     // Após sair do loop principal
     escrever_log("Servidor encerrado");
