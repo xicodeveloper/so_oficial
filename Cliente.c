@@ -768,7 +768,7 @@ void comunicacao_Apagador(int client_socket) {
                     while (num_vazias < 81 && num_vazias > 0) {
                         
                         recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
-                        printf("Número total de casas vazias do server: %s\n", buffer);
+                        printf("Número total de casas vazias: %d\n", num_vazias);
                         
                         escolhe_celula_com_algo(matriz, &linha_ocupada, &coluna_ocupada);
                         printf("Posição ocupada encontrada em: linha %d, coluna %d\n", linha_ocupada, coluna_ocupada);
@@ -793,12 +793,14 @@ void comunicacao_Apagador(int client_socket) {
                         printf("%s \n", buffer);
                         escrever_log_cliente(buffer);
                     }
+                    printf("Número total de casas vazias: %d\n", num_vazias);
                     
                 } else {
                     escrever_log_cliente("Erro ao receber resposta do servidor");
                     perror("[ERRO] Falha ao receber resposta do servidor");
                     return;
                 }
+                
                 printf("[INFO] Jogo %d Acabado!\n", id_tabuleiro);
                 escrever_log_cliente("Jogo acabado :)");
                 return;
