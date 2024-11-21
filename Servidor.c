@@ -664,6 +664,7 @@ void *handle_client_Apagador(void *client_socket) {
                 }
                 send(sock, "Jogo Acabado.\n", 31, 0);
                 printf("[INFO] Tabuleiro %d resolvido pelo cliente %d\n", num, client_id);
+                running2 = 0; // Exit loop
                 break;
 
             case 2:
@@ -812,6 +813,7 @@ void *handle_client_Resolvedor(void *client_socket) {
                     total_vazias = numero_total_vazias(matriz_of, num);
                 }
                 printf("[INFO] Tabuleiro %d resolvido pelo cliente %d\n", num, client_id);
+                running = 0; // Exit loop
                 break;
 
             

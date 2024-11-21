@@ -608,8 +608,8 @@ void comunicacao_Resolvedor(int client_socket) {
                     total_vazias = numCelulasVazias(matriz);
 
                 }
-                printf("[INFO] Tabuleiro %d resolvido!\n", id_tabuleiro);
-                escrever_log_cliente("Tabuleiro resolvido com sucesso");
+                printf("[INFO] Jogo %d Acabado!\n", id_tabuleiro);
+                escrever_log_cliente("Jogo Acabado :)");
                 return;
                 break;
 
@@ -799,8 +799,8 @@ void comunicacao_Apagador(int client_socket) {
                     perror("[ERRO] Falha ao receber resposta do servidor");
                     return;
                 }
-                printf("[INFO] Tabuleiro %d Apagado!\n", id_tabuleiro);
-                escrever_log_cliente("Tabuleiro apagado com sucesso");
+                printf("[INFO] Jogo %d Acabado!\n", id_tabuleiro);
+                escrever_log_cliente("Jogo acabado :)");
                 return;
                 break;
             case 2:
