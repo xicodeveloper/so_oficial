@@ -317,10 +317,8 @@ void enviar_menu_resolvedor(int client_socket) {
     const char *menu =
         "---------- Menu de Sudoku ----------\n"
         "1. Resolver Tabuleiro Total.\n"
-        "2. Resolver Tabuleiro Parcial (n tentativas): .\n"
-        "3. O Servidor revela a Solução.\n"
-        "4. O Servidor revela a Solução Parcial.\n"
-        "5. Desistir.\n"
+        "2. O Servidor revela a Solução e Desistir.\n"
+        "3. Desistir.\n"
         "------------------------------------\n";
     printf("Enviando menu para o cliente\n"); // Debug
     send(client_socket, menu, strlen(menu), 0);
@@ -338,9 +336,8 @@ void enviar_menu_resolvedor(int client_socket) {
 void enviar_menu_apagador(int client_socket) {
     const char *menu =
         "---------- Menu de Sudoku ----------\n"
-        "1. Apagar uma Celula do Tabuleiro.\n"
-        "2. Apagar Tabuleiro Parcial (n tentativas): .\n"
-        "5. Desistir.\n"
+        "1. Apagar uma a uma as Celulas do Tabuleiro.\n"
+        "2. Desistir.\n"
         "------------------------------------\n";
     printf("Enviando menu para o cliente\n"); // Debug
     send(client_socket, menu, strlen(menu), 0);
@@ -441,7 +438,7 @@ void enviar_id_tabuleiro(int client_socket, int num) {
  * @param matriz_of Matriz 3D com os jogos
  * @return void
  */
-void apagador(int client_socket, int matriz_of[4][9][9]) {
+void recebe_apaga_celula(int client_socket, int matriz_of[4][9][9]) {
     char buffer[BUFFER_SIZE];
     int num, linha, coluna;
 
@@ -580,7 +577,7 @@ void *handle_client_Apagador(void *client_socket) {
     int sock = *(int *)client_socket;
     free(client_socket);
     char buffer[BUFFER_SIZE];
-    int opcao, client_id, tentativa;
+    int opcao, client_id;
     int num = 2;
 
     if (recv(sock, &client_id, sizeof(client_id), 0) <= 0) {
@@ -650,45 +647,37 @@ void *handle_client_Apagador(void *client_socket) {
                     escrever_log("Erro ao enviar resposta inicial ao cliente");
                     break;
                 }
-                int num_vazias = numero_total_vazias(matriz_of, num);
+                
 
+                recv(sock, buffer, BUFFER_SIZE - 1, 0);
+                int num_vazias = numero_total_vazias(matriz_of, num);
                 printf("[DEBUG] Resposta inicial enviada para o cliente %d: '%s'\n", client_id, buffer);
-                while (num_vazias < 81) {
+                while (num_vazias < 81 && num_vazias > 0) {
+                    send(sock, &num_vazias, sizeof(num_vazias), 0);
                     printf("Número total de casas vazias: %d\n", num_vazias);
                     // Enquanto houver casas vazias, processa as tentativas recebidas
                     escrever_log("Número total de casas vazias recebido com sucesso");
-                    apagador(sock, matriz_of);
+                    recebe_apaga_celula(sock, matriz_of);
+                    recv(sock, buffer, BUFFER_SIZE - 1, 0);
+                    envia_tabuleiro(sock, num, matriz_of);
                     num_vazias = numero_total_vazias(matriz_of, num);
                 }
+                send(sock, "Jogo Acabado.\n", 31, 0);
                 printf("[INFO] Tabuleiro %d resolvido pelo cliente %d\n", num, client_id);
                 break;
 
             case 2:
-                printf("Client %d requested Partial Solution.\n", client_id);
-                strcpy(buffer, "Option 2: Partial Solution revealed.\n");
-                escrever_log("Cliente selecionou solução parcial");
-
+                printf("Client %d quit the game.\n", client_id);
+                strcpy(buffer, "Option 2: Exiting the game.\n");
+                escrever_log("Cliente desistiu do jogo");
                 if (send(sock, buffer, strlen(buffer), 0) < 0) {
-                    perror("[ERRO] Falha ao enviar resposta parcial ao cliente");
-                    escrever_log("Erro ao enviar resposta parcial ao cliente");
+                    perror("[ERRO] Falha ao enviar mensagem de saída ao cliente");
+                    escrever_log("Erro ao enviar mensagem de saída ao cliente");
                     break;
                 }
-                escrever_log("Mensagem de solução parcial enviada ao cliente");
-                if (recv(sock, &tentativa, sizeof(tentativa), 0) <= 0) {
-                    perror("Erro ao receber número de tentativas");
-                    escrever_log("Erro ao receber número de tentativas");
-                    close(sock);
-                    break;
-                }
-                escrever_log("Número de tentativas recebido com sucesso");
-                printf("Número de tentativas recebido: %d\n", tentativa);
-
-                while (tentativa != 0) {
-                    apagador(sock, matriz_of);
-                    tentativa--;
-                }
-
-                printf("[DEBUG] Resposta parcial enviada para o cliente %d.\n", client_id);
+                printf("[DEBUG] Mensagem de saída enviada para o cliente %d.\n", client_id);
+                escrever_log("Mensagem de saída enviada ao cliente");
+                running2 = 0; // Exit loop
                 break;
             default:
                 printf("Client %d selected an invalid option: %d\n", client_id, opcao);
@@ -734,7 +723,7 @@ void *handle_client_Resolvedor(void *client_socket) {
     int sock = *(int *)client_socket;
     free(client_socket);
     char buffer[BUFFER_SIZE];
-    int opcao, client_id, tentativa;
+    int opcao, client_id;
     int num = 2;
  
     if (recv(sock, &client_id, sizeof(client_id), 0) <= 0) {                     //erro aqui
@@ -825,35 +814,8 @@ void *handle_client_Resolvedor(void *client_socket) {
                 printf("[INFO] Tabuleiro %d resolvido pelo cliente %d\n", num, client_id);
                 break;
 
+            
             case 2:
-                printf("Client %d requested Partial Solution.\n", client_id);
-                strcpy(buffer, "Option 2: Partial Solution revealed.\n");
-                escrever_log("Cliente selecionou solução parcial");
-
-                if (send(sock, buffer, strlen(buffer), 0) < 0) {
-                    perror("[ERRO] Falha ao enviar resposta parcial ao cliente");
-                    escrever_log("Erro ao enviar resposta parcial ao cliente");
-                    break;
-                }
-                escrever_log("Mensagem de solução parcial enviada ao cliente");
-                if (recv(sock, &tentativa, sizeof(tentativa), 0) <= 0) {
-                    perror("Erro ao receber número de tentativas");
-                    escrever_log("Erro ao receber número de tentativas");
-                    close(sock);
-                    break;
-                }
-                escrever_log("Número de tentativas recebido com sucesso");
-                printf("Número de tentativas recebido: %d\n", tentativa);
-
-                while (tentativa != 0) {
-                    recebe_tentativa_e_envia_feedback(sock, matriz_solucao, matriz_of);
-                    tentativa--;
-                }
-
-                printf("[DEBUG] Resposta parcial enviada para o cliente %d.\n", client_id);
-                break;
-
-            case 3:
                 printf("Client %d requested Full Solution from Server.\n", client_id);
                 strcpy(buffer, "Option 3: Server reveals Solution.\n");
                 escrever_log("Cliente selecionou solução completa");
@@ -872,25 +834,13 @@ void *handle_client_Resolvedor(void *client_socket) {
                 } else {
                     envia_solucao(sock, num);
                     escrever_log("Solução enviada com sucesso");
+                    running = 0; // Exit loop
                 }
 
                 // Envia a solução completa
                 break;
 
-            case 4:
-                printf("Client %d requested Partial Solution from Server.\n", client_id);
-                strcpy(buffer, "Option 4: Partial Solution revealed by server.\n");
-                escrever_log("Cliente selecionou solução parcial");
-                if (send(sock, buffer, strlen(buffer), 0) < 0) {
-                    perror("[ERRO] Falha ao enviar solução parcial ao cliente");
-                    escrever_log("Erro ao enviar solução parcial ao cliente");
-                    break;
-                }
-                escrever_log("Mensagem de solução parcial enviada ao cliente");
-                printf("[DEBUG] Mensagem de solução parcial enviada ao cliente %d.\n", client_id);
-                break;
-
-            case 5:
+            case 3:
                 printf("Client %d quit the game.\n", client_id);
                 strcpy(buffer, "Option 5: Exiting the game.\n");
                 escrever_log("Cliente desistiu do jogo");
