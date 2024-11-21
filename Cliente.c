@@ -581,7 +581,7 @@ void comunicacao_Resolvedor(int client_socket) {
                 escrever_log_cliente("Confirmação de opção recebida");
                 int total_vazias = numCelulasVazias(matriz);
 
-                while (total_vazias > 0) {
+                while (total_vazias > 0 && total_vazias < 81) {
 
                     printf("Número total de casas vazias: %d\n", total_vazias);
                     escrever_log_cliente("Número total de casas vazias recebido com sucesso");
@@ -610,6 +610,7 @@ void comunicacao_Resolvedor(int client_socket) {
                 }
                 printf("[INFO] Tabuleiro %d resolvido!\n", id_tabuleiro);
                 escrever_log_cliente("Tabuleiro resolvido com sucesso");
+                return;
                 break;
 
             
@@ -800,6 +801,7 @@ void comunicacao_Apagador(int client_socket) {
                 }
                 printf("[INFO] Tabuleiro %d Apagado!\n", id_tabuleiro);
                 escrever_log_cliente("Tabuleiro apagado com sucesso");
+                return;
                 break;
             case 2:
                 printf("[DEBUG] Opção 2: Desistir do Jogo.\n");
