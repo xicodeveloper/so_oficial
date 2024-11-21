@@ -797,7 +797,9 @@ void *handle_client_Resolvedor(void *client_socket) {
                 printf("[DEBUG] Resposta inicial enviada para o cliente %d: '%s'\n", client_id, buffer);
 
                 int total_vazias = numero_total_vazias(matriz_of, num);
-                while (total_vazias > 0) {
+
+                
+                while (total_vazias > 0 && total_vazias < 81) {
                     printf("Número total de casas vazias: %d\n", total_vazias);
                     // Enquanto houver casas vazias, processa as tentativas recebidas
                     recebe_tentativa_e_envia_feedback(sock, matriz_solucao, matriz_of);
