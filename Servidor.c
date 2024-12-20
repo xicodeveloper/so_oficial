@@ -7,11 +7,15 @@
 #include <signal.h>
 #include <time.h>
 #include "header.h"
+#include <semaphore.h>
 
 #define BUFFER_SIZE 1024
 #define TAMANHO 1024
 #define SIZE 4
 #define LC 9
+
+
+
 
 int matriz_of[SIZE][LC][LC] = {{{0}}};
 int matriz_solucao[SIZE][LC][LC] = {{{0}}};
@@ -22,6 +26,11 @@ pthread_mutex_t clients_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t clients_mutex_board = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t log_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t clients_mutex_board_2 = PTHREAD_MUTEX_INITIALIZER;
+//-------------------Barrier-------------------------------
+#define MAX_CLIENTES 4
+int clients_waiting=0;
+sem_t sem_barrier;
+pthread_mutex_t mutex_contador= PTHREAD_MUTEX_INITIALIZER;
 
 /**
  *  Função para registrar logs do servidor incluindo a data e hora do evento
@@ -566,7 +575,25 @@ void recebe_tentativa_e_envia_feedback(int client_socket, int matriz_sol[4][9][9
     }
 }
 
+void semaforo(){
 
+       pthread_mutex_lock(&mutex_contador);
+        clients_waiting++;
+        printf("Clientes esperando %d\n", clients_waiting);
+        printf("Aguardando por 4 clientes....\n");
+        if (clients_waiting == MAX_CLIENTES) {
+        // Libera o semáforo para permitir que todos os 4 threads avancem
+        for (int i = 0; i < MAX_CLIENTES; i++) {
+            printf("Liberta\n");
+            sem_post(&sem_barrier);
+        }
+    }
+    pthread_mutex_unlock(&mutex_contador);
+
+    // Espera até que o semáforo seja sinalizado
+    sem_wait(&sem_barrier);
+
+}
 /**
  * Função para lidar com o cliente Apagador
  * 
@@ -589,8 +616,8 @@ void *handle_client_Apagador(void *client_socket) {
     escrever_log("ID do cliente recebido com sucesso");
     printf("New client connected with ID: %d\n", client_id);
     escrever_log("New client connected");
+    semaforo();
     enviar_id_tabuleiro(sock, num);
-
     int running2 = 1;
     while (running2) {
         int bytes_received = recv(sock, buffer, BUFFER_SIZE - 1, 0);
@@ -714,6 +741,7 @@ void *handle_client_Apagador(void *client_socket) {
     return NULL;
 }
 
+
 /**
  * Função para lidar com o cliente Resolvedor
  * 
@@ -726,8 +754,8 @@ void *handle_client_Resolvedor(void *client_socket) {
     char buffer[BUFFER_SIZE];
     int opcao, client_id;
     int num = 2;
- 
-    if (recv(sock, &client_id, sizeof(client_id), 0) <= 0) {                     //erro aqui
+
+    if (recv(sock, &client_id, sizeof(client_id), 0) <= 0) {                     
         escrever_log("Erro ao receber ID do cliente");
         printf("Error receiving client ID: %d\n", client_id);
         close(sock);
@@ -736,6 +764,9 @@ void *handle_client_Resolvedor(void *client_socket) {
     escrever_log("ID do cliente recebido com sucesso");
     printf("New client connected with ID: %d\n", client_id);
     escrever_log("New client connected");
+
+
+    
     enviar_id_tabuleiro(sock, num);
 
     int running = 1;
@@ -785,6 +816,7 @@ void *handle_client_Resolvedor(void *client_socket) {
         // Handle the selected option
         switch (opcao) {
             case 1:
+                semaforo();
                 printf("Client %d selected to solve one cell\n", client_id);
                 escrever_log("Cliente selecionou resolver uma célula");
                 // Envia uma resposta inicial ao cliente confirmando a opção
@@ -944,7 +976,7 @@ int main(int argc, char *argv[]) {
     escrever_log("Servidor pronto para ouvir conexões");
     printf("Servidor iniciado na porta %d\n", porta); // Debug
     srand(time(NULL));
-
+sem_init(&sem_barrier, 0, 0);
     while (1) {
         int modoJogo;
         int jogadorModo;
@@ -1015,6 +1047,7 @@ int main(int argc, char *argv[]) {
 
                 if (jogadorModo == 1) {
                     // Tenta criar uma thread para "leitor"
+                    
                     if (pthread_create(&tid, NULL, handle_client_Resolvedor, (void *)new_sock) != 0) {
                         escrever_log("Erro ao criar thread para o cliente leitor");
                         perror("Erro ao criar thread para o cliente leitor");
@@ -1051,6 +1084,7 @@ int main(int argc, char *argv[]) {
         }
         pthread_mutex_unlock(&clients_mutex_board_2); // Libera mutex no caso de erro
     }
+    sem_destroy(&sem_barrier);
     // Após sair do loop principal
     escrever_log("Servidor encerrado");
     close(server_socket);
