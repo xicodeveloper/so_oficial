@@ -25,7 +25,7 @@ pthread_mutex_t clients_mutex_board = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t log_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t clients_mutex_board_2 = PTHREAD_MUTEX_INITIALIZER;
 //-------------------Barrier-------------------------------
-#define MAX_CLIENTES 7
+#define MAX_CLIENTES 4
 int clients_waiting = 0;
 sem_t sem_barrier;
 pthread_mutex_t mutex_contador = PTHREAD_MUTEX_INITIALIZER;
@@ -575,7 +575,7 @@ void envia_solucao(int client_socket, int num)
 void enviar_id_tabuleiro(int client_socket, int num)
 {
 
-    if (send(client_socket, &num, BUFFER_SIZE, 0) < 0)
+    if (send(client_socket, &num, sizeof(int), 0) < 0)
     {
 
         perror("Erro ao enviar ID do tabuleiro");
@@ -754,7 +754,7 @@ void semaforo()
     pthread_mutex_lock(&mutex_contador);
     clients_waiting++;
     printf("Clientes esperando %d\n", clients_waiting);
-    printf("Aguardando por 4 clientes....\n");
+    printf("Aguardando por %d clientes....\n", MAX_CLIENTES);
     if (clients_waiting == MAX_CLIENTES)
     {
         // Libera o semáforo para permitir que todos os 4 threads avancem
@@ -783,7 +783,7 @@ void *handle_client_Apagador(void *client_socket)
     int opcao, client_id;
     int num = 2;
 
-    if (recv(sock, &client_id, BUFFER_SIZE, 0) <= 0)
+    if (recv(sock, &client_id, sizeof(int), 0) <= 0)
     {
         escrever_log("Erro ao receber ID do cliente");
         perror("Error receiving client ID");
@@ -943,7 +943,7 @@ void *handle_client_Resolvedor(void *client_socket)
     int opcao, client_id;
     int num = 2;
 
-    if (recv(sock, &client_id, BUFFER_SIZE, 0) <= 0)
+    if (recv(sock, &client_id, sizeof(int), 0) <= 0)
     {
         escrever_log("Erro ao receber ID do cliente");
         printf("Error receiving client ID: %d\n", client_id);
@@ -1143,7 +1143,7 @@ void *handle_client_trinco(void *client_socket)
     int opcao, client_id;
     int num = 2;
 
-    if (recv(sock, &client_id, BUFFER_SIZE, 0) <= 0)
+    if (recv(sock, &client_id, sizeof(int), 0) <= 0)
     {
         escrever_log("Erro ao receber ID do cliente");
         printf("Error receiving client ID: %d\n", client_id);
