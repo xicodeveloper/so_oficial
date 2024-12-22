@@ -186,7 +186,7 @@ void conectar_servidor(int client_socket, struct sockaddr_in *server_addr) {
  * @return void
  */
 void enviar_id_cliente(int client_socket, int client_id) {
-    if (send(client_socket, &client_id, sizeof(client_id), 0) < 0) {
+    if (send(client_socket, &client_id, BUFFER_SIZE, 0) < 0) {
         perror("Erro ao enviar ID do cliente");
         escrever_log_cliente("Erro ao enviar ID do cliente");
         close(client_socket);
@@ -325,7 +325,7 @@ void envia_tentativa(int client_socket, int num, int linha, int coluna) {
     snprintf(buffer, BUFFER_SIZE, "%d %d %d %d", num, linha, coluna, tentativa);
 
     printf("[DEBUG] Enviando mensagem para o servidor: '%s'\n", buffer);
-    if (send(client_socket, buffer, strlen(buffer), 0) < 0) {
+    if (send(client_socket, buffer, BUFFER_SIZE, 0) < 0) {
         perror("[ERRO] Falha ao enviar tentativa para o servidor");
         escrever_log_cliente("Tentativa não enviada com sucesso");
         return;
@@ -355,7 +355,7 @@ void envia_tentativa_apaga(int client_socket, int num, int linha, int coluna) {
     printf("[DEBUG] Enviando solicitação para eliminar ao servidor: '%s'\n", buffer);
 
     // Envia os dados para o servidor
-    if (send(client_socket, buffer, strlen(buffer), 0) < 0) {
+    if (send(client_socket, buffer, BUFFER_SIZE, 0) < 0) {
         perror("[ERRO] Falha ao enviar solicitação ao servidor");
         escrever_log_cliente("Solicitação de apagar não enviada com sucesso");
         return;
@@ -427,7 +427,7 @@ void recebe_feedback_Apaga(int client_socket) {
     char buffer[BUFFER_SIZE];
 
     escrever_log_cliente("Aguardando feedback do servidor");
-    int bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+    int bytes_received = recv(client_socket, buffer, BUFFER_SIZE, 0);
     if (bytes_received > 0) {
         buffer[bytes_received] = '\0';
         escrever_log_cliente("Feedback do servidor recebido");
@@ -456,7 +456,7 @@ void recebe_feedback_tentativa(int client_socket) {
     char buffer[BUFFER_SIZE];
 
     escrever_log_cliente("Aguardando feedback do servidor");
-    int bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+    int bytes_received = recv(client_socket, buffer, BUFFER_SIZE, 0);
     if (bytes_received > 0) {
         buffer[bytes_received] = '\0';
         escrever_log_cliente("Feedback do servidor recebido");
@@ -467,7 +467,7 @@ void recebe_feedback_tentativa(int client_socket) {
     }
     printf("Resposta do servidor:\n%s\n", buffer);
     processa_feedback(buffer);
-    send(client_socket, "Feedback recebido", 17, 0);
+    send(client_socket, "Feedback recebido",BUFFER_SIZE, 0);
 }
 
 
@@ -482,7 +482,7 @@ void recebe_feedback_tentativa(int client_socket) {
  */
 void recebe_Tabuleiro(int client_socket, int matriz[9][9]) {
     char buffer[BUFFER_SIZE];
-    int bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+    int bytes_received = recv(client_socket, buffer, BUFFER_SIZE, 0);
     
     if (bytes_received <= 0) {
         printf("Servidor desconectado.\n");
@@ -490,7 +490,7 @@ void recebe_Tabuleiro(int client_socket, int matriz[9][9]) {
         return;
     }
     escrever_log_cliente("TabuleirO recebido com sucesso");
-    send(client_socket, "Tabuleiro recebido\0", 19, 0);
+    send(client_socket, "Tabuleiro recebido\0", BUFFER_SIZE, 0);
     escrever_log_cliente("Confirmação de tabuleiro enviada");
     buffer[bytes_received] = '\0'; // Corrigido para usar buffer
     string_para_matriz(buffer, matriz);
@@ -503,7 +503,7 @@ void comunicacao_Resolvedor(int client_socket) {
     int id_tabuleiro;
     int linha_branca;
     int coluna_branca;
-    if (recv(client_socket, &id_tabuleiro, sizeof(id_tabuleiro), 0) <= 0) {
+    if (recv(client_socket, &id_tabuleiro, BUFFER_SIZE, 0) <= 0) {
         escrever_log_cliente("Erro ao receber ID do tabuleiro");
         perror("Erro ao receber ID do tabuleiro");
         close(client_socket);
@@ -517,7 +517,7 @@ void comunicacao_Resolvedor(int client_socket) {
         // solicita Tabuleiro
         // ____________________________________
         strcpy(buffer, "Solicita Tabuleiro");
-        send(client_socket, buffer, strlen(buffer), 0);
+        send(client_socket, buffer, BUFFER_SIZE, 0);
         escrever_log_cliente("Solicitação de tabuleiro enviada");
 
         recebe_Tabuleiro(client_socket, matriz);
@@ -526,7 +526,7 @@ void comunicacao_Resolvedor(int client_socket) {
         // _______________________________________________
         // Recebe o menu inicial do servidor
         printf("Recebe menu inicial\n");
-        int bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+        int bytes_received = recv(client_socket, buffer, BUFFER_SIZE, 0);
         escrever_log_cliente("Menu inicial recebido");
         printf("Depois de receber menu inicial\n");
         if (bytes_received <= 0) {
@@ -554,7 +554,7 @@ void comunicacao_Resolvedor(int client_socket) {
         int resposta = atoi(buffer); // Converte a entrada para inteiro
 
         // Envia a opção para o servidor
-        if (send(client_socket, buffer, strlen(buffer), 0) < 0) {
+        if (send(client_socket, buffer, BUFFER_SIZE, 0) < 0) {
             escrever_log_cliente("Erro ao enviar opção para o servidor");
             perror("Erro ao enviar dados");
             return;
@@ -569,7 +569,7 @@ void comunicacao_Resolvedor(int client_socket) {
 
                 escrever_log_cliente("Opção 1: Resolver o tabuleiro completo selecionada");
                 // Recebe confirmação do servidor
-                bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+                bytes_received = recv(client_socket, buffer, BUFFER_SIZE, 0);
                 if (bytes_received > 0) {
                     buffer[bytes_received] = '\0';
                     printf("Resposta do servidor:\n%s", buffer);
@@ -603,7 +603,7 @@ void comunicacao_Resolvedor(int client_socket) {
 
                     recebe_Tabuleiro(client_socket, matriz); //recv - send
                     imprima_matriz(matriz);
-                    bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0); // recv
+                    bytes_received = recv(client_socket, buffer, BUFFER_SIZE, 0); // recv
 
                     total_vazias = numCelulasVazias(matriz);
 
@@ -617,12 +617,12 @@ void comunicacao_Resolvedor(int client_socket) {
             case 2:
                 printf("[DEBUG] Opção 3: Solicitar solução parcial selecionada.\n");
                 escrever_log_cliente("Opção 3: Solicitar solução parcial selecionada");
-                bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+                bytes_received = recv(client_socket, buffer, BUFFER_SIZE, 0);
                 if (bytes_received > 0) {
                     escrever_log_cliente("Resposta do servidor recebida da opcao 3");
                     buffer[bytes_received] = '\0';
                     printf("Resposta do servidor: %s", buffer);
-                    send(client_socket, "Resposta do servidor confirmada", 25, 0);
+                    send(client_socket, "Resposta do servidor confirmada", BUFFER_SIZE, 0);
                     recebe_Tabuleiro(client_socket, matriz);
                     imprima_matriz(matriz);
                     return;
@@ -637,7 +637,7 @@ void comunicacao_Resolvedor(int client_socket) {
             case 3:
                 printf("[DEBUG] Opção 5: Desistir do Jogo.\n");
                 escrever_log_cliente("Opção 5: Desistir do Jogo");
-                bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+                bytes_received = recv(client_socket, buffer, BUFFER_SIZE, 0);
                 if (bytes_received > 0) {
                     escrever_log_cliente("Resposta do servidor recebida da opcao 5");
                     buffer[bytes_received] = '\0';
@@ -653,7 +653,7 @@ void comunicacao_Resolvedor(int client_socket) {
                 printf("[ERRO] Opção inválida! Tente novamente.\n");
                 escrever_log_cliente("Opção inválida! Tente novamente");
                 printf("[DEBUG] opção escolhida: %d\n", resposta);
-                bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+                bytes_received = recv(client_socket, buffer, BUFFER_SIZE, 0);
                 if (bytes_received > 0) {
                     escrever_log_cliente("Resposta do servidor recebida da opcao invalida");
                     buffer[bytes_received] = '\0';
@@ -677,7 +677,7 @@ void comunicacao_Apagador(int client_socket) {
 
     int linha_ocupada, coluna_ocupada;
 
-    if (recv(client_socket, &id_tabuleiro, sizeof(id_tabuleiro), 0) <= 0) {
+    if (recv(client_socket, &id_tabuleiro, BUFFER_SIZE, 0) <= 0) {
         escrever_log_cliente("Erro ao receber ID do tabuleiro");
         perror("Erro ao receber ID do tabuleiro");
         close(client_socket);
@@ -691,10 +691,10 @@ void comunicacao_Apagador(int client_socket) {
         // solicita Tabuleiro
         // ____________________________________
         strcpy(buffer, "Solicita Tabuleiro");
-        send(client_socket, buffer, strlen(buffer), 0);
+        send(client_socket, buffer, BUFFER_SIZE, 0);
         escrever_log_cliente("Solicitação de tabuleiro enviada");
         // Recebe o tabuleiro do servidor
-        int bytes_received2 = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+        int bytes_received2 = recv(client_socket, buffer, BUFFER_SIZE, 0);
         if (bytes_received2 <= 0) {
             escrever_log_cliente("Erro ao receber tabuleiro");
             printf("Servidor desconectado.\n");
@@ -703,7 +703,7 @@ void comunicacao_Apagador(int client_socket) {
         escrever_log_cliente("Tabuleiro recebido com sucesso");
         buffer[bytes_received2] = '\0'; // Corrigido para usar buffer
         printf("\nTabuleiro enviado:\n%s\n", buffer);
-        send(client_socket, "Tabuleiro recebido\0", 19, 0);
+        send(client_socket, "Tabuleiro recebido\0", BUFFER_SIZE, 0);
         escrever_log_cliente("Confirmação de tabuleiro enviada");
         // Converte a string para a matriz
         string_para_matriz(buffer, matriz);
@@ -713,7 +713,7 @@ void comunicacao_Apagador(int client_socket) {
         // _______________________________________________
         // Recebe o menu inicial do servidor
         printf("Recebe menu inicial\n");
-        int bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+        int bytes_received = recv(client_socket, buffer, BUFFER_SIZE, 0);
         escrever_log_cliente("Menu inicial recebido");
         printf("Depois de receber menu inicial\n");
         if (bytes_received <= 0) {
@@ -741,7 +741,7 @@ void comunicacao_Apagador(int client_socket) {
         int resposta = atoi(buffer); // Converte a entrada para inteiro
 
         // Envia a opção para o servidor
-        if (send(client_socket, buffer, strlen(buffer), 0) < 0) {
+        if (send(client_socket, buffer, BUFFER_SIZE, 0) < 0) {
             escrever_log_cliente("Erro ao enviar opção para o servidor");
             perror("Erro ao enviar dados");
             return;
@@ -754,7 +754,7 @@ void comunicacao_Apagador(int client_socket) {
                 printf("[DEBUG] Opção 1: Apagar o tabuleiro completo selecionada.\n");
                 escrever_log_cliente("Opção 1: Apagar o tabuleiro completo selecionada");
                 // Recebe confirmação do servidor
-                bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+                bytes_received = recv(client_socket, buffer, BUFFER_SIZE, 0);
                 escrever_log_cliente("Confirmação de opção recebida");
                 
                 if (bytes_received > 0) {
@@ -763,11 +763,11 @@ void comunicacao_Apagador(int client_socket) {
                     buffer[bytes_received] = '\0';
                     printf("Resposta do servidor:\n%s", buffer);
 
-                    send(client_socket, "Inicio", 6, 0);
+                    send(client_socket, "Inicio", BUFFER_SIZE, 0);
                     int num_vazias = numCelulasVazias(matriz);
                     while (num_vazias < 81 && num_vazias > 0) {
                         
-                        recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+                        recv(client_socket, buffer, BUFFER_SIZE, 0);
                         printf("Número total de casas vazias: %d\n", num_vazias);
                         
                         escolhe_celula_com_algo(matriz, &linha_ocupada, &coluna_ocupada);
@@ -780,14 +780,14 @@ void comunicacao_Apagador(int client_socket) {
                         // Recebe feedback do servidor
                         printf("[DEBUG] Tentativa enviada. Aguardando feedback do servidor...\n");
                         recebe_feedback_Apaga(client_socket);
-                        send(client_socket, "Feedback recebido", 17, 0);
+                        send(client_socket, "Feedback recebido", BUFFER_SIZE, 0);
                             
                         recebe_Tabuleiro(client_socket, matriz); //recv - send
                         
                         imprima_matriz(matriz);
                         num_vazias = numCelulasVazias(matriz);
                     }
-                    bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+                    bytes_received = recv(client_socket, buffer, BUFFER_SIZE, 0);
                     if (bytes_received > 0) {
                         buffer[bytes_received] = '\0';
                         printf("%s \n", buffer);
@@ -808,7 +808,7 @@ void comunicacao_Apagador(int client_socket) {
             case 2:
                 printf("[DEBUG] Opção 2: Desistir do Jogo.\n");
                 escrever_log_cliente("Opção 2: Desistir do Jogo");
-                bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+                bytes_received = recv(client_socket, buffer, BUFFER_SIZE, 0);
                 if (bytes_received > 0) {
                     escrever_log_cliente("Resposta do servidor recebida da opcao 5");
                     buffer[bytes_received] = '\0';
@@ -823,7 +823,7 @@ void comunicacao_Apagador(int client_socket) {
                 printf("[ERRO] Opção inválida! Tente novamente.\n");
                 escrever_log_cliente("Opção inválida! Tente novamente");
                 printf("[DEBUG] opção escolhida: %d\n", resposta);
-                bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+                bytes_received = recv(client_socket, buffer, BUFFER_SIZE, 0);
                 if (bytes_received > 0) {
                     escrever_log_cliente("Resposta do servidor recebida da opcao invalida");
                     buffer[bytes_received] = '\0';
@@ -976,12 +976,12 @@ int main(int argc, char *argv[]) {
     snprintf(buffer, BUFFER_SIZE, "%d,%d", modoJogo, jogadorModo);
     printf("modojogo,jogadorModo: %s\n", buffer);
     printf("Cliente %d conectado ao servidor\n", client_id);
-   if (send(client_socket, buffer, strlen(buffer), 0) < 0) {
+   if (send(client_socket, buffer, BUFFER_SIZE, 0) < 0) {
         perror("Erro ao enviar resolvedor");
         close(client_socket);
         exit(EXIT_FAILURE);
     }
-    recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+    recv(client_socket, buffer, BUFFER_SIZE, 0);
     
     enviar_id_cliente(client_socket, client_id);
 

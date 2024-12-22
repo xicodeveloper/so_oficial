@@ -455,7 +455,7 @@ void enviar_menu_resolvedor(int client_socket)
         "3. Desistir.\n"
         "------------------------------------\n";
     printf("Enviando menu para o cliente\n"); // Debug
-    send(client_socket, menu, strlen(menu), 0);
+    send(client_socket, menu, BUFFER_SIZE, 0);
     escrever_log("Menu enviado com sucesso");
 }
 
@@ -468,7 +468,7 @@ void enviar_menu_trinco(int client_socket)
         "3. Desistir.\n"
         "------------------------------------\n";
     printf("Enviando menu para o cliente\n"); // Debug
-    send(client_socket, menu, strlen(menu), 0);
+    send(client_socket, menu, BUFFER_SIZE, 0);
     escrever_log("Menu enviado com sucesso");
 }
 /**
