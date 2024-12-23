@@ -1186,7 +1186,7 @@ int main(int argc, char *argv[])
 /*
 
 
-/**
+
  * Função para lidar com o cliente Resolvedor
  *
  * @param client_socket Socket do cliente
@@ -1386,7 +1386,7 @@ void *handle_client_trinco(void *client_socket)
 }
 
 
-/**
+
  * Função para lidar com o cliente Apagador
  *
  * @param client_socket Socket do cliente
