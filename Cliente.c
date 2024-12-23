@@ -67,9 +67,11 @@ void string_para_matriz(char *tabuleiro_str, int matriz[SIZE][SIZE]) {
  * @param config_path Caminho para o ficheiro de configuração : const char *
  * @param porta Ponteiro para armazenar a porta do servidor : int *
  * @param ip_server Ponteiro para armazenar o IP do servidor : char *
+ * @param rol Ponteiro para armazenar o rol do cliente : int *
+ * @param prioridade Ponteiro para armazenar a prioridade do cliente : int *
  * @return void
  */
-void ler_configuracao_cliente(const char *config_path, int *porta, char *ip_server) {
+void ler_configuracao_cliente(const char *config_path, int *porta, char *ip_server, int *rol, int *prioridade) {
     FILE *config = fopen(config_path, "r");
     if (config == NULL) {
         printf("Erro ao abrir o ficheiro de configuração.\n");
@@ -89,7 +91,16 @@ void ler_configuracao_cliente(const char *config_path, int *porta, char *ip_serv
             token = strtok(NULL, "\n");
             strcpy(ip_server, token);
             escrever_log_cliente("IP do servidor lido com sucesso");
-        }
+        } else if (strcmp(token, "rol") == 0) {
+            token = strtok(NULL, "\n");
+            *rol = atoi(token);
+            escrever_log_cliente("rol lido com sucesso");
+        } else if (strcmp(token, "prioridade") == 0) {
+            token = strtok(NULL, "\n");
+            *prioridade = atoi(token);
+            escrever_log_cliente("prioridade lida com sucesso");
+        }   
+        
     }
     fclose(config);
     escrever_log_cliente("Configuração lida com sucesso");
@@ -439,9 +450,6 @@ void recebe_feedback_Apaga(int client_socket) {
     printf("Resposta do servidor:\n%s\n", buffer);
     processa_feedback_apaga(buffer);
 }
-
-
-
 
 
 /**
@@ -1024,6 +1032,10 @@ void comunicar_servidor(int client_socket, int modoJogo, int jogadorModo) {
                 comunicacao_Apagador(client_socket);
             }
             break;
+        case 3:
+            printf("Resolvedor\n");
+            comunicacao_Trinco(client_socket);
+            break;    
         default:
             printf("[ERRO] Modo de jogo inválido! Tente novamente.\n");
             printf("[DEBUG] Modo de jogo escolhido: %d\n", modoJogo);
@@ -1033,86 +1045,15 @@ void comunicar_servidor(int client_socket, int modoJogo, int jogadorModo) {
 
 
 
-/**
- * Função para escolher o modo de jogo
- * 
- * @param modoJogo Modo de jogo escolhido : int *
- * @param jogadorModo Modo de jogador escolhido : int *
- * @return void
- */
-void escolhe_modo_de_Jogo(int *modoJogo, int *jogadorModo) {
-    printf("Escolha o modo de jogo:\n");
-    printf("1 - Modo Clásico cooperativo\n");
-    printf("2 - Modo Apagadores e Resolvedores\n");
-    
-    printf("Insira um número ('0' para encerrar): ");
-    char buffer[BUFFER_SIZE];
-    memset(buffer, 0, BUFFER_SIZE);
-    fgets(buffer, BUFFER_SIZE, stdin);
-
-    if (strlen(buffer) == 1) {
-        printf("Por favor, insira um número válido.\n");
-        return;
-    }
-
-    // Remove o newline que `fgets` deixa no buffer
-    buffer[strcspn(buffer, "\n")] = 0;
-
-    *modoJogo = atoi(buffer); // Converte a entrada para inteiro
-
-    switch (*modoJogo) {
-        case 1:
-            printf("[DEBUG] Modo de jogo 1: Modo Clásico cooperativo selecionado.\n");
-            escrever_log_cliente("Modo de jogo 1: Modo Clásico cooperativo selecionado");
-            break;
-        case 2:
-            printf("[DEBUG] Modo de jogo 2: Modo Apagadores e Resolvedores selecionado.\n");
-            escrever_log_cliente("Modo de jogo 2: Modo Apagadores e Resolvedores selecionado");
-
-            printf("Escolha o Jogador:\n");
-            printf("1 - Resolvedor\n");
-            printf("2 - Apagador\n");
-
-            printf("Insira um número ('0' para encerrar): ");
-
-            memset(buffer, 0, BUFFER_SIZE);
-            fgets(buffer, BUFFER_SIZE, stdin);
-
-            if (strlen(buffer) == 1) {
-                printf("Por favor, insira um número válido.\n");
-                return;
-            }
-
-            // Remove o newline que `fgets` deixa no buffer
-            buffer[strcspn(buffer, "\n")] = 0;
-
-            *jogadorModo = atoi(buffer); // Converte a entrada para inteiro
-
-            if (*jogadorModo != 1 && *jogadorModo != 2) {
-                printf("[ERRO] Modo de jogador inválido! Tente novamente.\n");
-                printf("[DEBUG] Modo de jogador escolhido: %d\n", *jogadorModo);
-
-            }
-
-            break;
-
-        case 0:
-            printf("[DEBUG] Modo de jogo 0: Encerrar.\n");
-            escrever_log_cliente("Jogador Saiu");
-            break;
-
-
-    }
-
-    return;
-}
 
 int main(int argc, char *argv[]) {
     int client_socket;
     int porta;
     char ip[256];
     int modoJogo = 0;
-    int jogadorModo = 1;
+    int rol = 0;
+    int prioridade = 0;
+
     char buffer[BUFFER_SIZE];
     if (argc < 2) {
         printf("Uso: %s <ficheiro de configuração>\n", argv[0]);
@@ -1121,49 +1062,34 @@ int main(int argc, char *argv[]) {
 
     int client_id = get_new_user_id();
 
-    ler_configuracao_cliente(argv[1], &porta, ip);
-    escolhe_modo_de_Jogo(&modoJogo, &jogadorModo);
+    ler_configuracao_cliente(argv[1], &porta, ip, &rol, &prioridade);
 
-    if (modoJogo == 0 || jogadorModo == 0) {
-        printf("Cliente desconectado\n");
-        return 0;
-    }
-
-
-    if(jogadorModo==1 && modoJogo==2){
-        printf("Resolvedor\n");
-    }else if(jogadorModo==2 && modoJogo==2){
-
-        printf("Apagador\n");
-    }else if(jogadorModo==1 && modoJogo==1){
-
-        printf("Jogador trinco\n");
-    }
+    
     struct sockaddr_in server_addr;
 
     client_socket = criar_socket_cliente();
     configurar_endereco_servidor(&server_addr, porta, ip);
 
     conectar_servidor(client_socket, &server_addr);
-
-
-    snprintf(buffer, BUFFER_SIZE, "%d,%d", modoJogo, jogadorModo);
-    printf("modojogo,jogadorModo: %s\n", buffer);
     printf("Cliente %d conectado ao servidor\n", client_id);
 
+    snprintf(buffer, BUFFER_SIZE, "%d,%d", rol, prioridade);
+    printf("rol, prioridade: %s\n", buffer);
 
    if (send(client_socket, buffer, BUFFER_SIZE, 0) < 0) {
         perror("Erro ao enviar resolvedor");
         close(client_socket);
         exit(EXIT_FAILURE);
     }
-    recv(client_socket, buffer, BUFFER_SIZE, 0);
+    recv(client_socket, &modoJogo, sizeof(int), 0);
+    printf("Modo de jogo: %d\n", modoJogo);
     
     enviar_id_cliente(client_socket, client_id);
-    printf("mODO JOGO %d",modoJogo);
-    printf("JOGOdor modo %d",jogadorModo);
+    printf("Modo de Jogo %d \n",modoJogo);
+    printf("Rol do jogador %d \n",rol);
+    printf("Prioridade do jogador %d \n",prioridade);
 
-    comunicar_servidor(client_socket, modoJogo, jogadorModo);
+    comunicar_servidor(client_socket, modoJogo, rol);
 
     close(client_socket);
     escrever_log_cliente("Cliente desconectado");

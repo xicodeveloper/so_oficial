@@ -18,6 +18,7 @@
 int matriz_of[SIZE][LC][LC] = {{{0}}};
 int matriz_solucao[SIZE][LC][LC] = {{{0}}};
 
+
 int num_clients_sessao = 0;
 int server_socket, client_socket, porta;
 pthread_mutex_t clients_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -135,6 +136,7 @@ void escrever_log_com_cliente_id_tentativa_col_row(int cliente_id, int tentativa
     fclose(f);
     pthread_mutex_unlock(&log_mutex_3);
 }
+
 /**
  * Função para ler o ficheiro de configuração e carregar as configurações
  * @param config_path Caminho para o ficheiro de configuração
@@ -471,6 +473,7 @@ void enviar_menu_trinco(int client_socket)
     send(client_socket, menu, BUFFER_SIZE, 0);
     escrever_log("Menu enviado com sucesso");
 }
+
 /**
  * Função para enviar o menu para o cliente Apagador
  *
@@ -769,6 +772,61 @@ void semaforo()
     // Espera até que o semáforo seja sinalizado
     sem_wait(&sem_barrier);
 }
+
+
+
+/**
+ * Função para escolher o modo de jogo
+ * 
+ * @param modoJogo Modo de jogo escolhido : int *
+ * @return void
+ */
+void escolhe_modo_de_Jogo(int *modoJogo) {
+    printf("Escolha o modo de jogo:\n");
+    printf("1 - Modo Clásico cooperativo\n");
+    printf("2 - Modo Apagadores e Resolvedores\n");
+    printf("3 - Modo de Prioridades\n");
+    
+    printf("Insira um número ('0' para encerrar): ");
+    char buffer[BUFFER_SIZE];
+    memset(buffer, 0, BUFFER_SIZE);
+    fgets(buffer, BUFFER_SIZE, stdin);
+
+    if (strlen(buffer) == 1) {
+        printf("Por favor, insira um número válido.\n");
+        return;
+    }
+
+    // Remove o newline que `fgets` deixa no buffer
+    buffer[strcspn(buffer, "\n")] = 0;
+
+    *modoJogo = atoi(buffer); // Converte a entrada para inteiro
+
+    switch (*modoJogo) {
+        case 1:
+            printf("[DEBUG] Modo de jogo 1: Modo Clásico cooperativo selecionado.\n");
+            escrever_log("Modo de jogo 1: Modo Clásico cooperativo selecionado");
+            break;
+        case 2:
+            printf("[DEBUG] Modo de jogo 2: Modo Apagadores e Resolvedores selecionado.\n");
+            escrever_log("Modo de jogo 2: Modo Apagadores e Resolvedores selecionado");
+            break;
+        
+        case 3:
+            printf("[DEBUG] Modo de jogo 3: Modo de Prioridades selecionado.\n");
+            escrever_log("Modo de jogo 3: Modo de Prioridades selecionado");
+            break;
+        case 0:
+            printf("[DEBUG] Modo de jogo 0: Encerrar.\n");
+            escrever_log("Jogador Saiu");
+            break;
+
+
+    }
+
+    return;
+}
+
 /**
  * Função para lidar com o cliente Apagador
  *
@@ -1330,7 +1388,9 @@ void *handle_client_trinco(void *client_socket)
 
 //----------------------------
 int main(int argc, char *argv[])
-{
+{   
+
+    // INICIALIZAÇÃO DO SERVIDOR
     struct sockaddr_in server_addr, client_addr;
     socklen_t addr_len = sizeof(client_addr);
 
@@ -1349,6 +1409,7 @@ int main(int argc, char *argv[])
     ler_matrizes(matriz_of);
     printf("----------");
     ler_matrizes(matriz_solucao);
+    //_________________________________________________________________________
 
     struct sigaction sa;
     sa.sa_handler = handle_sigint;
@@ -1356,6 +1417,7 @@ int main(int argc, char *argv[])
     sigemptyset(&sa.sa_mask);
     sigaction(SIGINT, &sa, NULL);
 
+    // CRIAÇÃO DO SOCKET DO SERVIDOR
     server_socket = socket(AF_INET, SOCK_STREAM, 0);
     escrever_log("Socket do servidor criado com sucesso");
     if (server_socket < 0)
@@ -1388,14 +1450,20 @@ int main(int argc, char *argv[])
     }
     escrever_log("Servidor pronto para ouvir conexões");
     printf("Servidor iniciado na porta %d\n", porta); // Debug
+    //_________________________________________________________________
 
-    
+    // INICIALIZAÇÃO DOS MUTEX
     srand(time(NULL));
-    sem_init(&sem_barrier, 0, 0);
+    sem_init(&sem_barrier, 0, 0);    
+    //_________________________________________________________________
+
+    int modoJogo;
+    escolhe_modo_de_Jogo(&modoJogo);
+
     while (1)
     {
-        int modoJogo;
-        int jogadorModo;
+        int rol_Jogador;
+        int prioridade_Jogador;
         char buffer[BUFFER_SIZE];
 
         client_socket = accept(server_socket, (struct sockaddr *)&client_addr, &addr_len);
@@ -1406,6 +1474,9 @@ int main(int argc, char *argv[])
             continue;
         }
         escrever_log("Conexão aceita com sucesso");
+
+
+        //_________________________________________________________________
         pthread_mutex_lock(&clients_mutex);
         if (num_clients_sessao >= 10)
         {
@@ -1417,6 +1488,7 @@ int main(int argc, char *argv[])
         escrever_log("Número de clientes na sessão atualizado");
         num_clients_sessao++;
         pthread_mutex_unlock(&clients_mutex);
+        //_________________________________________________________________
 
         int *new_sock = malloc(sizeof(int));
         if (new_sock == NULL)
@@ -1441,17 +1513,18 @@ int main(int argc, char *argv[])
 
         buffer[bytes_received] = '\0'; // Assegura-se de que a mensagem recebida seja terminada com '\0'
         // Extraer os inteiros do buffer
-        if (sscanf(buffer, "%d,%d", &modoJogo, &jogadorModo) != 2)
+        if (sscanf(buffer, "%d,%d", &rol_Jogador,&prioridade_Jogador) != 2)
         {
-            printf("modoJogo: %d, jogadorModo: %d\n", modoJogo, jogadorModo);
+            printf("rol do Jogador: %d, prioridade do jogador: %d\n", rol_Jogador, prioridade_Jogador);
             printf("Erro ao analisar os dados recebidos: '%s'\n", buffer);
             free(new_sock);
             close(client_socket);
             continue;
         }
-        printf("modoJogo: %d, jogadorModo: %d\n", modoJogo, jogadorModo);
+        printf("rol do Jogador: %d, prioridade do jogador: %d\n", rol_Jogador, prioridade_Jogador);
         printf("Received from client: '%s' (bytes_received: %d)\n", buffer, bytes_received); // Debug
-        send(client_socket, "Conexão estabelecida com sucesso", BUFFER_SIZE, 0);
+
+        send(client_socket, &modoJogo, sizeof(int), 0);
 
         pthread_t tid;
         pthread_mutex_lock(&clients_mutex_board_2); // Bloqueia o primeiro mutex
@@ -1472,7 +1545,7 @@ int main(int argc, char *argv[])
         case 2:
             /* modo Resolvedores-Apagadores (leitores-escritores) */
 
-            if (jogadorModo == 1)
+            if (rol_Jogador == 1)
             {
                 // Tenta criar uma thread para "leitor"
 
@@ -1486,7 +1559,7 @@ int main(int argc, char *argv[])
                     continue;
                 }
             }
-            else if (jogadorModo == 2)
+            else if (rol_Jogador == 2)
             {
                 pthread_mutex_unlock(&clients_mutex_board_2); // Libera o mutex antes de usar outro
 
@@ -1511,6 +1584,17 @@ int main(int argc, char *argv[])
             escrever_log("Thread desanexada com sucesso");
             break;
 
+        case 3:
+            if (pthread_create(&tid, NULL, handle_client_trinco, (void *)new_sock) != 0)
+            {
+                escrever_log("Erro ao criar thread para o cliente resolvedor");
+                perror("Erro ao criar thread para o cliente resolvedor");
+                free(new_sock);
+                close(client_socket);
+                pthread_mutex_unlock(&clients_mutex_board_2); // Libera mutex no caso de erro
+                continue;
+            }
+            break;
         default:
             break;
         }
