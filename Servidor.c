@@ -17,8 +17,7 @@
 
 int matriz_of[SIZE][LC][LC] = {{{0}}};
 int matriz_solucao[SIZE][LC][LC] = {{{0}}};
-
-
+int modoJogo;
 int num_clients_sessao = 0;
 int server_socket, client_socket, porta;
 pthread_mutex_t clients_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -35,6 +34,12 @@ pthread_mutex_t exlusao_tentativa = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t exclusao_zeros = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t log_mutex_2 = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t log_mutex_3 = PTHREAD_MUTEX_INITIALIZER;
+
+typedef struct
+{
+    int client_socket;
+    int rol_Jogador;
+} client_args_t;
 
 /**
  *  Função para registrar logs do servidor incluindo a data e hora do evento
@@ -461,19 +466,6 @@ void enviar_menu_resolvedor(int client_socket)
     escrever_log("Menu enviado com sucesso");
 }
 
-void enviar_menu_trinco(int client_socket)
-{
-    const char *menu =
-        "---------- Menu de Sudoku ----------\n"
-        "1. Resolver Tabuleiro Total.\n"
-        "2. O Servidor revela a Solução e Desistir.\n"
-        "3. Desistir.\n"
-        "------------------------------------\n";
-    printf("Enviando menu para o cliente\n"); // Debug
-    send(client_socket, menu, BUFFER_SIZE, 0);
-    escrever_log("Menu enviado com sucesso");
-}
-
 /**
  * Função para enviar o menu para o cliente Apagador
  *
@@ -487,7 +479,8 @@ void enviar_menu_apagador(int client_socket)
     const char *menu =
         "---------- Menu de Sudoku ----------\n"
         "1. Apagar uma a uma as Celulas do Tabuleiro.\n"
-        "2. Desistir.\n"
+        "2. O Servidor revela a Solução e Desistir.\n"
+        "3. Desistir.\n"
         "------------------------------------\n";
     printf("Enviando menu para o cliente\n"); // Debug
     send(client_socket, menu, BUFFER_SIZE, 0);
@@ -721,6 +714,9 @@ void recebe_tentativa_e_envia_feedback(int client_socket, int matriz_sol[4][9][9
 
     // Prepara o feedback (certo ou errado)
     char resposta[BUFFER_SIZE];
+
+    // AQUI DEVE SER FEITA A SINCONIZAÇÃO
+
     if (matriz_sol[num - 1][linha][coluna] == tentativa)
     {
         matriz_of[num - 1][linha][coluna] = tentativa;
@@ -773,26 +769,26 @@ void semaforo()
     sem_wait(&sem_barrier);
 }
 
-
-
 /**
  * Função para escolher o modo de jogo
- * 
+ *
  * @param modoJogo Modo de jogo escolhido : int *
  * @return void
  */
-void escolhe_modo_de_Jogo(int *modoJogo) {
+void escolhe_modo_de_Jogo()
+{
     printf("Escolha o modo de jogo:\n");
     printf("1 - Modo Clásico cooperativo\n");
     printf("2 - Modo Apagadores e Resolvedores\n");
     printf("3 - Modo de Prioridades\n");
-    
+
     printf("Insira um número ('0' para encerrar): ");
     char buffer[BUFFER_SIZE];
     memset(buffer, 0, BUFFER_SIZE);
     fgets(buffer, BUFFER_SIZE, stdin);
 
-    if (strlen(buffer) == 1) {
+    if (strlen(buffer) == 1)
+    {
         printf("Por favor, insira um número válido.\n");
         return;
     }
@@ -800,192 +796,32 @@ void escolhe_modo_de_Jogo(int *modoJogo) {
     // Remove o newline que `fgets` deixa no buffer
     buffer[strcspn(buffer, "\n")] = 0;
 
-    *modoJogo = atoi(buffer); // Converte a entrada para inteiro
+    modoJogo = atoi(buffer); // Converte a entrada para inteiro
 
-    switch (*modoJogo) {
-        case 1:
-            printf("[DEBUG] Modo de jogo 1: Modo Clásico cooperativo selecionado.\n");
-            escrever_log("Modo de jogo 1: Modo Clásico cooperativo selecionado");
-            break;
-        case 2:
-            printf("[DEBUG] Modo de jogo 2: Modo Apagadores e Resolvedores selecionado.\n");
-            escrever_log("Modo de jogo 2: Modo Apagadores e Resolvedores selecionado");
-            break;
-        
-        case 3:
-            printf("[DEBUG] Modo de jogo 3: Modo de Prioridades selecionado.\n");
-            escrever_log("Modo de jogo 3: Modo de Prioridades selecionado");
-            break;
-        case 0:
-            printf("[DEBUG] Modo de jogo 0: Encerrar.\n");
-            escrever_log("Jogador Saiu");
-            break;
+    switch (modoJogo)
+    {
+    case 1:
+        printf("[DEBUG] Modo de jogo 1: Modo Clásico cooperativo selecionado.\n");
+        escrever_log("Modo de jogo 1: Modo Clásico cooperativo selecionado");
+        break;
+    case 2:
+        printf("[DEBUG] Modo de jogo 2: Modo Apagadores e Resolvedores selecionado.\n");
+        escrever_log("Modo de jogo 2: Modo Apagadores e Resolvedores selecionado");
+        break;
 
-
+    case 3:
+        printf("[DEBUG] Modo de jogo 3: Modo de Prioridades selecionado.\n");
+        escrever_log("Modo de jogo 3: Modo de Prioridades selecionado");
+        break;
+    case 0:
+        printf("[DEBUG] Modo de jogo 0: Encerrar.\n");
+        escrever_log("Jogador Saiu");
+        break;
     }
 
     return;
 }
 
-/**
- * Função para lidar com o cliente Apagador
- *
- * @param client_socket Socket do cliente
- * @return void
- */
-void *handle_client_Apagador(void *client_socket)
-{
-    int sock = *(int *)client_socket;
-    free(client_socket);
-    char buffer[BUFFER_SIZE];
-    int opcao, client_id;
-    int num = 2;
-
-    if (recv(sock, &client_id, sizeof(int), 0) <= 0)
-    {
-        escrever_log("Erro ao receber ID do cliente");
-        perror("Error receiving client ID");
-        close(sock);
-        return NULL;
-    }
-    escrever_log("ID do cliente recebido com sucesso");
-    printf("New client connected with ID: %d\n", client_id);
-    escrever_log("New client connected");
-    semaforo();
-    enviar_id_tabuleiro(sock, num);
-    int running2 = 1;
-    while (running2)
-    {
-        int bytes_received = recv(sock, buffer, BUFFER_SIZE, 0);
-        if (bytes_received < 0)
-        {
-            escrever_log("Erro ao receber pedido de tabuleiro");
-            perror("Error ao receber pedido de tabuleiro");
-            printf("Client %d disconnected due to error.\n", client_id);
-            escrever_log("Client disconnected due to receive error");
-            break;
-        }
-        escrever_log("Pedido de tabuleiro recebido com sucesso");
-        printf("Cliente %d: %s \n", client_id, buffer);
-        envia_tabuleiro(sock, num, matriz_of);
-
-        //_____________________________________________________________
-        enviar_menu_apagador(sock);
-        printf("Sending menu to client: %d\n", client_id);
-
-        printf("Waiting for option from client: %d\n", client_id);
-
-        // Receive the client's option
-        bytes_received = recv(sock, buffer, BUFFER_SIZE, 0);
-        if (bytes_received < 0)
-        {
-            escrever_log("Erro ao receber opção do cliente");
-            perror("Error receiving data from client");
-            printf("Client %d disconnected due to error.\n", client_id);
-            escrever_log("Client disconnected due to receive error");
-            break;
-        }
-        else if (bytes_received == 0)
-        {
-            escrever_log("Cliente desconectado");
-            printf("Client %d disconnected.\n", client_id);
-            escrever_log("Client disconnected");
-            break;
-        }
-        escrever_log("Opção do cliente recebida com sucesso");
-        buffer[bytes_received] = '\0';                                                                     // Null-terminate the received data
-        printf("Received from client %d: '%s' (bytes_received: %d)\n", client_id, buffer, bytes_received); // Debug
-
-        // Convert received message to an integer option
-        opcao = atoi(buffer);                                           // Try parsing the received data as an integer
-        printf("Parsed option from client %d: %d\n", client_id, opcao); // Debug
-        escrever_log("Opção do cliente convertida com sucesso");
-
-        // Handle the selected option
-        switch (opcao)
-        {
-        case 1:
-            // Determina o ponteiro para a variável global de casas vazias
-            printf("Client %d selected to solve one cell\n", client_id);
-            escrever_log("Cliente selecionou resolver uma célula");
-            // Envia uma resposta inicial ao cliente confirmando a opção
-            strcpy(buffer, "Option 1: one cell requested.\n");
-            if (send(sock, buffer, BUFFER_SIZE, 0) < 0)
-            {
-                perror("[ERRO] Falha ao enviar resposta inicial ao cliente");
-                escrever_log("Erro ao enviar resposta inicial ao cliente");
-                break;
-            }
-
-            recv(sock, buffer, BUFFER_SIZE, 0);
-            int num_vazias = numero_total_vazias(matriz_of, num);
-            printf("[DEBUG] Resposta inicial enviada para o cliente %d: '%s'\n", client_id, buffer);
-            while (num_vazias < 81 && num_vazias > 0)
-            {
-                send(sock, &num_vazias, sizeof(num_vazias), 0);
-                printf("Número total de casas vazias: %d\n", num_vazias);
-                // Enquanto houver casas vazias, processa as tentativas recebidas
-                escrever_log("Número total de casas vazias recebido com sucesso");
-                recebe_apaga_celula(sock, matriz_of);
-                recv(sock, buffer, BUFFER_SIZE, 0);
-                envia_tabuleiro(sock, num, matriz_of);
-                num_vazias = numero_total_vazias(matriz_of, num);
-            }
-            send(sock, "Jogo Acabado.\n", BUFFER_SIZE, 0);
-            printf("[INFO] Tabuleiro %d resolvido pelo cliente %d\n", num, client_id);
-            running2 = 0; // Exit loop
-            break;
-
-        case 2:
-            printf("Client %d quit the game.\n", client_id);
-            strcpy(buffer, "Option 2: Exiting the game.\n");
-            escrever_log("Cliente desistiu do jogo");
-            if (send(sock, buffer, BUFFER_SIZE, 0) < 0)
-            {
-                perror("[ERRO] Falha ao enviar mensagem de saída ao cliente");
-                escrever_log("Erro ao enviar mensagem de saída ao cliente");
-                break;
-            }
-            printf("[DEBUG] Mensagem de saída enviada para o cliente %d.\n", client_id);
-            escrever_log("Mensagem de saída enviada ao cliente");
-            running2 = 0; // Exit loop
-            break;
-        default:
-            printf("Client %d selected an invalid option: %d\n", client_id, opcao);
-            strcpy(buffer, "Invalid option! Please try again.\n");
-            escrever_log("Cliente selecionou uma opção inválida");
-
-            if (send(sock, buffer, BUFFER_SIZE, 0) < 0)
-            {
-                perror("[ERRO] Falha ao enviar mensagem de opção inválida");
-                escrever_log("Erro ao enviar mensagem de opção inválida");
-            }
-            else
-            {
-                escrever_log("Mensagem de opção inválida enviada ao cliente");
-                printf("[DEBUG] Mensagem de opção inválida enviada para o cliente %d.\n", client_id);
-            }
-            escrever_log("Mensagem de opção inválida enviada ao cliente");
-            printf("[DEBUG] opção escolhida pelo cliente: %d\n", opcao);
-            break;
-        }
-
-        // Debug opcional para verificar envio final (não necessário)
-        printf("[DEBUG] Opção processada para cliente %d.\n", client_id);
-    }
-
-    // Close connection and update client count
-    close(sock);
-    escrever_log("Conexão fechada e contagem de clientes atualizada");
-    pthread_mutex_lock(&clients_mutex);
-    num_clients_sessao--;
-    pthread_mutex_unlock(&clients_mutex);
-    escrever_log("Clientes atualizados");
-    printf("Current clients: %d\n", num_clients_sessao);
-    printf("Connection with client %d closed\n", client_id);
-    escrever_log("Client connection closed");
-    return NULL;
-}
 
 /**
  * Função para lidar com o cliente Resolvedor
@@ -993,10 +829,12 @@ void *handle_client_Apagador(void *client_socket)
  * @param client_socket Socket do cliente
  * @return void
  */
-void *handle_client_Resolvedor(void *client_socket)
+void *handle_client(void *args)
 {
-    int sock = *(int *)client_socket;
-    free(client_socket);
+    client_args_t *client_args = (client_args_t *)args;
+    int sock = client_args->client_socket;
+    int rol_Jogador = client_args->rol_Jogador;
+    free(client_args);
     char buffer[BUFFER_SIZE];
     int opcao, client_id;
     int num = 2;
@@ -1068,39 +906,28 @@ void *handle_client_Resolvedor(void *client_socket)
         {
         case 1:
             semaforo();
-            printf("Client %d selected to solve one cell\n", client_id);
-            escrever_log("Cliente selecionou resolver uma célula");
-            // Envia uma resposta inicial ao cliente confirmando a opção
-            pthread_mutex_lock(&exlusao);
-            strcpy(buffer, "Option 1: one cell requested.\n");
-            if (send(sock, buffer, BUFFER_SIZE, 0) < 0)
+            if (rol_Jogador == 1)
             {
-                perror("[ERRO] Falha ao enviar resposta inicial ao cliente");
-                escrever_log("Erro ao enviar resposta inicial ao cliente");
-                break;
-            }
-            printf("[DEBUG] Resposta inicial enviada para o cliente %d: '%s'\n", client_id, buffer);
+                printf("Client %d selected to solve one cell\n", client_id);
+                escrever_log("Cliente selecionou resolver uma célula");
 
-            int total_vazias = numero_total_vazias(matriz_of, num);
-            while (total_vazias > 0 && total_vazias < 81)
-            {
-                printf("Número total de casas vazias: %d\n", total_vazias);
-                // Enquanto houver casas vazias, processa as tentativas recebidas
-                recebe_tentativa_e_envia_feedback(sock, matriz_solucao, matriz_of);
-                bytes_received = recv(sock, buffer, BUFFER_SIZE, 0);
-                if (bytes_received < 0)
+                int total_vazias = numero_total_vazias(matriz_of, num);
+                while (total_vazias > 0 && total_vazias < 81)
                 {
-                    perror("Erro ao receber a confirmaçao de recebimento de feedback do cliente");
-                    escrever_log("Erro ao receber tentativa do cliente");
-                    break;
-                }
+                    printf("Número total de casas vazias: %d\n", total_vazias);
+                    // Enquanto houver casas vazias, processa as tentativas recebidas
+                    recebe_tentativa_e_envia_feedback(sock, matriz_solucao, matriz_of);
 
-                envia_tabuleiro(sock, num, matriz_of);
-                send(sock, "espera", BUFFER_SIZE, 0);
-                total_vazias = numero_total_vazias(matriz_of, num);
-                pthread_mutex_unlock(&exlusao);
+                    envia_tabuleiro(sock, num, matriz_of);
+                    total_vazias = numero_total_vazias(matriz_of, num);
+                }
+                printf("[INFO] Tabuleiro %d resolvido pelo cliente %d\n", num, client_id);
             }
-            printf("[INFO] Tabuleiro %d resolvido pelo cliente %d\n", num, client_id);
+            else
+            {
+                // option1Apagador(client_id, num, sock);
+            }
+
             running = 0; // Exit loop
             break;
 
@@ -1116,7 +943,7 @@ void *handle_client_Resolvedor(void *client_socket)
             }
             printf("[DEBUG] Mensagem de solução completa enviada ao cliente %d.\n", client_id);
             escrever_log("Mensagem de solução completa enviada ao cliente");
-            memset(buffer, 0, BUFFER_SIZE - 1);
+            memset(buffer, 0, BUFFER_SIZE);
             int bytesReceived = recv(sock, buffer, BUFFER_SIZE, 0);
             if (bytesReceived < 0)
             {
@@ -1135,7 +962,7 @@ void *handle_client_Resolvedor(void *client_socket)
 
         case 3:
             printf("Client %d quit the game.\n", client_id);
-            strcpy(buffer, "Option 5: Exiting the game.\n");
+            strcpy(buffer, "Option 3: Exiting the game.\n");
             escrever_log("Cliente desistiu do jogo");
             if (send(sock, buffer, BUFFER_SIZE, 0) < 0)
             {
@@ -1187,12 +1014,184 @@ void *handle_client_Resolvedor(void *client_socket)
 
 //----------------------------
 
+
+//----------------------------
+int main(int argc, char *argv[])
+{
+
+    // INICIALIZAÇÃO DO SERVIDOR
+    struct sockaddr_in server_addr, client_addr;
+    socklen_t addr_len = sizeof(client_addr);
+
+    if (argc < 2)
+    {
+        escrever_log("Erro ao abrir o ficheiro de configuração");
+        printf("Uso: %s <ficheiro de configuração>\n", argv[0]);
+        return 1;
+    }
+
+    char ficheiro_jogos[100], ficheiro_solucoes[100];
+    ler_configuracao(argv[1], ficheiro_jogos, ficheiro_solucoes, &porta);
+
+    transforma_matriz(ficheiro_jogos, matriz_of);
+    transforma_matriz_solucao(ficheiro_solucoes, matriz_solucao);
+    ler_matrizes(matriz_of);
+    printf("----------");
+    ler_matrizes(matriz_solucao);
+    //_________________________________________________________________________
+
+    struct sigaction sa;
+    sa.sa_handler = handle_sigint;
+    sa.sa_flags = 0;
+    sigemptyset(&sa.sa_mask);
+    sigaction(SIGINT, &sa, NULL);
+
+    // CRIAÇÃO DO SOCKET DO SERVIDOR
+    server_socket = socket(AF_INET, SOCK_STREAM, 0);
+    escrever_log("Socket do servidor criado com sucesso");
+    if (server_socket < 0)
+    {
+        escrever_log("Erro ao criar socket do servidor");
+        perror("Erro ao criar socket do servidor");
+        return 1;
+    }
+
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_addr.s_addr = INADDR_ANY;
+    server_addr.sin_port = htons(porta);
+
+    if (bind(server_socket, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
+    {
+        escrever_log("Erro no bind");
+        perror("Erro no bind");
+        close(server_socket);
+        return 1;
+    }
+    escrever_log("Bind feito com sucesso");
+
+    if (listen(server_socket, 10) < 0)
+    {
+        escrever_log("Erro ao ouvir no socket");
+        perror("Erro ao ouvir no socket");
+        close(server_socket);
+        return 1;
+    }
+    escrever_log("Servidor pronto para ouvir conexões");
+    printf("Servidor iniciado na porta %d\n", porta); // Debug
+    //_________________________________________________________________
+
+    // INICIALIZAÇÃO DOS MUTEX
+    srand(time(NULL));
+    sem_init(&sem_barrier, 0, 0);
+    //_________________________________________________________________
+
+    escolhe_modo_de_Jogo();
+
+    while (1)
+    {
+        int rol_Jogador;
+        int prioridade_Jogador;
+        char buffer[BUFFER_SIZE];
+
+        client_socket = accept(server_socket, (struct sockaddr *)&client_addr, &addr_len);
+        if (client_socket < 0)
+        {
+            escrever_log("Erro ao aceitar conexão");
+            perror("Erro ao aceitar conexão");
+            continue;
+        }
+        escrever_log("Conexão aceita com sucesso");
+
+        //_________________________________________________________________
+        pthread_mutex_lock(&clients_mutex);
+        if (num_clients_sessao >= 10)
+        {
+            escrever_log("Número máximo de clientes atingido");
+            close(client_socket);
+            pthread_mutex_unlock(&clients_mutex);
+            continue;
+        }
+        escrever_log("Número de clientes na sessão atualizado");
+        num_clients_sessao++;
+        pthread_mutex_unlock(&clients_mutex);
+        //_________________________________________________________________
+
+        int *new_sock = malloc(sizeof(int));
+        if (new_sock == NULL)
+        {
+            escrever_log("Erro ao alocar memória para new_sock");
+            perror("Erro ao alocar memória para new_sock");
+            close(client_socket);
+            continue;
+        }
+        *new_sock = client_socket;
+        escrever_log("Memória alocada para new_sock com sucesso");
+
+        int bytes_received = recv(client_socket, buffer, BUFFER_SIZE, 0);
+        if (bytes_received <= 0)
+        {
+            escrever_log("Erro ao receber resolvedor do cliente");
+            perror("Erro ao receber resolvedor");
+            free(new_sock);
+            close(client_socket);
+            continue;
+        }
+
+        buffer[bytes_received] = '\0'; // Assegura-se de que a mensagem recebida seja terminada com '\0'
+        // Extraer os inteiros do buffer
+        if (sscanf(buffer, "%d,%d", &rol_Jogador, &prioridade_Jogador) != 2)
+        {
+            printf("rol do Jogador: %d, prioridade do jogador: %d\n", rol_Jogador, prioridade_Jogador);
+            printf("Erro ao analisar os dados recebidos: '%s'\n", buffer);
+            free(new_sock);
+            close(client_socket);
+            continue;
+        }
+        printf("rol do Jogador: %d, prioridade do jogador: %d\n", rol_Jogador, prioridade_Jogador);
+        printf("Received from client: '%s' (bytes_received: %d)\n", buffer, bytes_received); // Debug
+
+        send(client_socket, &modoJogo, sizeof(int), 0);
+
+        pthread_t tid;
+        pthread_mutex_lock(&clients_mutex_board_2); // Bloqueia o primeiro mutex
+
+        client_args_t *client_args = malloc(sizeof(client_args_t));
+        client_args->client_socket = client_socket;
+        client_args->rol_Jogador = rol_Jogador;
+
+        if (pthread_create(&tid, NULL, handle_client, (void *)client_args) != 0)
+        {
+            escrever_log("Erro ao criar thread para o cliente leitor");
+            perror("Erro ao criar thread para o cliente leitor");
+            free(new_sock);
+            close(client_socket);
+            pthread_mutex_unlock(&clients_mutex_board_2); // Libera mutex no caso de erro
+            continue;
+        }
+        pthread_mutex_unlock(&clients_mutex_board_2);
+    }
+    sem_destroy(&sem_barrier);
+    // Após sair do loop principal
+    escrever_log("Servidor encerrado");
+    close(server_socket);
+    return 0;
+}
+
+
+
+
+//________________________________________________________________________________
+
+
+/*
+
+
 /**
  * Função para lidar com o cliente Resolvedor
  *
  * @param client_socket Socket do cliente
  * @return void
- */
+
 void *handle_client_trinco(void *client_socket)
 {
     int sock = *(int *)client_socket;
@@ -1386,223 +1385,166 @@ void *handle_client_trinco(void *client_socket)
     return NULL;
 }
 
-//----------------------------
-int main(int argc, char *argv[])
-{   
 
-    // INICIALIZAÇÃO DO SERVIDOR
-    struct sockaddr_in server_addr, client_addr;
-    socklen_t addr_len = sizeof(client_addr);
+/**
+ * Função para lidar com o cliente Apagador
+ *
+ * @param client_socket Socket do cliente
+ * @return void
+ 
+void *handle_client_Apagador(void *client_socket)
+{
+    int sock = *(int *)client_socket;
+    free(client_socket);
+    char buffer[BUFFER_SIZE];
+    int opcao, client_id;
+    int num = 2;
 
-    if (argc < 2)
+    if (recv(sock, &client_id, sizeof(int), 0) <= 0)
     {
-        escrever_log("Erro ao abrir o ficheiro de configuração");
-        printf("Uso: %s <ficheiro de configuração>\n", argv[0]);
-        return 1;
+        escrever_log("Erro ao receber ID do cliente");
+        perror("Error receiving client ID");
+        close(sock);
+        return NULL;
     }
-
-    char ficheiro_jogos[100], ficheiro_solucoes[100];
-    ler_configuracao(argv[1], ficheiro_jogos, ficheiro_solucoes, &porta);
-
-    transforma_matriz(ficheiro_jogos, matriz_of);
-    transforma_matriz_solucao(ficheiro_solucoes, matriz_solucao);
-    ler_matrizes(matriz_of);
-    printf("----------");
-    ler_matrizes(matriz_solucao);
-    //_________________________________________________________________________
-
-    struct sigaction sa;
-    sa.sa_handler = handle_sigint;
-    sa.sa_flags = 0;
-    sigemptyset(&sa.sa_mask);
-    sigaction(SIGINT, &sa, NULL);
-
-    // CRIAÇÃO DO SOCKET DO SERVIDOR
-    server_socket = socket(AF_INET, SOCK_STREAM, 0);
-    escrever_log("Socket do servidor criado com sucesso");
-    if (server_socket < 0)
+    escrever_log("ID do cliente recebido com sucesso");
+    printf("New client connected with ID: %d\n", client_id);
+    escrever_log("New client connected");
+    semaforo();
+    enviar_id_tabuleiro(sock, num);
+    int running2 = 1;
+    while (running2)
     {
-        escrever_log("Erro ao criar socket do servidor");
-        perror("Erro ao criar socket do servidor");
-        return 1;
-    }
-
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_addr.s_addr = INADDR_ANY;
-    server_addr.sin_port = htons(porta);
-
-    if (bind(server_socket, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
-    {
-        escrever_log("Erro no bind");
-        perror("Erro no bind");
-        close(server_socket);
-        return 1;
-    }
-    escrever_log("Bind feito com sucesso");
-
-
-    if (listen(server_socket, 10) < 0)
-    {
-        escrever_log("Erro ao ouvir no socket");
-        perror("Erro ao ouvir no socket");
-        close(server_socket);
-        return 1;
-    }
-    escrever_log("Servidor pronto para ouvir conexões");
-    printf("Servidor iniciado na porta %d\n", porta); // Debug
-    //_________________________________________________________________
-
-    // INICIALIZAÇÃO DOS MUTEX
-    srand(time(NULL));
-    sem_init(&sem_barrier, 0, 0);    
-    //_________________________________________________________________
-
-    int modoJogo;
-    escolhe_modo_de_Jogo(&modoJogo);
-
-    while (1)
-    {
-        int rol_Jogador;
-        int prioridade_Jogador;
-        char buffer[BUFFER_SIZE];
-
-        client_socket = accept(server_socket, (struct sockaddr *)&client_addr, &addr_len);
-        if (client_socket < 0)
+        int bytes_received = recv(sock, buffer, BUFFER_SIZE, 0);
+        if (bytes_received < 0)
         {
-            escrever_log("Erro ao aceitar conexão");
-            perror("Erro ao aceitar conexão");
-            continue;
+            escrever_log("Erro ao receber pedido de tabuleiro");
+            perror("Error ao receber pedido de tabuleiro");
+            printf("Client %d disconnected due to error.\n", client_id);
+            escrever_log("Client disconnected due to receive error");
+            break;
         }
-        escrever_log("Conexão aceita com sucesso");
+        escrever_log("Pedido de tabuleiro recebido com sucesso");
+        printf("Cliente %d: %s \n", client_id, buffer);
+        envia_tabuleiro(sock, num, matriz_of);
 
+        //_____________________________________________________________
+        enviar_menu_apagador(sock);
+        printf("Sending menu to client: %d\n", client_id);
 
-        //_________________________________________________________________
-        pthread_mutex_lock(&clients_mutex);
-        if (num_clients_sessao >= 10)
+        printf("Waiting for option from client: %d\n", client_id);
+
+        // Receive the client's option
+        bytes_received = recv(sock, buffer, BUFFER_SIZE, 0);
+        if (bytes_received < 0)
         {
-            escrever_log("Número máximo de clientes atingido");
-            close(client_socket);
-            pthread_mutex_unlock(&clients_mutex);
-            continue;
+            escrever_log("Erro ao receber opção do cliente");
+            perror("Error receiving data from client");
+            printf("Client %d disconnected due to error.\n", client_id);
+            escrever_log("Client disconnected due to receive error");
+            break;
         }
-        escrever_log("Número de clientes na sessão atualizado");
-        num_clients_sessao++;
-        pthread_mutex_unlock(&clients_mutex);
-        //_________________________________________________________________
-
-        int *new_sock = malloc(sizeof(int));
-        if (new_sock == NULL)
+        else if (bytes_received == 0)
         {
-            escrever_log("Erro ao alocar memória para new_sock");
-            perror("Erro ao alocar memória para new_sock");
-            close(client_socket);
-            continue;
+            escrever_log("Cliente desconectado");
+            printf("Client %d disconnected.\n", client_id);
+            escrever_log("Client disconnected");
+            break;
         }
-        *new_sock = client_socket;
-        escrever_log("Memória alocada para new_sock com sucesso");
+        escrever_log("Opção do cliente recebida com sucesso");
+        buffer[bytes_received] = '\0';                                                                     // Null-terminate the received data
+        printf("Received from client %d: '%s' (bytes_received: %d)\n", client_id, buffer, bytes_received); // Debug
 
-        int bytes_received = recv(client_socket, buffer, BUFFER_SIZE, 0);
-        if (bytes_received <= 0)
-        {
-            escrever_log("Erro ao receber resolvedor do cliente");
-            perror("Erro ao receber resolvedor");
-            free(new_sock);
-            close(client_socket);
-            continue;
-        }
+        // Convert received message to an integer option
+        opcao = atoi(buffer);                                           // Try parsing the received data as an integer
+        printf("Parsed option from client %d: %d\n", client_id, opcao); // Debug
+        escrever_log("Opção do cliente convertida com sucesso");
 
-        buffer[bytes_received] = '\0'; // Assegura-se de que a mensagem recebida seja terminada com '\0'
-        // Extraer os inteiros do buffer
-        if (sscanf(buffer, "%d,%d", &rol_Jogador,&prioridade_Jogador) != 2)
-        {
-            printf("rol do Jogador: %d, prioridade do jogador: %d\n", rol_Jogador, prioridade_Jogador);
-            printf("Erro ao analisar os dados recebidos: '%s'\n", buffer);
-            free(new_sock);
-            close(client_socket);
-            continue;
-        }
-        printf("rol do Jogador: %d, prioridade do jogador: %d\n", rol_Jogador, prioridade_Jogador);
-        printf("Received from client: '%s' (bytes_received: %d)\n", buffer, bytes_received); // Debug
-
-        send(client_socket, &modoJogo, sizeof(int), 0);
-
-        pthread_t tid;
-        pthread_mutex_lock(&clients_mutex_board_2); // Bloqueia o primeiro mutex
-        switch (modoJogo)
+        // Handle the selected option
+        switch (opcao)
         {
         case 1:
-            if (pthread_create(&tid, NULL, handle_client_trinco, (void *)new_sock) != 0)
+            // Determina o ponteiro para a variável global de casas vazias
+            printf("Client %d selected to solve one cell\n", client_id);
+            escrever_log("Cliente selecionou resolver uma célula");
+            // Envia uma resposta inicial ao cliente confirmando a opção
+            strcpy(buffer, "Option 1: one cell requested.\n");
+            if (send(sock, buffer, BUFFER_SIZE, 0) < 0)
             {
-                escrever_log("Erro ao criar thread para o cliente leitor");
-                perror("Erro ao criar thread para o cliente leitor");
-                free(new_sock);
-                close(client_socket);
-                pthread_mutex_unlock(&clients_mutex_board_2); // Libera mutex no caso de erro
-                continue;
+                perror("[ERRO] Falha ao enviar resposta inicial ao cliente");
+                escrever_log("Erro ao enviar resposta inicial ao cliente");
+                break;
             }
+
+            recv(sock, buffer, BUFFER_SIZE, 0);
+            int num_vazias = numero_total_vazias(matriz_of, num);
+            printf("[DEBUG] Resposta inicial enviada para o cliente %d: '%s'\n", client_id, buffer);
+            while (num_vazias < 81 && num_vazias > 0)
+            {
+                send(sock, &num_vazias, sizeof(num_vazias), 0);
+                printf("Número total de casas vazias: %d\n", num_vazias);
+                // Enquanto houver casas vazias, processa as tentativas recebidas
+                escrever_log("Número total de casas vazias recebido com sucesso");
+                recebe_apaga_celula(sock, matriz_of);
+                recv(sock, buffer, BUFFER_SIZE, 0);
+                envia_tabuleiro(sock, num, matriz_of);
+                num_vazias = numero_total_vazias(matriz_of, num);
+            }
+            send(sock, "Jogo Acabado.\n", BUFFER_SIZE, 0);
+            printf("[INFO] Tabuleiro %d resolvido pelo cliente %d\n", num, client_id);
+            running2 = 0; // Exit loop
             break;
 
         case 2:
-            /* modo Resolvedores-Apagadores (leitores-escritores) */
-
-            if (rol_Jogador == 1)
+            printf("Client %d quit the game.\n", client_id);
+            strcpy(buffer, "Option 2: Exiting the game.\n");
+            escrever_log("Cliente desistiu do jogo");
+            if (send(sock, buffer, BUFFER_SIZE, 0) < 0)
             {
-                // Tenta criar uma thread para "leitor"
-
-                if (pthread_create(&tid, NULL, handle_client_Resolvedor, (void *)new_sock) != 0)
-                {
-                    escrever_log("Erro ao criar thread para o cliente leitor");
-                    perror("Erro ao criar thread para o cliente leitor");
-                    free(new_sock);
-                    close(client_socket);
-                    pthread_mutex_unlock(&clients_mutex_board_2); // Libera mutex no caso de erro
-                    continue;
-                }
+                perror("[ERRO] Falha ao enviar mensagem de saída ao cliente");
+                escrever_log("Erro ao enviar mensagem de saída ao cliente");
+                break;
             }
-            else if (rol_Jogador == 2)
-            {
-                pthread_mutex_unlock(&clients_mutex_board_2); // Libera o mutex antes de usar outro
-
-                pthread_mutex_lock(&clients_mutex_board); // Bloqueia o segundo mutex
-
-                // Tenta criar uma thread para "Resolvedor"
-                if (pthread_create(&tid, NULL, handle_client_Apagador, (void *)new_sock) != 0)
-                {
-                    escrever_log("Erro ao criar thread para o cliente escritor");
-                    perror("Erro ao criar thread para o cliente escritor");
-                    free(new_sock);
-                    close(client_socket);
-                    pthread_mutex_unlock(&clients_mutex_board); // Libera mutex no caso de erro
-                    continue;
-                }
-
-                pthread_mutex_unlock(&clients_mutex_board); // Libera o segundo mutex após uso
-            }
-
-            escrever_log("Thread criada com sucesso");
-            pthread_detach(tid); // Desanexa a thread
-            escrever_log("Thread desanexada com sucesso");
-            break;
-
-        case 3:
-            if (pthread_create(&tid, NULL, handle_client_trinco, (void *)new_sock) != 0)
-            {
-                escrever_log("Erro ao criar thread para o cliente resolvedor");
-                perror("Erro ao criar thread para o cliente resolvedor");
-                free(new_sock);
-                close(client_socket);
-                pthread_mutex_unlock(&clients_mutex_board_2); // Libera mutex no caso de erro
-                continue;
-            }
+            printf("[DEBUG] Mensagem de saída enviada para o cliente %d.\n", client_id);
+            escrever_log("Mensagem de saída enviada ao cliente");
+            running2 = 0; // Exit loop
             break;
         default:
+            printf("Client %d selected an invalid option: %d\n", client_id, opcao);
+            strcpy(buffer, "Invalid option! Please try again.\n");
+            escrever_log("Cliente selecionou uma opção inválida");
+
+            if (send(sock, buffer, BUFFER_SIZE, 0) < 0)
+            {
+                perror("[ERRO] Falha ao enviar mensagem de opção inválida");
+                escrever_log("Erro ao enviar mensagem de opção inválida");
+            }
+            else
+            {
+                escrever_log("Mensagem de opção inválida enviada ao cliente");
+                printf("[DEBUG] Mensagem de opção inválida enviada para o cliente %d.\n", client_id);
+            }
+            escrever_log("Mensagem de opção inválida enviada ao cliente");
+            printf("[DEBUG] opção escolhida pelo cliente: %d\n", opcao);
             break;
         }
-        pthread_mutex_unlock(&clients_mutex_board_2); // Libera mutex no caso de erro
+
+        // Debug opcional para verificar envio final (não necessário)
+        printf("[DEBUG] Opção processada para cliente %d.\n", client_id);
     }
-    sem_destroy(&sem_barrier);
-    // Após sair do loop principal
-    escrever_log("Servidor encerrado");
-    close(server_socket);
-    return 0;
+
+    // Close connection and update client count
+    close(sock);
+    escrever_log("Conexão fechada e contagem de clientes atualizada");
+    pthread_mutex_lock(&clients_mutex);
+    num_clients_sessao--;
+    pthread_mutex_unlock(&clients_mutex);
+    escrever_log("Clientes atualizados");
+    printf("Current clients: %d\n", num_clients_sessao);
+    printf("Connection with client %d closed\n", client_id);
+    escrever_log("Client connection closed");
+    return NULL;
 }
+
+
+ */
