@@ -639,6 +639,11 @@ void recebe_apaga_celula(int client_socket, int matriz_of[4][9][9])
 
     printf("[DEBUG] Dados extraídos: Tabuleiro ID=%d, Linha=%d, Coluna=%d\n", num, linha, coluna);
 
+
+
+    // AQUI DEVE SER FEITA A SINCONIZAÇÃO
+    //_____________________________________ 
+
     // Processa solicitação
     char resposta[BUFFER_SIZE];
     if (matriz_of[num - 1][linha][coluna] != 0)
@@ -822,7 +827,6 @@ void escolhe_modo_de_Jogo()
     return;
 }
 
-
 /**
  * Função para lidar com o cliente Resolvedor
  *
@@ -870,7 +874,13 @@ void *handle_client(void *args)
         envia_tabuleiro(sock, num, matriz_of);
 
         //_____________________________________________________________
-        enviar_menu_resolvedor(sock);
+        if(rol_Jogador==1){
+            enviar_menu_resolvedor(sock);
+        }
+        else{
+            enviar_menu_apagador(sock);
+        }
+        
         printf("Sending menu to client: %d\n", client_id);
 
         printf("Waiting for option from client: %d\n", client_id);
@@ -925,7 +935,22 @@ void *handle_client(void *args)
             }
             else
             {
-                // option1Apagador(client_id, num, sock);
+                // Determina o ponteiro para a variável global de casas vazias
+                printf("Client %d selected to solve one cell\n", client_id);
+                escrever_log("Cliente selecionou resolver uma célula");
+
+                int num_vazias = numero_total_vazias(matriz_of, num);
+                while (num_vazias < 81 && num_vazias > 0)
+                {
+                    printf("Número total de casas vazias: %d\n", num_vazias);
+
+                    recebe_apaga_celula(sock, matriz_of);
+                    
+                    envia_tabuleiro(sock, num, matriz_of);
+                    num_vazias = numero_total_vazias(matriz_of, num);
+                }
+                
+                printf("[INFO] Tabuleiro %d resolvido pelo cliente %d\n", num, client_id);
             }
 
             running = 0; // Exit loop
@@ -1013,7 +1038,6 @@ void *handle_client(void *args)
 }
 
 //----------------------------
-
 
 //----------------------------
 int main(int argc, char *argv[])
@@ -1177,11 +1201,7 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-
-
-
 //________________________________________________________________________________
-
 
 /*
 
@@ -1391,7 +1411,7 @@ void *handle_client_trinco(void *client_socket)
  *
  * @param client_socket Socket do cliente
  * @return void
- 
+
 void *handle_client_Apagador(void *client_socket)
 {
     int sock = *(int *)client_socket;
