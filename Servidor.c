@@ -34,12 +34,80 @@ pthread_mutex_t exlusao_tentativa = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t exclusao_zeros = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t log_mutex_2 = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t log_mutex_3 = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutexCelulas[LC][LC];
 
 typedef struct
 {
     int client_socket;
     int rol_Jogador;
+    int prioridade;
 } client_args_t;
+
+
+
+/**
+ * Função para inicializar os mutexes das células
+ */
+void inicializaSinc_1(){
+    for (int i = 0; i < LC; i++)
+        {
+            for (int j = 0; j < LC; j++)
+            {
+                if (pthread_mutex_init(&mutexCelulas[i][j], NULL) != 0)
+                {
+                    perror("Erro ao inicializar mutex");
+                }
+            }
+        }
+}
+
+/**
+ * Função para destruir os mutexes das células
+ */
+void destruirSinc_1(){
+    for (int i = 0; i < LC; i++)
+        {
+            for (int j = 0; j < LC; j++)
+            {
+                if (pthread_mutex_destroy(&mutexCelulas[i][j]) != 0)
+                {
+                    perror("Erro ao destruir mutex");
+                }
+            }
+        }
+}
+
+/**
+ * Função para inicializar os semaforos para os prod/cons
+ * ainda não implementado
+ */
+void inicializaSinc_2(){
+    
+}
+
+/**
+ * Função para destruir os semaforos para os prod/cons
+ * ainda não implementado
+ */
+void destruirSinc_2(){
+
+}
+
+/**
+ * Função para inicalizar os semaforos para as prioridades
+ * ainda não implementado
+ */
+void inicializaSinc_3(){
+    
+}
+
+/**
+ * Função para destruir os semaforos para as prioridades
+ * ainda não implementado
+ */
+void destruirSinc_3(){
+    
+}
 
 /**
  *  Função para registrar logs do servidor incluindo a data e hora do evento
@@ -582,6 +650,8 @@ void enviar_id_tabuleiro(int client_socket, int num)
     escrever_log("Enviar ID do tabuleiro ao cliente");
 }
 
+
+
 /**
  * Função para apagar a informação da célula que o cliente escolheu
  *
@@ -639,10 +709,8 @@ void recebe_apaga_celula(int client_socket, int matriz_of[4][9][9])
 
     printf("[DEBUG] Dados extraídos: Tabuleiro ID=%d, Linha=%d, Coluna=%d\n", num, linha, coluna);
 
-
-
     // AQUI DEVE SER FEITA A SINCONIZAÇÃO
-    //_____________________________________ 
+    //_____________________________________
 
     // Processa solicitação
     char resposta[BUFFER_SIZE];
@@ -674,6 +742,37 @@ void recebe_apaga_celula(int client_socket, int matriz_of[4][9][9])
     }
 }
 
+
+/**
+ * Função para analisar a tentativa do cliente, Fazer as alterações no tabuleiro e criar o feedback
+ * @param matriz_of Matriz 3D com os jogos
+ * @param matriz_sol Matriz 3D com as soluções
+ * @param client_socket Socket do cliente
+ * @param num ID do tabuleiro
+ * @param linha Linha da célula
+ * @param coluna Coluna da célula
+ * @param tentativa Valor da tentativa
+ * @param resposta Resposta a ser enviada ao cliente
+ */
+void analisaTentativa(int matriz_of[4][9][9], int matriz_sol[4][9][9], int client_socket, int num, int linha, int coluna, int tentativa, char *resposta)
+{
+    if (matriz_sol[num - 1][linha][coluna] == tentativa)
+    {
+        matriz_of[num - 1][linha][coluna] = tentativa;
+        snprintf(resposta, BUFFER_SIZE, "Tentativa %d na posição (%d, %d) está correta.", tentativa, linha + 1, coluna + 1);
+        escrever_log_com_cliente_id_tentativa_col_row(client_socket, tentativa, linha, coluna, "O servidor recebeu tentativa correta na (linha-coluna)");
+        escrever_log("Tentativa correta recebida do cliente");
+        ler_matrizes_id(matriz_of, num);
+    }
+    else
+    {
+        snprintf(resposta, BUFFER_SIZE, "Tentativa %d na posição (%d, %d) está errada.", tentativa, linha, coluna);
+        escrever_log("Tentativa errada recebida do cliente");
+        escrever_log_com_cliente_id_tentativa_col_row(client_socket, tentativa, linha, coluna, "O servidor recebeu tentativa errada na (linha-coluna)");
+    }
+    printf("[DEBUG] Feedback gerado: '%s'\n", resposta);
+}
+
 /**
  * Função para receber a tentativa do cliente e enviar o feedback
  *
@@ -682,13 +781,16 @@ void recebe_apaga_celula(int client_socket, int matriz_of[4][9][9])
  * @param client_socket Socket do cliente
  * @param matriz_sol Matriz 3D com as soluções
  * @param matriz_of Matriz 3D com os jogos
+ * @param client_id ID do cliente
+ * @param prioridade Prioridade do Jogador
  * @return void
  */
-void recebe_tentativa_e_envia_feedback(int client_socket, int matriz_sol[4][9][9], int matriz_of[4][9][9])
+void recebe_tentativa_e_envia_feedback(int client_socket, int matriz_sol[4][9][9], int matriz_of[4][9][9], int client_id ,int prioridade)
 {
     char buffer[BUFFER_SIZE];
+    char resposta[BUFFER_SIZE];
     int num, linha, coluna, tentativa;
-    pthread_mutex_lock(&exlusao_tentativa);
+
     escrever_log_com_cliente_id(client_socket, "Cliente a mandar a tentativa");
     printf("[DEBUG] Aguardando mensagem do cliente para receber tentativa...\n");
     escrever_log("Recebendo tentativa do cliente");
@@ -710,35 +812,43 @@ void recebe_tentativa_e_envia_feedback(int client_socket, int matriz_sol[4][9][9
         printf("[ERRO] Mensagem inválida recebida do cliente: '%s'\n", buffer);
         escrever_log_com_cliente_id_tentativa(client_socket, tentativa, "O servidor recebeu a tentativa");
         escrever_log_com_cliente_id_tentativa_col_row(client_socket, tentativa, linha, coluna, "O servidor recebeu tentativa na (linha-coluna)");
-        escrever_log("Mensagem inválida recebida do cliente");
+        sprintf(buffer, "Mensagem inválida recebida do cliente %d", client_id);
+        escrever_log(buffer);
         return;
     }
-    escrever_log("Mensagem válida recebida do cliente");
+
     printf("[DEBUG] Dados extraídos: Tabuleiro ID=%d, Linha=%d, Coluna=%d, Tentativa=%d\n", num, linha, coluna, tentativa);
-    escrever_log("Dados extraídos com sucesso");
 
-    // Prepara o feedback (certo ou errado)
-    char resposta[BUFFER_SIZE];
+    // SINCONIZAÇÃO ______________________________________________________________________________________
+    if(modoJogo== 1){
 
-    // AQUI DEVE SER FEITA A SINCONIZAÇÃO
+        sprintf(buffer, "client %d chega ao mutex da linha: %d e coluna: %d", client_id, linha, coluna);
+        escrever_log(buffer);
 
-    if (matriz_sol[num - 1][linha][coluna] == tentativa)
-    {
-        matriz_of[num - 1][linha][coluna] = tentativa;
-        snprintf(resposta, BUFFER_SIZE, "Tentativa %d na posição (%d, %d) está correta.", tentativa, linha + 1, coluna + 1);
-        escrever_log_com_cliente_id_tentativa_col_row(client_socket, tentativa, linha, coluna, "O servidor recebeu tentativa correta na (linha-coluna)");
-        escrever_log("Tentativa correta recebida do cliente");
-        ler_matrizes_id(matriz_of, num);
+        pthread_mutex_lock(&mutexCelulas[linha][coluna]);
+
+        sprintf(buffer, "client %d entra e bloqueia ao mutex da linha: %d e coluna: %d", client_id, linha, coluna);
+        escrever_log(buffer);
+
+        analisaTentativa(matriz_of, matriz_sol, client_socket, num, linha, coluna, tentativa, resposta);
+
+        pthread_mutex_unlock(&mutexCelulas[linha][coluna]);
+
+        sprintf(buffer, "client %d desbloqueia o mutex da linha: %d e coluna: %d", client_id, linha, coluna);
+        escrever_log(buffer);
+
     }
-    else
-    {
-        snprintf(resposta, BUFFER_SIZE, "Tentativa %d na posição (%d, %d) está errada.", tentativa, linha, coluna);
-        escrever_log("Tentativa errada recebida do cliente");
-        escrever_log_com_cliente_id_tentativa_col_row(client_socket, tentativa, linha, coluna, "O servidor recebeu tentativa errada na (linha-coluna)");
-    }
-    printf("[DEBUG] Feedback gerado: '%s'\n", resposta);
+    else if(modoJogo== 2){
 
-    // Envia o feedback ao cliente
+        analisaTentativa(matriz_of, matriz_sol, client_socket, num, linha, coluna, tentativa, resposta);
+
+    }
+    else if(modoJogo== 3){
+        analisaTentativa(matriz_of, matriz_sol, client_socket, num, linha, coluna, tentativa, resposta);
+    }
+    //____________________________________________________________________________________________________
+
+    // ENVIA O FEEDBACK AO CLIENTE
     if (send(client_socket, resposta, BUFFER_SIZE, 0) < 0)
     {
         perror("[ERRO] Falha ao enviar feedback ao cliente");
@@ -749,7 +859,7 @@ void recebe_tentativa_e_envia_feedback(int client_socket, int matriz_sol[4][9][9
         printf("[DEBUG] Feedback enviado ao cliente com sucesso.\n");
         escrever_log("Feedback enviado ao cliente com sucesso");
     }
-    pthread_mutex_unlock(&exlusao_tentativa);
+
 }
 
 void semaforo()
@@ -838,6 +948,7 @@ void *handle_client(void *args)
     client_args_t *client_args = (client_args_t *)args;
     int sock = client_args->client_socket;
     int rol_Jogador = client_args->rol_Jogador;
+    int prioridade_Jogador = client_args-> prioridade; 
     free(client_args);
     char buffer[BUFFER_SIZE];
     int opcao, client_id;
@@ -874,13 +985,16 @@ void *handle_client(void *args)
         envia_tabuleiro(sock, num, matriz_of);
 
         //_____________________________________________________________
-        if(rol_Jogador==1){
-            enviar_menu_resolvedor(sock);
-        }
-        else{
+        if (rol_Jogador == 2 && modoJogo == 2)
+        {
+
             enviar_menu_apagador(sock);
         }
-        
+        else
+        {
+            enviar_menu_resolvedor(sock);
+        }
+
         printf("Sending menu to client: %d\n", client_id);
 
         printf("Waiting for option from client: %d\n", client_id);
@@ -916,26 +1030,9 @@ void *handle_client(void *args)
         {
         case 1:
             semaforo();
-            if (rol_Jogador == 1)
+            if (rol_Jogador == 2 && modoJogo == 2) // caso for apagador do modo de jogo 2
             {
-                printf("Client %d selected to solve one cell\n", client_id);
-                escrever_log("Cliente selecionou resolver uma célula");
-
-                int total_vazias = numero_total_vazias(matriz_of, num);
-                while (total_vazias > 0 && total_vazias < 81)
-                {
-                    printf("Número total de casas vazias: %d\n", total_vazias);
-                    // Enquanto houver casas vazias, processa as tentativas recebidas
-                    recebe_tentativa_e_envia_feedback(sock, matriz_solucao, matriz_of);
-
-                    envia_tabuleiro(sock, num, matriz_of);
-                    total_vazias = numero_total_vazias(matriz_of, num);
-                }
-                printf("[INFO] Tabuleiro %d resolvido pelo cliente %d\n", num, client_id);
-            }
-            else
-            {
-                // Determina o ponteiro para a variável global de casas vazias
+                // APAGADOR ESCOLHEU APAGAR O TABULEIRO UM A UM AS CELULAS
                 printf("Client %d selected to solve one cell\n", client_id);
                 escrever_log("Cliente selecionou resolver uma célula");
 
@@ -945,11 +1042,30 @@ void *handle_client(void *args)
                     printf("Número total de casas vazias: %d\n", num_vazias);
 
                     recebe_apaga_celula(sock, matriz_of);
-                    
+
                     envia_tabuleiro(sock, num, matriz_of);
                     num_vazias = numero_total_vazias(matriz_of, num);
                 }
-                
+
+                printf("[INFO] Tabuleiro %d resolvido pelo cliente %d\n", num, client_id);
+            }
+            else
+            {
+                // O RESOLVEDOR ESCOLHEU RESOLVER O TABULEIRO UM A UM
+                printf("Client %d selected to solve one cell\n", client_id);
+                escrever_log("Cliente selecionou resolver uma célula");
+
+                int total_vazias = numero_total_vazias(matriz_of, num);
+                while (total_vazias > 0 && total_vazias < 81)
+                {
+                    printf("Número total de casas vazias: %d\n", total_vazias);
+                    // Enquanto houver casas vazias, processa as tentativas recebidas
+                    
+                    recebe_tentativa_e_envia_feedback(sock, matriz_solucao, matriz_of, client_id, prioridade_Jogador);
+
+                    envia_tabuleiro(sock, num, matriz_of);
+                    total_vazias = numero_total_vazias(matriz_of, num);
+                }
                 printf("[INFO] Tabuleiro %d resolvido pelo cliente %d\n", num, client_id);
             }
 
@@ -1102,14 +1218,29 @@ int main(int argc, char *argv[])
     }
     escrever_log("Servidor pronto para ouvir conexões");
     printf("Servidor iniciado na porta %d\n", porta); // Debug
+
+    escolhe_modo_de_Jogo();
+
     //_________________________________________________________________
 
     // INICIALIZAÇÃO DOS MUTEX
     srand(time(NULL));
+
+    if (modoJogo == 1)
+    {
+        inicializaSinc_1();
+    }
+    else if (modoJogo == 2)
+    {
+        inicializaSinc_2();
+    }
+    else if (modoJogo == 3)
+    {
+        inicializaSinc_3();
+    }
+    
     sem_init(&sem_barrier, 0, 0);
     //_________________________________________________________________
-
-    escolhe_modo_de_Jogo();
 
     while (1)
     {
@@ -1182,6 +1313,7 @@ int main(int argc, char *argv[])
         client_args_t *client_args = malloc(sizeof(client_args_t));
         client_args->client_socket = client_socket;
         client_args->rol_Jogador = rol_Jogador;
+        client_args->prioridade = prioridade_Jogador;
 
         if (pthread_create(&tid, NULL, handle_client, (void *)client_args) != 0)
         {
@@ -1194,7 +1326,18 @@ int main(int argc, char *argv[])
         }
         pthread_mutex_unlock(&clients_mutex_board_2);
     }
+    // Destuição dos semaforos e mutexes
+    
     sem_destroy(&sem_barrier);
+    if(modoJogo == 1){
+        destruirSinc_1();
+    }else if(modoJogo == 2){
+        destruirSinc_2();
+    }else if(modoJogo == 3){
+        destruirSinc_3();
+    }
+
+
     // Após sair do loop principal
     escrever_log("Servidor encerrado");
     close(server_socket);

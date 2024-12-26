@@ -8,6 +8,10 @@
 
 #define BUFFER_SIZE 1024
 #define SIZE 9
+int client_id;
+int modoJogo;
+int rol;
+int prioridade;
 
 /**
  *  Escreve nos Logs do utilizador a mensagem pretendida com a data e hora do evento
@@ -17,7 +21,10 @@
  */
 void escrever_log_cliente(const char *mensagem)
 {
-    FILE *f = fopen("./logs/cliente_log.txt", "a");
+
+    char caminho[BUFFER_SIZE];
+    sprintf(caminho, "./logs/cliente%d_log.txt", client_id);
+    FILE *f = fopen(caminho, "a");
     if (f == NULL)
     {
         printf("Erro ao abrir o ficheiro log.txt\n");
@@ -152,7 +159,6 @@ int get_new_user_id()
     rewind(file);
     fprintf(file, "%d", id);
     fclose(file);
-    escrever_log_cliente("ID do cliente lido com sucesso");
     return id;
 }
 
@@ -294,7 +300,6 @@ int escolhe_celula_sem_nada_aleatoria(int matriz[9][9], int *linha, int *coluna)
     int indice = rand() % count;
     *linha = vazias[indice][0];
     *coluna = vazias[indice][1];
-    escrever_log_cliente("Célula sem nada escolhida com sucesso");
     return 1;
 }
 
@@ -372,10 +377,14 @@ int numCelulasVazias(int matriz[9][9])
 void envia_tentativa(int client_socket, int num, int linha, int coluna)
 {
     int tentativa = (rand() % 9) + 1;
+    char log[BUFFER_SIZE];
     char buffer[BUFFER_SIZE];
 
     printf("[DEBUG] Tentativa gerada: %d\n", tentativa);
-    snprintf(buffer, BUFFER_SIZE, "%d %d %d %d", num, linha, coluna, tentativa);
+    sprintf(buffer, "%d %d %d %d", num, linha, coluna, tentativa);
+
+    sprintf(log, "Tentativa gerada: linha: %d, coluna: %d, valor: %d", linha, coluna, tentativa);
+    escrever_log_cliente(log); 
 
     printf("[DEBUG] Enviando mensagem para o servidor: '%s'\n", buffer);
     if (send(client_socket, buffer, BUFFER_SIZE, 0) < 0)
@@ -521,7 +530,6 @@ void recebe_feedback_tentativa(int client_socket)
 {
     char buffer[BUFFER_SIZE];
 
-    escrever_log_cliente("Aguardando feedback do servidor");
     int bytes_received = recv(client_socket, buffer, BUFFER_SIZE, 0);
     if (bytes_received > 0)
     {
@@ -577,7 +585,7 @@ void recebe_Tabuleiro(int client_socket, int matriz[9][9])
  *
  */
 
-void comunicacao(int client_socket, int rol_Jogador)
+void comunicacao(int client_socket)
 {
     char buffer[BUFFER_SIZE];
     int matriz[SIZE][SIZE] = {0}; // Inicializa a matriz com zeros
@@ -652,45 +660,7 @@ void comunicacao(int client_socket, int rol_Jogador)
         {
         case 1:
 
-            if (rol_Jogador == 1)
-            {
-                printf("[DEBUG] Opção 1: Resolver o tabuleiro completo selecionada.\n");
-                escrever_log_cliente("Opção 1: Resolver o tabuleiro completo selecionada");
-                int total_vazias = numCelulasVazias(matriz);
-
-                while (total_vazias > 0 && total_vazias < 81)
-                {
-
-                    printf("Número total de casas vazias: %d\n", total_vazias);
-                    if (escolhe_celula_sem_nada_aleatoria(matriz, &linha_branca, &coluna_branca))
-                    {
-                        printf("Posição vazia encontrada em: linha %d, coluna %d\n", linha_branca, coluna_branca);
-                        printf("O ID do tabuleiro é: %d\n", id_tabuleiro);
-
-                        // Envia tentativa ao servidor
-                        envia_tentativa(client_socket, id_tabuleiro, linha_branca, coluna_branca); // send
-                        // Recebe feedback do servidor
-                        printf("[DEBUG] Tentativa enviada. Aguardando feedback do servidor...\n");
-
-                        recebe_feedback_tentativa(client_socket); // recv
-                    }
-                    else
-                    {
-                        escrever_log_cliente("Nenhuma posição vazia encontrada. Sudoku resolvido!");
-                        printf("Nenhuma posição vazia encontrada. Sudoku resolvido!\n");
-                        break;
-                    }
-
-                    recebe_Tabuleiro(client_socket, matriz); // recv - send
-                    imprima_matriz(matriz);
-
-                    total_vazias = numCelulasVazias(matriz);
-                }
-                printf("[INFO] Jogo %d Acabado!\n", id_tabuleiro);
-                escrever_log_cliente("Jogo Acabado :)");
-                return;
-            }
-            else if (rol_Jogador == 2)
+            if (modoJogo == 2 && rol == 2)
             {
                 printf("[DEBUG] Opção 1: Apagar o tabuleiro completo selecionada.\n");
                 escrever_log_cliente("Opção 1: Apagar o tabuleiro completo selecionada");
@@ -729,6 +699,44 @@ void comunicacao(int client_socket, int rol_Jogador)
                 escrever_log_cliente("Jogo acabado :)");
                 return;
                 break;
+            }
+            else
+            {
+                printf("[DEBUG] Opção 1: Resolver o tabuleiro completo selecionada.\n");
+                escrever_log_cliente("Opção 1: Resolver o tabuleiro completo selecionada");
+                int total_vazias = numCelulasVazias(matriz);
+
+                while (total_vazias > 0 && total_vazias < 81)
+                {
+
+                    printf("Número total de casas vazias: %d\n", total_vazias);
+                    if (escolhe_celula_sem_nada_aleatoria(matriz, &linha_branca, &coluna_branca))
+                    {
+                        printf("Posição vazia encontrada em: linha %d, coluna %d\n", linha_branca, coluna_branca);
+                        printf("O ID do tabuleiro é: %d\n", id_tabuleiro);
+
+                        // Envia tentativa ao servidor
+                        envia_tentativa(client_socket, id_tabuleiro, linha_branca, coluna_branca); // send
+                        // Recebe feedback do servidor
+                        printf("[DEBUG] Tentativa enviada. Aguardando feedback do servidor...\n");
+
+                        recebe_feedback_tentativa(client_socket); // recv
+                    }
+                    else
+                    {
+                        escrever_log_cliente("Nenhuma posição vazia encontrada. Sudoku resolvido!");
+                        printf("Nenhuma posição vazia encontrada. Sudoku resolvido!\n");
+                        break;
+                    }
+
+                    recebe_Tabuleiro(client_socket, matriz); // recv - send
+                    imprima_matriz(matriz);
+
+                    total_vazias = numCelulasVazias(matriz);
+                }
+                printf("[INFO] Jogo %d Acabado!\n", id_tabuleiro);
+                escrever_log_cliente("Jogo Acabado :)");
+                return;
             }
 
             break;
@@ -800,9 +808,7 @@ int main(int argc, char *argv[])
     int client_socket;
     int porta;
     char ip[256];
-    int modoJogo = 0;
-    int rol = 0;
-    int prioridade = 0;
+    
 
     char buffer[BUFFER_SIZE];
     if (argc < 2)
@@ -811,7 +817,8 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    int client_id = get_new_user_id();
+    client_id = get_new_user_id();
+    escrever_log_cliente("ID do cliente lido com sucesso");
 
     ler_configuracao_cliente(argv[1], &porta, ip, &rol, &prioridade);
 
@@ -840,7 +847,7 @@ int main(int argc, char *argv[])
     printf("Rol do jogador %d \n", rol);
     printf("Prioridade do jogador %d \n", prioridade);
 
-    comunicacao(client_socket, rol);
+    comunicacao(client_socket);
 
     close(client_socket);
     escrever_log_cliente("Cliente desconectado");

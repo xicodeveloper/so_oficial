@@ -23,6 +23,7 @@ clean:
 
 # Alvo para limpeza com mensagem adicional
 clear: clean
+	rm ./logs/*.txt
 	@echo "Ficheiros e configurações limpos"
 
 # Força a execução do "clean" e "clear"
