@@ -32,8 +32,6 @@ pthread_mutex_t mutex_contador = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t exlusao = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t exlusao_tentativa = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t exclusao_zeros = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t log_mutex_2 = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t log_mutex_3 = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutexCelulas[LC][LC];
 
 typedef struct
@@ -137,13 +135,13 @@ void escrever_log(const char *mensagem)
 
 void escrever_log_com_cliente_id(int cliente_id, const char *mensagem)
 {
-    pthread_mutex_lock(&log_mutex_2);
+    pthread_mutex_lock(&log_mutex);
 
     FILE *f = fopen("./logs/log.txt", "a");
     if (f == NULL)
     {
         printf("Erro ao abrir o ficheiro log.txt\n");
-        pthread_mutex_unlock(&log_mutex_2);
+        pthread_mutex_unlock(&log_mutex);
         return;
     }
 
@@ -153,22 +151,22 @@ void escrever_log_com_cliente_id(int cliente_id, const char *mensagem)
 
     // Construir a mensagem a ser registrada
     char log_message[256];
-    snprintf(log_message, sizeof(log_message), "%d - %s", cliente_id, mensagem);
+    snprintf(log_message, sizeof(log_message), "Cliente: %d - %s", cliente_id, mensagem);
     fprintf(f, "%s | %s\n", timestamp, log_message);
 
     fclose(f);
-    pthread_mutex_unlock(&log_mutex_2);
+    pthread_mutex_unlock(&log_mutex);
 }
 
 void escrever_log_com_cliente_id_tentativa(int cliente_id, int tentativa, const char *mensagem)
 {
-    pthread_mutex_lock(&log_mutex_3);
+    pthread_mutex_lock(&log_mutex);
 
     FILE *f = fopen("./logs/log.txt", "a");
     if (f == NULL)
     {
         printf("Erro ao abrir o ficheiro log.txt\n");
-        pthread_mutex_unlock(&log_mutex_3);
+        pthread_mutex_unlock(&log_mutex);
         return;
     }
 
@@ -182,18 +180,18 @@ void escrever_log_com_cliente_id_tentativa(int cliente_id, int tentativa, const 
     fprintf(f, "%s | %s\n", timestamp, log_message);
 
     fclose(f);
-    pthread_mutex_unlock(&log_mutex_3);
+    pthread_mutex_unlock(&log_mutex);
 }
 
 void escrever_log_com_cliente_id_tentativa_col_row(int cliente_id, int tentativa, int linha, int coluna, const char *mensagem)
 {
-    pthread_mutex_lock(&log_mutex_3);
+    pthread_mutex_lock(&log_mutex);
 
     FILE *f = fopen("./logs/log.txt", "a");
     if (f == NULL)
     {
         printf("Erro ao abrir o ficheiro log.txt\n");
-        pthread_mutex_unlock(&log_mutex_3);
+        pthread_mutex_unlock(&log_mutex);
         return;
     }
 
@@ -203,11 +201,11 @@ void escrever_log_com_cliente_id_tentativa_col_row(int cliente_id, int tentativa
 
     // Construir a mensagem a ser registrada
     char log_message[256];
-    snprintf(log_message, sizeof(log_message), "%d - %s - %d( %d - %d)", cliente_id, mensagem, tentativa, linha, coluna);
+    snprintf(log_message, sizeof(log_message), "Client: %d - %s - %d -> (%d,%d)", cliente_id, mensagem, tentativa, linha, coluna);
     fprintf(f, "%s | %s\n", timestamp, log_message);
 
     fclose(f);
-    pthread_mutex_unlock(&log_mutex_3);
+    pthread_mutex_unlock(&log_mutex);
 }
 
 /**
@@ -754,21 +752,20 @@ void recebe_apaga_celula(int client_socket, int matriz_of[4][9][9])
  * @param tentativa Valor da tentativa
  * @param resposta Resposta a ser enviada ao cliente
  */
-void analisaTentativa(int matriz_of[4][9][9], int matriz_sol[4][9][9], int client_socket, int num, int linha, int coluna, int tentativa, char *resposta)
+void analisaTentativa(int matriz_of[4][9][9], int matriz_sol[4][9][9], int client_socket, int client_id, int num, int linha, int coluna, int tentativa, char *resposta)
 {
     if (matriz_sol[num - 1][linha][coluna] == tentativa)
     {
         matriz_of[num - 1][linha][coluna] = tentativa;
         snprintf(resposta, BUFFER_SIZE, "Tentativa %d na posição (%d, %d) está correta.", tentativa, linha + 1, coluna + 1);
-        escrever_log_com_cliente_id_tentativa_col_row(client_socket, tentativa, linha, coluna, "O servidor recebeu tentativa correta na (linha-coluna)");
+        escrever_log_com_cliente_id_tentativa_col_row(client_id, tentativa, linha, coluna, "O servidor recebeu tentativa correta na (linha-coluna)");
         escrever_log("Tentativa correta recebida do cliente");
         ler_matrizes_id(matriz_of, num);
     }
     else
     {
         snprintf(resposta, BUFFER_SIZE, "Tentativa %d na posição (%d, %d) está errada.", tentativa, linha, coluna);
-        escrever_log("Tentativa errada recebida do cliente");
-        escrever_log_com_cliente_id_tentativa_col_row(client_socket, tentativa, linha, coluna, "O servidor recebeu tentativa errada na (linha-coluna)");
+        escrever_log_com_cliente_id_tentativa_col_row(client_id, tentativa, linha, coluna, "O servidor recebeu tentativa errada na (linha-coluna)");
     }
     printf("[DEBUG] Feedback gerado: '%s'\n", resposta);
 }
@@ -791,17 +788,15 @@ void recebe_tentativa_e_envia_feedback(int client_socket, int matriz_sol[4][9][9
     char resposta[BUFFER_SIZE];
     int num, linha, coluna, tentativa;
 
-    escrever_log_com_cliente_id(client_socket, "Cliente a mandar a tentativa");
     printf("[DEBUG] Aguardando mensagem do cliente para receber tentativa...\n");
-    escrever_log("Recebendo tentativa do cliente");
     int bytes_received = recv(client_socket, buffer, BUFFER_SIZE, 0);
     if (bytes_received < 0)
     {
-        escrever_log("Erro ao receber tentativa do cliente");
+        escrever_log_com_cliente_id( client_id ,"Erro ao receber tentativa do cliente");
         perror("[ERRO] Falha no recv");
         return;
     }
-    escrever_log("Tentativa recebida com sucesso");
+    escrever_log_com_cliente_id(client_id, "Tentativa recebida com sucesso");
 
     buffer[bytes_received] = '\0'; // Garante que a mensagem recebida é válida
     printf("[DEBUG] Mensagem recebida: '%s'\n", buffer);
@@ -810,8 +805,8 @@ void recebe_tentativa_e_envia_feedback(int client_socket, int matriz_sol[4][9][9
     if (sscanf(buffer, "%d %d %d %d", &num, &linha, &coluna, &tentativa) != 4)
     {
         printf("[ERRO] Mensagem inválida recebida do cliente: '%s'\n", buffer);
-        escrever_log_com_cliente_id_tentativa(client_socket, tentativa, "O servidor recebeu a tentativa");
-        escrever_log_com_cliente_id_tentativa_col_row(client_socket, tentativa, linha, coluna, "O servidor recebeu tentativa na (linha-coluna)");
+        escrever_log_com_cliente_id_tentativa(client_id, tentativa, "O servidor recebeu a tentativa");
+        escrever_log_com_cliente_id_tentativa_col_row(client_id, tentativa, linha, coluna, "O servidor recebeu tentativa na (linha-coluna)");
         sprintf(buffer, "Mensagem inválida recebida do cliente %d", client_id);
         escrever_log(buffer);
         return;
@@ -830,7 +825,7 @@ void recebe_tentativa_e_envia_feedback(int client_socket, int matriz_sol[4][9][9
         sprintf(buffer, "client %d entra e bloqueia ao mutex da linha: %d e coluna: %d", client_id, linha, coluna);
         escrever_log(buffer);
 
-        analisaTentativa(matriz_of, matriz_sol, client_socket, num, linha, coluna, tentativa, resposta);
+        analisaTentativa(matriz_of, matriz_sol, client_socket, client_id, num, linha, coluna, tentativa, resposta);
 
         pthread_mutex_unlock(&mutexCelulas[linha][coluna]);
 
@@ -840,11 +835,11 @@ void recebe_tentativa_e_envia_feedback(int client_socket, int matriz_sol[4][9][9
     }
     else if(modoJogo== 2){
 
-        analisaTentativa(matriz_of, matriz_sol, client_socket, num, linha, coluna, tentativa, resposta);
+        analisaTentativa(matriz_of, matriz_sol, client_socket, client_id, num, linha, coluna, tentativa, resposta);
 
     }
     else if(modoJogo== 3){
-        analisaTentativa(matriz_of, matriz_sol, client_socket, num, linha, coluna, tentativa, resposta);
+        analisaTentativa(matriz_of, matriz_sol, client_socket, client_id, num, linha, coluna, tentativa, resposta);
     }
     //____________________________________________________________________________________________________
 
