@@ -41,6 +41,13 @@ pthread_mutex_t mutex_apagadores = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_apagadores_2 = PTHREAD_MUTEX_INITIALIZER;
 
 //-------------------Prioridades------------------------------
+sem_t prioridade_1[LC][LC];
+sem_t prioridade_2[LC][LC];
+sem_t prioridade_3[LC][LC];
+pthread_mutex_t mutex_Escritura = PTHREAD_MUTEX_INITIALIZER;
+int prioridade_1_count[LC][LC] = {{0}};
+int prioridade_2_count[LC][LC] = {{0}};
+int prioridade_3_count[LC][LC] = {{0}};
 
 typedef struct
 {
@@ -72,120 +79,6 @@ int numero_total_vazias(int num)
         }
     }
     return total_vazias;
-}
-
-/**
- * Função para inicializar os mutexes das células
- */
-void inicializaSinc_1()
-{
-    for (int i = 0; i < LC; i++)
-    {
-        for (int j = 0; j < LC; j++)
-        {
-            if (pthread_mutex_init(&mutexCelulas[i][j], NULL) != 0)
-            {
-                perror("Erro ao inicializar mutex");
-            }
-        }
-    }
-}
-
-/**
- * Função para destruir os mutexes das células
- */
-void destruirSinc_1()
-{
-    for (int i = 0; i < LC; i++)
-    {
-        for (int j = 0; j < LC; j++)
-        {
-            if (pthread_mutex_destroy(&mutexCelulas[i][j]) != 0)
-            {
-                perror("Erro ao destruir mutex");
-            }
-        }
-    }
-}
-
-/**
- * Função para inicializar os semaforos para os prod/cons
- * ainda não implementado
- */
-void inicializaSinc_2(int tabID)
-{
-    int vazias = numero_total_vazias(tabID);
-    sem_init(&pode_inserir, 0, vazias);
-    sem_init(&pode_apagar, 0, 81-vazias);
-}
-
-/**
- * Função para destruir os semaforos para os prod/cons
- * ainda não implementado
- */
-void destruirSinc_2()
-{
-    sem_destroy(&pode_inserir);
-    sem_destroy(&pode_apagar);
-}
-
-/**
- * Função para inicalizar os semaforos para as prioridades
- * ainda não implementado
- */
-void inicializaSinc_3()
-{
-}
-
-/**
- * Função para destruir os semaforos para as prioridades
- * ainda não implementado
- */
-void destruirSinc_3()
-{
-}
-
-void semaforo()
-{
-
-    pthread_mutex_lock(&mutex_barreira);
-    clients_waiting++;
-    printf("Clientes esperando %d\n", clients_waiting);
-    printf("Aguardando por %d clientes....\n", MAX_CLIENTES);
-    if (clients_waiting == MAX_CLIENTES)
-    {
-        // Libera o semáforo para permitir que todos os 4 threads avancem
-        for (int i = 0; i < MAX_CLIENTES; i++)
-        {
-            printf("Liberta\n");
-            sem_post(&sem_barrier);
-        }
-    }
-    pthread_mutex_unlock(&mutex_barreira);
-
-    // Espera até que o semáforo seja sinalizado
-    sem_wait(&sem_barrier);
-}
-
-void assinalaResolvedores()
-{
-    pthread_mutex_lock(&mutex_resolvedores_2);
-    sem_post(&pode_inserir);
-    pthread_mutex_unlock(&mutex_resolvedores_2);
-}
-
-void assinalaApagadores()
-{
-    
-    pthread_mutex_lock(&mutex_apagadores_2);
-    /*apagadores_Espera++;
-    if (apagadores_Espera == 1)
-    {
-        */sem_post(&pode_apagar);
-        /*apagadores_Espera = 0;
-    }*/
-
-    pthread_mutex_unlock(&mutex_apagadores_2);
 }
 
 /**
@@ -552,6 +445,299 @@ void handle_sigint(int sig)
 }
 
 /**
+ * Função para inicializar os mutexes das células
+ */
+void inicializaSinc_1()
+{
+    for (int i = 0; i < LC; i++)
+    {
+        for (int j = 0; j < LC; j++)
+        {
+            if (pthread_mutex_init(&mutexCelulas[i][j], NULL) != 0)
+            {
+                perror("Erro ao inicializar mutex");
+            }
+        }
+    }
+}
+
+/**
+ * Função para destruir os mutexes das células
+ */
+void destruirSinc_1()
+{
+    for (int i = 0; i < LC; i++)
+    {
+        for (int j = 0; j < LC; j++)
+        {
+            if (pthread_mutex_destroy(&mutexCelulas[i][j]) != 0)
+            {
+                perror("Erro ao destruir mutex");
+            }
+        }
+    }
+}
+
+/**
+ * Função para inicializar os semaforos para os prod/cons
+ * ainda não implementado
+ */
+void inicializaSinc_2(int tabID)
+{
+    int vazias = numero_total_vazias(tabID);
+    sem_init(&pode_inserir, 0, vazias);
+    sem_init(&pode_apagar, 0, 81 - vazias);
+}
+
+/**
+ * Função para destruir os semaforos para os prod/cons
+ * ainda não implementado
+ */
+void destruirSinc_2()
+{
+    sem_destroy(&pode_inserir);
+    sem_destroy(&pode_apagar);
+}
+
+/**
+ * Função para inicalizar os semaforos para as prioridades
+ * ainda não implementado
+ */
+void inicializaSinc_3()
+{
+    for (int i = 0; i < LC; i++)
+    {
+        for (int j = 0; j < LC; j++)
+        {
+            if (sem_init(&prioridade_1[i][j], 0, 0) != 0)
+            {
+                perror("Erro ao inicializar os semaforo");
+            }
+        }
+    }
+    for (int i = 0; i < LC; i++)
+    {
+        for (int j = 0; j < LC; j++)
+        {
+            if (sem_init(&prioridade_2[i][j], 0, 0) != 0)
+            {
+                perror("Erro ao inicializar os semaforo");
+            }
+        }
+    }
+    for (int i = 0; i < LC; i++)
+    {
+        for (int j = 0; j < LC; j++)
+        {
+            if (sem_init(&prioridade_3[i][j], 0, 0) != 0)
+            {
+                perror("Erro ao inicializar os semaforo");
+            }
+        }
+    }
+}
+
+/**
+ * Função para destruir os semaforos para as prioridades
+ * ainda não implementado
+ */
+void destruirSinc_3()
+{
+    for (int i = 0; i < LC; i++)
+    {
+        for (int j = 0; j < LC; j++)
+        {
+            if (sem_destroy(&prioridade_1[i][j]) != 0)
+            {
+                perror("Error al destruir el semáforo");
+                // Manejo de errores
+            }
+        }
+    }
+    for (int i = 0; i < LC; i++)
+    {
+        for (int j = 0; j < LC; j++)
+        {
+            if (sem_destroy(&prioridade_2[i][j]) != 0)
+            {
+                perror("Error al destruir el semáforo");
+                // Manejo de errores
+            }
+        }
+    }
+    for (int i = 0; i < LC; i++)
+    {
+        for (int j = 0; j < LC; j++)
+        {
+            if (sem_destroy(&prioridade_3[i][j]) != 0)
+            {
+                perror("Error al destruir el semáforo");
+                // Manejo de errores
+            }
+        }
+    }
+}
+
+void semaforo()
+{
+
+    pthread_mutex_lock(&mutex_barreira);
+    clients_waiting++;
+    printf("Clientes esperando %d\n", clients_waiting);
+    printf("Aguardando por %d clientes....\n", MAX_CLIENTES);
+    if (clients_waiting == MAX_CLIENTES)
+    {
+        // Libera o semáforo para permitir que todos os 4 threads avancem
+        for (int i = 0; i < MAX_CLIENTES; i++)
+        {
+            printf("Liberta\n");
+            sem_post(&sem_barrier);
+        }
+    }
+    pthread_mutex_unlock(&mutex_barreira);
+
+    // Espera até que o semáforo seja sinalizado
+    sem_wait(&sem_barrier);
+}
+
+void assinalaResolvedores()
+{
+    pthread_mutex_lock(&mutex_resolvedores_2);
+    sem_post(&pode_inserir);
+    pthread_mutex_unlock(&mutex_resolvedores_2);
+}
+
+void assinalaApagadores()
+{
+
+    pthread_mutex_lock(&mutex_apagadores_2);
+    /*apagadores_Espera++;
+    if (apagadores_Espera == 1)
+    {
+        */
+    sem_post(&pode_apagar);
+    /*apagadores_Espera = 0;
+}*/
+
+    pthread_mutex_unlock(&mutex_apagadores_2);
+}
+
+/**
+ * Função para esperar pelos semaforos com prioridade
+ * @param prioridade Prioridade a ser esperada
+ * @param linha Linha da célula
+ * @param coluna Coluna da célula
+ */
+void esperaPrioridade(int prioridade, int linha, int coluna, int client_id)
+{
+    char buffer[BUFFER_SIZE];
+    int bloqueado = 1;
+
+    sprintf(buffer, "Prioridade 1 de (%d,%d) Count: %d", linha, coluna, prioridade_1_count[linha][coluna]);
+    escrever_log_com_cliente_id(client_id, buffer);
+    sprintf(buffer, "Prioridade 2 de (%d,%d) Count: %d", linha, coluna, prioridade_2_count[linha][coluna]);
+    escrever_log_com_cliente_id(client_id, buffer);
+    sprintf(buffer, "Prioridade 3 de (%d,%d) Count: %d", linha, coluna, prioridade_3_count[linha][coluna]);
+    escrever_log_com_cliente_id(client_id, buffer);
+
+    bloqueado = pthread_mutex_trylock(&mutexCelulas[linha][coluna]);
+    if (bloqueado == 0)
+    {
+        sprintf(buffer, "Prioridade 1 de (%d,%d) Count: %d", linha, coluna, prioridade_1_count[linha][coluna]);
+        escrever_log(buffer);
+        sprintf(buffer, "Prioridade 2 de (%d,%d) Count: %d", linha, coluna, prioridade_2_count[linha][coluna]);
+        escrever_log(buffer);
+        sprintf(buffer, "Prioridade 3 de (%d,%d) Count: %d", linha, coluna, prioridade_3_count[linha][coluna]);
+        escrever_log(buffer);
+        return;
+    }
+
+    else
+    {
+        if (prioridade == 1)
+        {
+            pthread_mutex_lock(&mutex_Escritura);
+            prioridade_1_count[linha][coluna]++;
+            pthread_mutex_unlock(&mutex_Escritura);
+            sem_wait(&prioridade_1[linha][coluna]);
+        }
+        else if (prioridade == 2)
+        {   
+            pthread_mutex_lock(&mutex_Escritura);
+            prioridade_2_count[linha][coluna]++;
+            pthread_mutex_unlock(&mutex_Escritura);
+            sem_wait(&prioridade_2[linha][coluna]);
+        }
+        else if (prioridade == 3)
+        {
+            pthread_mutex_lock(&mutex_Escritura);
+            prioridade_3_count[linha][coluna]++;
+            pthread_mutex_unlock(&mutex_Escritura);
+            sem_wait(&prioridade_3[linha][coluna]);
+        }
+
+        pthread_mutex_lock(&mutexCelulas[linha][coluna]);
+    }
+    
+
+    
+}
+
+/**
+ * Função para assinalar os semaforos de prioridade
+ * @param linha Linha da célula
+ * @param coluna Coluna da célula
+ */
+void assinalaPrioridade(int linha, int coluna, int client_id)
+{
+    pthread_mutex_lock(&mutex_Escritura);
+    
+    char buffer[BUFFER_SIZE];
+
+    sprintf(buffer, "Prioridade 1 de (%d,%d) Count: %d", linha, coluna, prioridade_1_count[linha][coluna]);
+    escrever_log_com_cliente_id(client_id, buffer);
+    sprintf(buffer, "Prioridade 2 de (%d,%d) Count: %d", linha, coluna, prioridade_2_count[linha][coluna]);
+    escrever_log_com_cliente_id(client_id, buffer);
+    sprintf(buffer, "Prioridade 3 de (%d,%d) Count: %d", linha, coluna, prioridade_3_count[linha][coluna]);
+    escrever_log_com_cliente_id(client_id, buffer);
+
+    if (prioridade_1_count[linha][coluna] > 0)
+    {
+        sem_post(&prioridade_1[linha][coluna]);
+        prioridade_1_count[linha][coluna]--;
+        escrever_log_com_cliente_id(client_id,"Prioridade 1 assinalada");
+    }
+    else
+    {
+
+        escrever_log(buffer);
+        if (prioridade_2_count[linha][coluna] > 0)
+        {
+            sem_post(&prioridade_2[linha][coluna]);
+            prioridade_2_count[linha][coluna]--;
+            escrever_log_com_cliente_id(client_id,"Prioridade 2 assinalada");
+        }
+        else
+        {
+
+            escrever_log(buffer);
+            if (prioridade_3_count[linha][coluna] > 0)
+            {
+                sem_post(&prioridade_3[linha][coluna]);
+                prioridade_3_count[linha][coluna]--;
+                escrever_log_com_cliente_id(client_id,"Prioridade 3 assinalada");
+            }
+        }
+    }
+    pthread_mutex_unlock(&mutex_Escritura);
+
+    pthread_mutex_unlock(&mutexCelulas[linha][coluna]);
+
+    sprintf(buffer, "É libertado o mutex (%d,%d)", linha, coluna);
+    escrever_log_com_cliente_id(client_id, buffer);
+}
+
+/**
  * Função para enviar o menu para o cliente Resolvedor
  *
  * socket: send
@@ -700,7 +886,7 @@ void analisa_apaga_celula(int client_id, int num, int linha, int coluna, char *r
     if (matriz_of[num - 1][linha][coluna] != 0)
     {
         escrever_log_com_cliente_id(client_id, "Chega ao semaforo para apagar");
-        
+
         escrever_log_com_cliente_id(client_id, "Entra no semaforo para apagar");
         pthread_mutex_lock(&mutex_apagadores);
 
@@ -872,6 +1058,40 @@ void analisaTentativa_Prod(int client_id, int num, int linha, int coluna, int te
     printf("[DEBUG] Feedback gerado: '%s'\n", resposta);
 }
 
+void analisaTentativa_Prioridade(int client_id, int num, int linha, int coluna, int tentativa, int prioridade, char *resposta)
+{
+    char buffer[BUFFER_SIZE];
+
+    sprintf(buffer, "client %d chega ao mutex da linha: %d e coluna: %d, com Prioridade: %d", client_id, linha, coluna, prioridade);
+    escrever_log(buffer);
+
+    esperaPrioridade(prioridade, linha, coluna, client_id); // Bloqueia o mutex da célula
+
+    sprintf(buffer, "client %d entra e bloqueia ao mutex da linha: %d e coluna: %d, com Prioridade: %d", client_id, linha, coluna, prioridade);
+    escrever_log(buffer);
+    //____________________________________________verificação________________________________________________________
+    if (matriz_solucao[num - 1][linha][coluna] == tentativa && matriz_of[num - 1][linha][coluna] == 0)
+    {
+
+        matriz_of[num - 1][linha][coluna] = tentativa;
+        snprintf(resposta, BUFFER_SIZE, "Tentativa %d na posição (%d, %d) está correta.", tentativa, linha + 1, coluna + 1);
+        escrever_log_com_cliente_id_tentativa_col_row(client_id, tentativa, linha, coluna, "O servidor recebeu tentativa correta na (linha-coluna)");
+        escrever_log("Tentativa correta recebida do cliente");
+        ler_matrizes_id(matriz_of, num);
+    }
+    else
+    {
+        snprintf(resposta, BUFFER_SIZE, "Tentativa %d na posição (%d, %d) está errada.", tentativa, linha, coluna);
+        escrever_log_com_cliente_id_tentativa_col_row(client_id, tentativa, linha, coluna, "O servidor recebeu tentativa errada na (linha-coluna)");
+    }
+    //_______________________________________________________________________________________________________________
+    assinalaPrioridade(linha, coluna, client_id); // Desbloqueia o mutex da célula
+
+    // sprintf(buffer, "client: %d desbloqueia o mutex da linha: %d e coluna: %d", client_id, linha, coluna);
+    //escrever_log(buffer);
+    printf("[DEBUG] Feedback gerado: '%s'\n", resposta);
+}
+
 /**
  * Função para receber a tentativa do cliente e enviar o feedback
  *
@@ -925,6 +1145,7 @@ void recebe_tentativa_e_envia_feedback(int client_socket, int client_id, int pri
     }
     else if (modoJogo == 3)
     {
+        analisaTentativa_Prioridade(client_id, num, linha, coluna, tentativa, prioridade, resposta);
     }
     //____________________________________________________________________________________________________
 
