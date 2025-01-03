@@ -574,8 +574,7 @@ void recebe_Tabuleiro(int client_socket, int matriz[9][9])
         return;
     }
     escrever_log_cliente("Tabuleiro recebido com sucesso");
-    send(client_socket, "Tabuleiro recebido\0", BUFFER_SIZE, 0);
-    escrever_log_cliente("Confirmação de tabuleiro enviada");
+    
     buffer[bytes_received] = '\0'; // Corrigido para usar buffer
     string_para_matriz(buffer, matriz);
 }
@@ -614,11 +613,6 @@ void comunicacao(int client_socket)
     // Inicia o loop para enviar e receber respostas
     while (1)
     {
-        // solicita Tabuleiro
-        // ____________________________________
-        strcpy(buffer, "Solicita Tabuleiro");
-        send(client_socket, buffer, BUFFER_SIZE, 0);
-        escrever_log_cliente("Solicitação de tabuleiro enviada");
 
         recebe_Tabuleiro(client_socket, matriz);
         imprima_matriz(matriz);
@@ -627,15 +621,12 @@ void comunicacao(int client_socket)
         // Recebe o menu inicial do servidor
         printf("Recebe menu inicial\n");
         int bytes_received = recv(client_socket, buffer, BUFFER_SIZE, 0);
-        escrever_log_cliente("Menu inicial recebido");
-        printf("Depois de receber menu inicial\n");
         if (bytes_received <= 0)
         {
             escrever_log_cliente("Erro ao receber menu inicial");
             printf("Servidor desconectado.\n");
             return;
         }
-        printf("bytes_received: %d\n", bytes_received);
         buffer[bytes_received] = '\0';
         printf("Resposta do servidor:\n%s", buffer);
 
@@ -669,13 +660,9 @@ void comunicacao(int client_socket)
 
             if (modoJogo == 2 && rol == 2)
             {
-                printf("[DEBUG] Opção 1: Apagar o tabuleiro completo selecionada.\n");
+                printf("Opção 1: Apagar o tabuleiro completo selecionada.\n");
                 escrever_log_cliente("Opção 1: Apagar o tabuleiro completo selecionada");
-                // Recebe confirmação do servidor
-
-                escrever_log_cliente("Tabuleiro recebido com sucesso");
-                buffer[bytes_received] = '\0';
-                printf("Resposta do servidor:\n%s", buffer);
+                
 
                 int num_vazias = numCelulasVazias(matriz);
                 while (num_vazias < 81 && num_vazias > 0)

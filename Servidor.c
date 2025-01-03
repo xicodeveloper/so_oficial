@@ -57,29 +57,6 @@ typedef struct
     int num;
 } client_args_t;
 
-/**
- * Função para calcular o número total de células vazias num tabuleiro específico
- * @param matriz Matriz 3D com os jogos
- * @param num ID do jogo
- * @return int Número total de células vazias
- */
-int numero_total_vazias(int num)
-{
-    int total_vazias = 0;
-    // Percorrer a matriz e registrar coordenadas de células vazias
-
-    for (int i = 0; i < 9; i++)
-    {
-        for (int j = 0; j < 9; j++)
-        {
-            if (matriz_of[num - 1][i][j] == 0)
-            {
-                total_vazias++;
-            }
-        }
-    }
-    return total_vazias;
-}
 
 /**
  *  Função para registrar logs do servidor incluindo a data e hora do evento
@@ -179,7 +156,6 @@ void escrever_log_com_cliente_id_tentativa_col_row(int cliente_id, int tentativa
 void ler_configuracao(char *config_path, char *ficheiro_jogos, char *ficheiro_solucoes, int *porta)
 {
     FILE *config = fopen(config_path, "r");
-    escrever_log("Inicio do servidor: Leitura do ficheiro de configuração");
     if (config == NULL)
     {
         escrever_log("Erro ao abrir o ficheiro de configuração");
@@ -213,7 +189,6 @@ void ler_configuracao(char *config_path, char *ficheiro_jogos, char *ficheiro_so
     }
     fclose(config);
     escrever_log("Inicio do servidor: Configuração lida com sucesso");
-    printf("Configuração carregada com sucesso\n"); // Debug
 }
 
 /**
@@ -222,14 +197,13 @@ void ler_configuracao(char *config_path, char *ficheiro_jogos, char *ficheiro_so
  * @param matriz_of Matriz 3D para armazenar os jogos
  * @return void
  */
-void transforma_matriz_solucao(char *ficheiro_solucoes, int matriz_of[SIZE][LC][LC])
+void transforma_matriz_solucao(char *ficheiro_solucoes)
 {
     char buffer[BUFFER_SIZE];
     ficheiro_solucoes[strcspn(ficheiro_solucoes, "\r")] = 0;
 
     FILE *f = fopen(ficheiro_solucoes, "r");
-    escrever_log("Inicio da transformação da matriz solução, leitura soluções.txt");
-    printf("Inicio da transformação da matriz solução, leitura %s\n", ficheiro_solucoes);
+
     if (f == NULL)
     {
         printf("Erro ao abrir o ficheiro das soluçoes jogos para leitura.\n");
@@ -277,12 +251,12 @@ void transforma_matriz_solucao(char *ficheiro_solucoes, int matriz_of[SIZE][LC][
  * @param matriz_of Matriz 3D para armazenar os jogos
  * @return void
  */
-void transforma_matriz(char *ficheiro_jogos, int matriz_of[SIZE][LC][LC])
+void transforma_matriz(char *ficheiro_jogos)
 {
     char buffer[BUFFER_SIZE];
     ficheiro_jogos[strcspn(ficheiro_jogos, "\r")] = 0;
     FILE *f = fopen(ficheiro_jogos, "r");
-    escrever_log("Inicio da transformação da matriz, leitura jogos.txt");
+
     if (f == NULL)
     {
         escrever_log("Erro ao abrir o ficheiro dos jogos para leitura");
@@ -326,6 +300,30 @@ void transforma_matriz(char *ficheiro_jogos, int matriz_of[SIZE][LC][LC])
 }
 
 /**
+ * Função para calcular o número total de células vazias num tabuleiro específico
+ * @param matriz Matriz 3D com os jogos
+ * @param num ID do jogo
+ * @return int Número total de células vazias
+ */
+int numero_total_vazias(int num)
+{
+    int total_vazias = 0;
+    // Percorrer a matriz e registrar coordenadas de células vazias
+
+    for (int i = 0; i < 9; i++)
+    {
+        for (int j = 0; j < 9; j++)
+        {
+            if (matriz_of[num - 1][i][j] == 0)
+            {
+                total_vazias++;
+            }
+        }
+    }
+    return total_vazias;
+}
+
+/**
  * Função para escrever no terminal as matrizes de jogos atuais
  * @param matriz_of Matriz 3D com os jogos
  * @return void
@@ -345,7 +343,7 @@ void ler_matrizes(int matriz_of[SIZE][LC][LC])
         }
         printf("\n"); // Linha em branco entre jogos
     }
-    escrever_log("Matrizes lidas com sucesso");
+
 }
 
 /**
@@ -367,7 +365,7 @@ void ler_matrizes_id(int matriz_of[SIZE][LC][LC], int num)
         printf("\n"); // Nova linha após cada linha da matriz
     }
     printf("\n"); // Linha em branco entre jogos
-    escrever_log("Matrizes lidas com sucesso");
+    
 }
 
 /**
@@ -403,7 +401,6 @@ void formatar_tabuleiro(char *tabuleiro, char *formatted_board)
         }
     }
     formatted_board[index] = '\0';
-    escrever_log("Tabuleiro formatado com sucesso");
 }
 
 /**
@@ -429,7 +426,6 @@ void converter_tabuleiro_para_string(int tabuleiro[LC][LC], char *tabuleiro_str)
         }
     }
     tabuleiro_str[index] = '\0'; // Termina a string
-    escrever_log("Tabuleiro convertido para string com sucesso");
 }
 
 /**
@@ -633,27 +629,12 @@ void esperaPrioridade(int prioridade, int linha, int coluna, int client_id)
     char buffer[BUFFER_SIZE];
     int bloqueado = 1;
 
-    sprintf(buffer, "Prioridade 1 de (%d,%d) Count: %d", linha, coluna, prioridade_1_count[linha][coluna]);
-    escrever_log_com_cliente_id(client_id, buffer);
-    sprintf(buffer, "Prioridade 2 de (%d,%d) Count: %d", linha, coluna, prioridade_2_count[linha][coluna]);
-    escrever_log_com_cliente_id(client_id, buffer);
-    sprintf(buffer, "Prioridade 3 de (%d,%d) Count: %d", linha, coluna, prioridade_3_count[linha][coluna]);
-    escrever_log_com_cliente_id(client_id, buffer);
-
     bloqueado = pthread_mutex_trylock(&mutexCelulas[linha][coluna]);
-    if (bloqueado == 0)
+    if (bloqueado != 0)
     {
-        sprintf(buffer, "Prioridade 1 de (%d,%d) Count: %d", linha, coluna, prioridade_1_count[linha][coluna]);
-        escrever_log(buffer);
-        sprintf(buffer, "Prioridade 2 de (%d,%d) Count: %d", linha, coluna, prioridade_2_count[linha][coluna]);
-        escrever_log(buffer);
-        sprintf(buffer, "Prioridade 3 de (%d,%d) Count: %d", linha, coluna, prioridade_3_count[linha][coluna]);
-        escrever_log(buffer);
-        return;
-    }
+        sprintf(buffer, "Já bloqueado em (%d,%d)", linha, coluna);
+        escrever_log_com_cliente_id(client_id, buffer);
 
-    else
-    {
         if (prioridade == 1)
         {
             pthread_mutex_lock(&mutex_Escritura);
@@ -733,8 +714,6 @@ void assinalaPrioridade(int linha, int coluna, int client_id)
 
     pthread_mutex_unlock(&mutexCelulas[linha][coluna]);
 
-    sprintf(buffer, "É libertado o mutex (%d,%d)", linha, coluna);
-    escrever_log_com_cliente_id(client_id, buffer);
 }
 
 /**
@@ -746,7 +725,7 @@ void assinalaPrioridade(int linha, int coluna, int client_id)
  * @return void
  *
  */
-void enviar_menu_resolvedor(int client_socket)
+void enviar_menu_resolvedor(int client_socket,int client_id)
 {
     const char *menu =
         "---------- Menu de Sudoku ----------\n"
@@ -754,9 +733,8 @@ void enviar_menu_resolvedor(int client_socket)
         "2. O Servidor revela a Solução e Desistir.\n"
         "3. Desistir.\n"
         "------------------------------------\n";
-    printf("Enviando menu para o cliente\n"); // Debug
     send(client_socket, menu, BUFFER_SIZE, 0);
-    escrever_log("Menu enviado com sucesso");
+    escrever_log_com_cliente_id(client_id,"Menu enviado com sucesso");
 }
 
 /**
@@ -767,7 +745,7 @@ void enviar_menu_resolvedor(int client_socket)
  * @param client_socket Socket do cliente
  * @return void
  */
-void enviar_menu_apagador(int client_socket)
+void enviar_menu_apagador(int client_socket, int client_id)
 {
     const char *menu =
         "---------- Menu de Sudoku ----------\n"
@@ -777,20 +755,20 @@ void enviar_menu_apagador(int client_socket)
         "------------------------------------\n";
     printf("Enviando menu para o cliente\n"); // Debug
     send(client_socket, menu, BUFFER_SIZE, 0);
-    escrever_log("Menu enviado com sucesso");
+    escrever_log_com_cliente_id(client_id,"Menu enviado com sucesso");
 }
 
 /**
  * Função para escolher e enviar o tabuleiro para o cliente
  *
- * socket: send - recv
+ * socket: send
  *
  * @param client_socket Socket do cliente
+ * @param client_id ID do cliente
  * @param num ID do tabuleiro
- * @param matriz Matriz 3D com os jogos
  * @return void
  */
-void envia_tabuleiro(int client_socket, int num, int matriz[SIZE][LC][LC])
+void envia_tabuleiro(int client_socket,int client_id, int num)
 {
     char tabuleiro_str[LC * LC + 1]; // String temporária para armazenar o tabuleiro unidimensional
     char formatted_tabuleiro[BUFFER_SIZE];
@@ -802,33 +780,15 @@ void envia_tabuleiro(int client_socket, int num, int matriz[SIZE][LC][LC])
         return;
     }
 
-    printf("Escolhendo tabuleiro com ID %d\n", num);                 // Debug
-    converter_tabuleiro_para_string(matriz[num - 1], tabuleiro_str); // Converte para string unidimensional
+    converter_tabuleiro_para_string(matriz_of[num - 1], tabuleiro_str); // Converte para string unidimensional
     formatar_tabuleiro(tabuleiro_str, formatted_tabuleiro);          // Formata o tabuleiro
 
-    printf("Enviando tabuleiro para o cliente\n"); // Debug
-    send(client_socket, formatted_tabuleiro, BUFFER_SIZE, 0);
-    escrever_log("Tabuleiro enviado com sucesso");
-    // Recebe a confirmação de que o cliente recebeu o tabuleiro
-    if (recv(client_socket, received_message, BUFFER_SIZE, 0) > 0)
+
+    if (send(client_socket, formatted_tabuleiro, BUFFER_SIZE, 0) < 0 )
     {
-        received_message[BUFFER_SIZE - 1] = '\0'; // Assegura-se de que a mensagem recebida seja terminada com '\0'
-        if (strcmp(received_message, "Tabuleiro recebido") == 0)
-        {
-            printf("Tabuleiro recebido pelo cliente\n");
-            escrever_log("Tabuleiro recebido pelo cliente");
-        }
-        else
-        {
-            printf("Erro ao receber tabuleiro: %s\n", received_message);
-            escrever_log("Erro ao receber tabuleiro");
-        }
+        escrever_log_com_cliente_id(client_id,"Erro ao enviar o Tabuleiro");
     }
-    else
-    {
-        printf("Erro na recepção da confirmação do cliente\n");
-        escrever_log("Erro na recepção da confirmação do cliente");
-    }
+    
 }
 
 /**
@@ -837,19 +797,21 @@ void envia_tabuleiro(int client_socket, int num, int matriz[SIZE][LC][LC])
  * Socket: send
  *
  * @param client_socket Socket do cliente
+ * @param client_id ID do cliente
  * @param num ID do tabuleiro
  *
  */
-void envia_solucao(int client_socket, int num)
+void envia_solucao(int client_socket, int client_id, int num)
 {
     char buffer[BUFFER_SIZE];
     char formatted_tabuleiro[BUFFER_SIZE];
 
     converter_tabuleiro_para_string(matriz_solucao[num - 1], buffer); // Converte para string unidimensional
     formatar_tabuleiro(buffer, formatted_tabuleiro);
-    send(client_socket, formatted_tabuleiro, BUFFER_SIZE, 0);
-
-    escrever_log("Solução enviada com sucesso");
+    if(send(client_socket, formatted_tabuleiro, BUFFER_SIZE, 0) < 0)
+    {
+        escrever_log_com_cliente_id(client_id,"Erro ao enviar a solução");
+    }
 }
 
 /**
@@ -872,7 +834,6 @@ void enviar_id_tabuleiro(int client_socket, int num)
         close(client_socket);
         exit(EXIT_FAILURE);
     }
-    escrever_log("Enviar ID do tabuleiro ao cliente");
 }
 
 void analisa_apaga_celula(int client_id, int num, int linha, int coluna, char *resposta)
@@ -880,15 +841,19 @@ void analisa_apaga_celula(int client_id, int num, int linha, int coluna, char *r
     char buffer[BUFFER_SIZE];
     int valor_semaforo;
     sem_getvalue(&pode_apagar, &valor_semaforo);
-    sprintf(buffer, "semaforo de apagadores tiene: %d", valor_semaforo);
+    sprintf(buffer, "semaforo de apagadores tem: %d", valor_semaforo);
     escrever_log(buffer);
     sem_wait(&pode_apagar);
     if (matriz_of[num - 1][linha][coluna] != 0)
     {
-        escrever_log_com_cliente_id(client_id, "Chega ao semaforo para apagar");
+        sprintf(buffer, "Chega ao mutex(%d,%d)", linha, coluna);
+        escrever_log_com_cliente_id(client_id, buffer);
 
-        escrever_log_com_cliente_id(client_id, "Entra no semaforo para apagar");
-        pthread_mutex_lock(&mutex_apagadores);
+        pthread_mutex_lock(&mutexCelulas[linha][coluna]);
+
+        sprintf(buffer, "Entra e bloqueia o mutex(%d,%d)", linha, coluna);
+        escrever_log_com_cliente_id(client_id, buffer);
+        
 
         matriz_of[num - 1][linha][coluna] = 0;
 
@@ -900,7 +865,9 @@ void analisa_apaga_celula(int client_id, int num, int linha, int coluna, char *r
         sem_getvalue(&pode_inserir, &valor_semaforo);
         sprintf(buffer, "semaforo de resolvedores tiene: %d", valor_semaforo);
         escrever_log(buffer);
-        pthread_mutex_unlock(&mutex_apagadores);
+        pthread_mutex_unlock(&mutexCelulas[linha][coluna]);
+        sprintf(buffer, "Desbloqueia o mutex(%d,%d)", linha, coluna);
+        escrever_log_com_cliente_id(client_id, buffer);
     }
     else
     {
@@ -982,13 +949,14 @@ void analisaTentativa_Exclusao(int client_id, int num, int linha, int coluna, in
 {
     char buffer[BUFFER_SIZE];
 
-    sprintf(buffer, "client %d chega ao mutex da linha: %d e coluna: %d", client_id, linha, coluna);
-    escrever_log(buffer);
+    sprintf(buffer, "Chega ao mutex(%d,%d)", linha, coluna);
+    escrever_log_com_cliente_id(client_id, buffer);
 
     pthread_mutex_lock(&mutexCelulas[linha][coluna]); // Bloqueia o mutex da célula
 
-    sprintf(buffer, "client %d entra e bloqueia ao mutex da linha: %d e coluna: %d", client_id, linha, coluna);
-    escrever_log(buffer);
+    sprintf(buffer, "Entra e bloqueia o mutex(%d,%d)", linha, coluna);
+    escrever_log_com_cliente_id(client_id, buffer);
+        
     //____________________________________________verificação________________________________________________________
     if (matriz_solucao[num - 1][linha][coluna] == tentativa && matriz_of[num - 1][linha][coluna] == 0)
     {
@@ -1007,9 +975,8 @@ void analisaTentativa_Exclusao(int client_id, int num, int linha, int coluna, in
     //_______________________________________________________________________________________________________________
     pthread_mutex_unlock(&mutexCelulas[linha][coluna]); // Desbloqueia o mutex da célula
 
-    sprintf(buffer, "client: %d desbloqueia o mutex da linha: %d e coluna: %d", client_id, linha, coluna);
-    escrever_log(buffer);
-    printf("[DEBUG] Feedback gerado: '%s'\n", resposta);
+    sprintf(buffer, "Desbloqueia o mutex(%d,%d)", linha, coluna);
+    escrever_log_com_cliente_id(client_id, buffer);
 }
 
 /**
@@ -1031,10 +998,14 @@ void analisaTentativa_Prod(int client_id, int num, int linha, int coluna, int te
     sem_wait(&pode_inserir);
     if (matriz_solucao[num - 1][linha][coluna] == tentativa && matriz_of[num - 1][linha][coluna] == 0)
     {
-        escrever_log_com_cliente_id(client_id, "Chega ao semaforo para inserir");
-        escrever_log_com_cliente_id(client_id, "Entra no semaforo para inserir");
+        sprintf(buffer, "Chega ao mutex(%d,%d)", linha, coluna);
+        escrever_log_com_cliente_id(client_id, buffer);
 
-        pthread_mutex_lock(&mutex_resolvedores);
+        pthread_mutex_lock(&mutexCelulas[linha][coluna]);
+
+        sprintf(buffer, "Entra e bloqueia o mutex(%d,%d)", linha, coluna);
+        escrever_log_com_cliente_id(client_id, buffer);
+        
 
         matriz_of[num - 1][linha][coluna] = tentativa;
         snprintf(resposta, BUFFER_SIZE, "Tentativa %d na posição (%d, %d) está correta.", tentativa, linha + 1, coluna + 1);
@@ -1046,7 +1017,10 @@ void analisaTentativa_Prod(int client_id, int num, int linha, int coluna, int te
         sprintf(buffer, "semaforo de apagadores tiene: %d", valor_semaforo);
         escrever_log(buffer);
 
-        pthread_mutex_unlock(&mutex_resolvedores);
+        pthread_mutex_unlock(&mutexCelulas[linha][coluna]);
+
+        sprintf(buffer, "Desbloqueia o mutex(%d,%d)", linha, coluna);
+        escrever_log_com_cliente_id(client_id, buffer);
     }
     else
     {
@@ -1062,13 +1036,14 @@ void analisaTentativa_Prioridade(int client_id, int num, int linha, int coluna, 
 {
     char buffer[BUFFER_SIZE];
 
-    sprintf(buffer, "client %d chega ao mutex da linha: %d e coluna: %d, com Prioridade: %d", client_id, linha, coluna, prioridade);
-    escrever_log(buffer);
+    sprintf(buffer, "Chega ao mutex(%d,%d) com prioridade: %d", linha, coluna, prioridade);
+    escrever_log_com_cliente_id(client_id, buffer);
 
     esperaPrioridade(prioridade, linha, coluna, client_id); // Bloqueia o mutex da célula
 
-    sprintf(buffer, "client %d entra e bloqueia ao mutex da linha: %d e coluna: %d, com Prioridade: %d", client_id, linha, coluna, prioridade);
-    escrever_log(buffer);
+    sprintf(buffer, "Entra e bloqueia o mutex(%d,%d) com prioridade: %d", linha, coluna, prioridade);
+    escrever_log_com_cliente_id(client_id, buffer);
+        
     //____________________________________________verificação________________________________________________________
     if (matriz_solucao[num - 1][linha][coluna] == tentativa && matriz_of[num - 1][linha][coluna] == 0)
     {
@@ -1087,8 +1062,9 @@ void analisaTentativa_Prioridade(int client_id, int num, int linha, int coluna, 
     //_______________________________________________________________________________________________________________
     assinalaPrioridade(linha, coluna, client_id); // Desbloqueia o mutex da célula
 
-    // sprintf(buffer, "client: %d desbloqueia o mutex da linha: %d e coluna: %d", client_id, linha, coluna);
-    //escrever_log(buffer);
+    sprintf(buffer, "Desbloqueia o mutex(%d,%d)", linha, coluna);
+    escrever_log_com_cliente_id(client_id, buffer);
+    
     printf("[DEBUG] Feedback gerado: '%s'\n", resposta);
 }
 
@@ -1108,7 +1084,6 @@ void recebe_tentativa_e_envia_feedback(int client_socket, int client_id, int pri
     char resposta[BUFFER_SIZE];
     int num, linha, coluna, tentativa;
 
-    printf("[DEBUG] Aguardando mensagem do cliente para receber tentativa...\n");
     int bytes_received = recv(client_socket, buffer, BUFFER_SIZE, 0);
     if (bytes_received < 0)
     {
@@ -1119,7 +1094,6 @@ void recebe_tentativa_e_envia_feedback(int client_socket, int client_id, int pri
     escrever_log_com_cliente_id(client_id, "Tentativa recebida com sucesso");
 
     buffer[bytes_received] = '\0'; // Garante que a mensagem recebida é válida
-    printf("[DEBUG] Mensagem recebida: '%s'\n", buffer);
 
     // Extrai os valores num, linha, coluna, e tentativa
     if (sscanf(buffer, "%d %d %d %d", &num, &linha, &coluna, &tentativa) != 4)
@@ -1131,8 +1105,6 @@ void recebe_tentativa_e_envia_feedback(int client_socket, int client_id, int pri
         escrever_log(buffer);
         return;
     }
-
-    printf("[DEBUG] Dados extraídos: Tabuleiro ID=%d, Linha=%d, Coluna=%d, Tentativa=%d\n", num, linha, coluna, tentativa);
 
     // SINCONIZAÇÃO E ANALISE DA TENTATIVA ______________________________________________________________________________________
     if (modoJogo == 1)
@@ -1194,20 +1166,20 @@ void escolhe_modo_de_Jogo()
     switch (modoJogo)
     {
     case 1:
-        printf("[DEBUG] Modo de jogo 1: Modo Clásico cooperativo selecionado.\n");
+        printf("Modo de jogo 1: Modo Clásico cooperativo selecionado.\n");
         escrever_log("Modo de jogo 1: Modo Clásico cooperativo selecionado");
         break;
     case 2:
-        printf("[DEBUG] Modo de jogo 2: Modo Apagadores e Resolvedores selecionado.\n");
+        printf("Modo de jogo 2: Modo Apagadores e Resolvedores selecionado.\n");
         escrever_log("Modo de jogo 2: Modo Apagadores e Resolvedores selecionado");
         break;
 
     case 3:
-        printf("[DEBUG] Modo de jogo 3: Modo de Prioridades selecionado.\n");
+        printf("Modo de jogo 3: Modo de Prioridades selecionado.\n");
         escrever_log("Modo de jogo 3: Modo de Prioridades selecionado");
         break;
     case 0:
-        printf("[DEBUG] Modo de jogo 0: Encerrar.\n");
+        printf("A encerrar...\n");
         escrever_log("Jogador Saiu");
         break;
     }
@@ -1240,9 +1212,9 @@ void *handle_client(void *args)
         close(sock);
         return NULL;
     }
-    escrever_log("ID do cliente recebido com sucesso");
-    printf("New client connected with ID: %d\n", client_id);
-    escrever_log("New client connected");
+
+    printf("Novo cliente conectado com ID: %d\n", client_id);
+    escrever_log_com_cliente_id(client_id, "Novo cliente conectado");
 
     enviar_id_tabuleiro(sock, num);
 
@@ -1250,28 +1222,17 @@ void *handle_client(void *args)
     while (running)
     {
 
-        int bytes_received = recv(sock, buffer, BUFFER_SIZE, 0);
-        if (bytes_received < 0)
-        {
-            escrever_log("Erro ao receber pedido de tabuleiro");
-            perror("Error ao receber pedido de tabuleiro");
-            printf("Client %d disconnected due to error.\n", client_id);
-            escrever_log("Client disconnected due to receive error");
-            break;
-        }
-        escrever_log("Pedido de tabuleiro recebido com sucesso");
-        printf("Cliente %d: %s \n", client_id, buffer);
-        envia_tabuleiro(sock, num, matriz_of);
+        envia_tabuleiro(sock, client_id, num);
 
         //_____________________________________________________________
         if (rol_Jogador == 2 && modoJogo == 2)
         {
 
-            enviar_menu_apagador(sock);
+            enviar_menu_apagador(sock, client_id);
         }
         else
         {
-            enviar_menu_resolvedor(sock);
+            enviar_menu_resolvedor(sock, client_id);
         }
 
         printf("Sending menu to client: %d\n", client_id);
@@ -1279,7 +1240,7 @@ void *handle_client(void *args)
         printf("Waiting for option from client: %d\n", client_id);
 
         // Receive the client's option
-        bytes_received = recv(sock, buffer, BUFFER_SIZE, 0);
+        int bytes_received = recv(sock, buffer, BUFFER_SIZE, 0);
         if (bytes_received < 0)
         {
             escrever_log("Erro ao receber opção do cliente");
@@ -1295,14 +1256,15 @@ void *handle_client(void *args)
             escrever_log("Client disconnected");
             break;
         }
-        escrever_log("Opção do cliente recebida com sucesso");
+
         buffer[bytes_received] = '\0';                                                                     // Null-terminate the received data
-        printf("Received from client %d: '%s' (bytes_received: %d)\n", client_id, buffer, bytes_received); // Debug
 
         // Convert received message to an integer option
         opcao = atoi(buffer);                                           // Try parsing the received data as an integer
-        printf("Parsed option from client %d: %d\n", client_id, opcao); // Debug
-        escrever_log("Opção do cliente convertida com sucesso");
+        sprintf(buffer, "Opção do escolhida: %d", opcao);
+        escrever_log_com_cliente_id(client_id, buffer);
+
+        // -------------------------------------------------------------- FIQUEI AQUI --------------------------------------------------------------
 
         // Handle the selected option
         switch (opcao)
@@ -1322,7 +1284,7 @@ void *handle_client(void *args)
 
                     recebe_apaga_celula(sock, client_id);
 
-                    envia_tabuleiro(sock, num, matriz_of);
+                    envia_tabuleiro(sock, client_id, num);
                     num_vazias = numero_total_vazias(num);
                 }
 
@@ -1342,7 +1304,7 @@ void *handle_client(void *args)
 
                     recebe_tentativa_e_envia_feedback(sock, client_id, prioridade_Jogador);
 
-                    envia_tabuleiro(sock, num, matriz_of);
+                    envia_tabuleiro(sock, client_id, num);
                     total_vazias = numero_total_vazias(num);
                 }
                 printf("[INFO] Tabuleiro %d resolvido pelo cliente %d\n", num, client_id);
@@ -1372,7 +1334,7 @@ void *handle_client(void *args)
             }
             else
             {
-                envia_solucao(sock, num);
+                envia_solucao(sock, client_id, num);
                 escrever_log("Solução enviada com sucesso");
                 running = 0; // Exit loop
             }
@@ -1452,8 +1414,8 @@ int main(int argc, char *argv[])
     char ficheiro_jogos[100], ficheiro_solucoes[100];
     ler_configuracao(argv[1], ficheiro_jogos, ficheiro_solucoes, &porta);
 
-    transforma_matriz(ficheiro_jogos, matriz_of);
-    transforma_matriz_solucao(ficheiro_solucoes, matriz_solucao);
+    transforma_matriz(ficheiro_jogos);
+    transforma_matriz_solucao(ficheiro_solucoes);
     ler_matrizes(matriz_of);
     printf("----------");
     ler_matrizes(matriz_solucao);
