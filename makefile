@@ -21,13 +21,13 @@ $(CLIENT): Cliente.c
 clean:
 	rm -f $(SERVER) $(CLIENT)
 
-logs:
+text:
 	rm ./logs/*.txt
 
 # Alvo para limpeza com mensagem adicional
-clear: clean logs
+clear: clean text
 	
-	@echo "Ficheiros e configurações limpos"
+	@echo "Ficheiros e logs limpos"
 
 # Força a execução do "clean" e "clear"
 .PHONY: all clean clear
