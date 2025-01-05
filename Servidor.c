@@ -25,7 +25,7 @@ pthread_mutex_t clients_mutex_board = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t log_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t clients_mutex_board_2 = PTHREAD_MUTEX_INITIALIZER;
 //-------------------Barrier-------------------------------
-#define MAX_CLIENTES 4
+int MAX_CLIENTES = 0;
 int clients_waiting = 0;
 sem_t sem_barrier;
 pthread_mutex_t mutex_barreira = PTHREAD_MUTEX_INITIALIZER;
@@ -436,7 +436,6 @@ void converter_tabuleiro_para_string(int tabuleiro[LC][LC], char *tabuleiro_str)
     tabuleiro_str[index] = '\0'; // Termina a string
 }
 
-
 /**
  * Função para inicializar os mutexes das células
  */
@@ -823,6 +822,7 @@ void analisa_apaga_celula(int client_id, int num, int linha, int coluna, char *r
     sprintf(buffer, "semaforo de apagadores tem: %d", valor_semaforo);
     escrever_log(buffer);
     sem_wait(&pode_apagar);
+    pthread_mutex_lock(&mutexCelulas[linha][coluna]);
     if (matriz_of[num - 1][linha][coluna] != 0)
     {
         sprintf(buffer, "Entra na celula:(%d,%d)", linha, coluna);
@@ -838,15 +838,15 @@ void analisa_apaga_celula(int client_id, int num, int linha, int coluna, char *r
         sem_getvalue(&pode_inserir, &valor_semaforo);
         sprintf(buffer, "Assinalado semaforo de resolvedores, agora tem: %d", valor_semaforo);
         escrever_log(buffer);
-
     }
     else
     {
-        
+
         snprintf(resposta, BUFFER_SIZE, "ERRO: Posição (%d, %d) já está vazia.", linha + 1, coluna + 1);
         assinalaApagadores();
         escrever_log("Tentativa de apagar errada: Posição já vazia");
     }
+    pthread_mutex_unlock(&mutexCelulas[linha][coluna]);
 }
 
 /**
@@ -962,6 +962,7 @@ void analisaTentativa_Prod(int client_id, int num, int linha, int coluna, int te
     sprintf(buffer, "semaforo de resolvedores tem: %d", valor_semaforo);
     escrever_log(buffer);
     sem_wait(&pode_inserir);
+    pthread_mutex_lock(&mutexCelulas[linha][coluna]); // Bloqueia o mutex da célula
     if (matriz_solucao[num - 1][linha][coluna] == tentativa && matriz_of[num - 1][linha][coluna] == 0)
     {
 
@@ -987,6 +988,7 @@ void analisaTentativa_Prod(int client_id, int num, int linha, int coluna, int te
         snprintf(resposta, BUFFER_SIZE, "Tentativa %d na posição (%d, %d) está errada.", tentativa, linha, coluna);
         escrever_log_com_cliente_id_tentativa_col_row(client_id, tentativa, linha, coluna, "O servidor recebeu tentativa errada na (linha-coluna)");
     }
+    pthread_mutex_unlock(&mutexCelulas[linha][coluna]); // Desbloqueia o mutex da célula
 }
 
 void analisaTentativa_Prioridade(int client_id, int num, int linha, int coluna, int tentativa, int prioridade, char *resposta)
@@ -1083,7 +1085,6 @@ void recebe_tentativa_e_envia_feedback(int client_socket, int client_id, int pri
         perror("[ERRO] Falha ao enviar feedback ao cliente");
         escrever_log("Erro ao enviar feedback ao cliente");
     }
-    
 }
 
 /**
@@ -1136,6 +1137,32 @@ void escolhe_modo_de_Jogo()
         break;
     }
 
+    printf("Quantos clientes deseja esperar para iniciar o jogo?\n");
+    while (1)
+    {
+        fgets(buffer, BUFFER_SIZE, stdin);
+        if (strlen(buffer) == 1)
+        {
+            printf("Por favor, insira um número válido.\n");
+            continue;
+        }
+
+        // Remove o newline que `fgets` deixa no buffer
+        buffer[strcspn(buffer, "\n")] = 0;
+
+
+        MAX_CLIENTES = atoi(buffer); // Converte a entrada para inteiro
+        if (MAX_CLIENTES < 1)
+        {
+            printf("Por favor, insira um número válido.\n");
+        }
+        else
+        {
+            printf("Esperando por %d clientes para iniciar o jogo...\n", MAX_CLIENTES);
+            break;
+        }
+    }
+
     return;
 }
 
@@ -1169,8 +1196,6 @@ void handle_sigint(int sig)
     reset_user_id();
     exit(0);
 }
-
-
 
 /**
  * Função para lidar com o cliente Resolvedor
@@ -1263,7 +1288,6 @@ void *handle_client(void *args)
                 while (num_vazias < 81 && num_vazias > 0)
                 {
 
-
                     recebe_apaga_celula(sock, client_id);
 
                     envia_tabuleiro(sock, client_id, num);
@@ -1275,13 +1299,13 @@ void *handle_client(void *args)
             {
                 // O RESOLVEDOR ESCOLHEU RESOLVER O TABULEIRO UM A UM
                 printf("Client %d selected to solve one cell\n", client_id);
-                escrever_log_com_cliente_id(client_id,"Cliente selecionou resolver uma célula");
+                escrever_log_com_cliente_id(client_id, "Cliente selecionou resolver uma célula");
 
                 int total_vazias = numero_total_vazias(num);
                 printf("Número total de casas vazias: %d\n", total_vazias);
                 while (total_vazias > 0 && total_vazias < 81)
                 {
-                    
+
                     // Enquanto houver casas vazias, processa as tentativas recebidas
 
                     recebe_tentativa_e_envia_feedback(sock, client_id, prioridade_Jogador);
@@ -1308,8 +1332,8 @@ void *handle_client(void *args)
 
         case 3:
             printf("Cliente %d desistiu do jogo.\n", client_id);
-            escrever_log_com_cliente_id(client_id,"Cliente desistiu do jogo");
-            
+            escrever_log_com_cliente_id(client_id, "Cliente desistiu do jogo");
+
             running = 0; // Exit loop
             break;
 
@@ -1506,6 +1530,6 @@ int main(int argc, char *argv[])
         }
         pthread_mutex_unlock(&clients_mutex_board_2);
     }
-    
+
     return 0;
 }
